@@ -1,8 +1,8 @@
 from deep_learning_methods.utils.dp_funs import *
 from deep_learning_methods.utils.win_data_fun import *
 
-# PATH = input("path: ")
-PATH = '/home/yicheng/Documents/imu project/contact_estimate'
+PATH = input("path: ")
+# PATH = '/home/yicheng/Documents/imu project/contact_estimate'
 
 mean = "{}/deep_learning_methods/data/data_mean.npy".format(PATH)
 std = "{}/deep_learning_methods/data/data_std.npy".format(PATH)
