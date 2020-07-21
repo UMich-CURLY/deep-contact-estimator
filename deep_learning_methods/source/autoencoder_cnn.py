@@ -2,6 +2,7 @@ from deep_learning_methods.utils.dp_funs import *
 from deep_learning_methods.utils.win_data_fun import robot_dataset
 from deep_learning_methods.utils.autoencoder_cnn_fun import *
 from sklearn.cluster import KMeans
+from torch.utils.data import DataLoader
 
 PATH = input("path: ")
 # PATH = '/home/yicheng/Documents/imu project/contact_estimate'
