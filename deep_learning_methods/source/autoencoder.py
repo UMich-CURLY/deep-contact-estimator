@@ -2,6 +2,7 @@ from deep_learning_methods.utils.dp_funs import *
 from deep_learning_methods.utils.win_data_fun import robot_dataset
 from deep_learning_methods.utils.autoencoder_fun import *
 from sklearn.cluster import KMeans
+from torch.utils.data import DataLoader
 
 PATH = input("path: ")
 # PATH = '/home/yicheng/Documents/imu project/contact_estimate'
@@ -42,7 +43,7 @@ criterion = nn.MSELoss()
 
 optimizier = optim.Adam(atcd.parameters(), lr=0.001, weight_decay=1e-12)
 
-for epoch in range(30):
+for epoch in range(30):from torch.utils.data import DataLoader
     running_loss = 0.0
     for i, samples in tqdm(enumerate(train_dataloader, start=0)):
         inputs, labels = samples['data'], samples['label']
