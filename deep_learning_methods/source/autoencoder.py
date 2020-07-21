@@ -1,5 +1,5 @@
 from deep_learning_methods.utils.dp_funs import *
-from deep_learning_methods.utils.win_data_fun import *
+from deep_learning_methods.utils.win_data_fun import robot_dataset
 from deep_learning_methods.utils.autoencoder_fun import *
 from sklearn.cluster import KMeans
 
