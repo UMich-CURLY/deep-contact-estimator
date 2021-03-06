@@ -1,0 +1,11 @@
+
+data_folder: "/home/justin/data/2021-02-21_contact_data_in_lab/cnn_data/"
+model_save_path: "/home/justin/code/deep-contact-estimator/results/0305_30epoch_lr1e-4.weight"
+loss_history_path: "/home/justin/code/deep-contact-estimator/results/0305_30epoch_lr1e-4_loss_history.npy"
+
+print_every: 1000
+
+batch_size: 30
+init_lr: 0.00001
+lr_decay_rate: 0.97
+num_epoch: 30
