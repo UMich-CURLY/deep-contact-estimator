@@ -89,18 +89,24 @@ def main():
 
 
     # load data   
-    data = load_data_from_mat(config['data_folder'],0.7,0.15)
+    # data = load_data_from_mat(config['data_folder'],config['window_size'],0.7,0.15)
     
     # separate data
-    train_data = contact_dataset(data=data['train'],label=data['train_label'],device=device)
+    train_data = contact_dataset(data_path=config['data_folder']+"train.npy",\
+                                label_path=config['data_folder']+"train_label.npy",\
+                                window_size=config['window_size'],device=device)
     train_dataloader = DataLoader(dataset=train_data, batch_size=config['batch_size'])
-    val_data = contact_dataset(data=data['val'],label=data['val_label'],device=device)
+    val_data = contact_dataset(data_path=config['data_folder']+"val.npy",\
+                                label_path=config['data_folder']+"val_label.npy",\
+                                window_size=config['window_size'],device=device)
     val_dataloader = DataLoader(dataset=val_data, batch_size=config['batch_size'])
-    test_data = contact_dataset(data=data['test'],label=data['test_label'],device=device)
+    test_data = contact_dataset(data_path=config['data_folder']+"test.npy",\
+                                label_path=config['data_folder']+"test_label.npy",\
+                                window_size=config['window_size'],device=device)
     test_dataloader = DataLoader(dataset=test_data, batch_size=config['batch_size'])
 
     # init network
-    model = contact_net()
+    model = contact_cnn()
     model = model.to(device)
 
     if args.mode == 'train':

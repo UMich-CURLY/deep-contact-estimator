@@ -1,0 +1,6 @@
+
+mat_folder: "/home/justin/data/contact_data/mat/"
+save_path: "/home/justin/data/contact_data/numpy/"
+
+train_ratio: 0.7
+val_ratio: 0.15

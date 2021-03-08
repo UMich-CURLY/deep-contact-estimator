@@ -1,11 +1,17 @@
 
-data_folder: "/home/justin/data/2021-02-21_contact_data_in_lab/cnn_data/"
-model_save_path: "/home/justin/code/deep-contact-estimator/results/0305_30epoch_lr1e-4.weight"
-loss_history_path: "/home/justin/code/deep-contact-estimator/results/0305_30epoch_lr1e-4_loss_history.npy"
+data_folder: "/home/justin/data/contact_data/numpy/"
+model_save_path: "/home/justin/code/deep-contact-estimator/results/0308_stacked_test.weight"
+loss_history_path: "/home/justin/code/deep-contact-estimator/results/0308_stacked_test_loss_history.npy"
 
 print_every: 1000
 
+# data params
+window_size: 300
+
+# network params
 batch_size: 30
-init_lr: 0.00001
+init_lr: 0.00005
 lr_decay_rate: 0.97
-num_epoch: 30
+num_epoch: 300
+
+
