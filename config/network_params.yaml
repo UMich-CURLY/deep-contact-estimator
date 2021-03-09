@@ -1,17 +1,17 @@
 
 data_folder: "/home/justin/data/contact_data/numpy/"
-model_save_path: "/home/justin/code/deep-contact-estimator/results/0308_stacked_test.weight"
-loss_history_path: "/home/justin/code/deep-contact-estimator/results/0308_stacked_test_loss_history.npy"
+model_save_path: "/home/justin/code/deep-contact-estimator/results/0309_ws150_lr1e-5.weight"
+loss_history_path: "/home/justin/code/deep-contact-estimator/results/0309_ws150_lr1e-5.npy"
 
 print_every: 1000
 
 # data params
-window_size: 300
+window_size: 150
 
 # network params
 batch_size: 30
-init_lr: 0.00005
+init_lr: 0.00001
 lr_decay_rate: 0.97
-num_epoch: 300
+num_epoch: 100
 
 
