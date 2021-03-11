@@ -63,6 +63,7 @@ def train(model, train_dataloader, val_dataloader, config):
     val_acc_history = []
     for epoch in range(config['num_epoch']):
         cur_training_loss_history = []
+        model.train()
         for i, samples in tqdm(enumerate(train_dataloader, start=0)):
             input_data = samples['data'] 
             label = samples['label'] 
@@ -80,9 +81,12 @@ def train(model, train_dataloader, val_dataloader, config):
                 print("epoch %d / %d, iteration %d / %d, loss: %.8f" %\
                     (epoch, config['num_epoch'], i, len(train_dataloader), loss))
         
+        # calculate training and validation accuracy
+        model.eval()
         train_acc = compute_accuracy(train_dataloader, model)
         val_acc, cur_val_loss_history = compute_accuracy_and_loss(val_dataloader, model, criterion)
 
+        # log loss history
         training_loss_history.append(cur_training_loss_history)
         val_loss_history.append(cur_val_loss_history)
         train_acc_history.append(train_acc)
