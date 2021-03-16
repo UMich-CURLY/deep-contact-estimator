@@ -1,17 +1,25 @@
-
+# Path to the data folder. Data should be separated into train.npy, train_label.npy, val.npy, val_label.npy.
 data_folder: "/home/justin/data/contact_data/numpy/"
-model_save_path: "/home/justin/code/deep-contact-estimator/results/0309_ws150_lr1e-5.weight"
-loss_history_path: "/home/justin/code/deep-contact-estimator/results/0309_ws150_lr1e-5.npy"
+
+# Path to save the trained model. 
+# Please leave the filename extension out.
+# It will automatically generate ${name}_best_loss.pt, ${name}_best_acc.pt, ${name}_final_epo.pt.
+model_save_path: "/home/justin/code/deep-contact-estimator/results/0316_ws150_lr1e-4_2block_drop_out"
+log_writer_path: "/home/justin/code/deep-contact-estimator/logs/0316_ws150_lr1e-4_2block_drop_out"
+loss_history_path: "/home/justin/code/deep-contact-estimator/results/0316_ws150_lr1e-4_2block_drop_out_history.npy"
+
+model_description: "CNN 2blocks w/ dropoutm, shuffle train, batch: 30, ws:150, lr:1e-4"
 
 print_every: 1000
 
-# data params
+# Data params
 window_size: 150
+shuffle: True
 
-# network params
+# Network params
 batch_size: 30
-init_lr: 0.00001
+init_lr: 0.0001
 lr_decay_rate: 0.97
-num_epoch: 100
+num_epoch: 80
 
 

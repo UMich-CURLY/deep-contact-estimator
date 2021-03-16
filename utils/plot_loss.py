@@ -12,7 +12,7 @@ import yaml
 
 def main():
 
-    file_path = "/media/curly_ssd_justin/DockerFolder/code/deep-contact-estimator/results/0309_ws150_lr1e-5.npy"
+    file_path = "/media/curly_ssd_justin/DockerFolder/code/deep-contact-estimator/results/0315_ws150_lr1e-4_2block_drop_out_history.npy"
     # file_path = "/home/justin/code/deep-contact-estimator/results/0309_ws150_lr1e-5.npy"
 
     # np_load_old = np.load

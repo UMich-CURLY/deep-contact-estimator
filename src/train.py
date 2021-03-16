@@ -11,7 +11,7 @@ import torch.optim as optim
 from contact_cnn import *
 from utils.data_handler import *
 
-
+from torch.utils.tensorboard import SummaryWriter
 
 def compute_accuracy(dataloader, model):
 
@@ -33,24 +33,36 @@ def compute_accuracy_and_loss(dataloader, model, criterion):
 
     num_correct = 0
     num_data = 0
-    loss_history = []
-    for sample in tqdm(dataloader):
-        input_data = sample['data']
-        gt_label = sample['label']
+    loss_sum = 0
+    with torch.no_grad():
+        for sample in tqdm(dataloader):
+            input_data = sample['data']
+            gt_label = sample['label']
 
-        output = model(input_data)
-        _, prediction = torch.max(output,1)
+            output = model(input_data)
+            _, prediction = torch.max(output,1)
 
-        loss = criterion(output, gt_label)
+            loss = criterion(output, gt_label)
 
-        num_data += input_data.size(0)
-        num_correct += (prediction==gt_label).sum().item()
+            num_data += input_data.size(0)
+            num_correct += (prediction==gt_label).sum().item()
 
-        loss_history.append(loss.item())
+            loss_sum += loss.item()
 
-    return num_correct/num_data, loss_history
+    return num_correct/num_data, loss_sum/len(dataloader)
 
 def train(model, train_dataloader, val_dataloader, config):
+
+    writer = SummaryWriter(config['log_writer_path'],comment=config['model_description'])
+    writer.add_text("data_folder: ",config['data_folder'])
+    writer.add_text("model_save_path: ",config['model_save_path'])
+    writer.add_text("log_writer_path: ",config['log_writer_path'])
+    writer.add_text("loss_history_path: ",config['loss_history_path'])
+    writer.add_text("window_size: ",str(config['window_size']))
+    writer.add_text("shuffle: ",str(config['shuffle']))
+    writer.add_text("batch_size: ",str(config['batch_size']))
+    writer.add_text("init_lr: ",str(config['init_lr']))
+    writer.add_text("num_epoch: ",str(config['num_epoch']))
 
     # let's try fixed lr first
     criterion = nn.CrossEntropyLoss()
@@ -61,8 +73,11 @@ def train(model, train_dataloader, val_dataloader, config):
     training_loss_history = []
     train_acc_history = []
     val_acc_history = []
+    best_acc = 0
+    best_loss = 1000000000
     for epoch in range(config['num_epoch']):
-        cur_training_loss_history = []
+        running_loss = 0.0
+        loss_sum = 0.0
         model.train()
         for i, samples in tqdm(enumerate(train_dataloader, start=0)):
             input_data = samples['data'] 
@@ -75,20 +90,60 @@ def train(model, train_dataloader, val_dataloader, config):
             loss.backward()
             optimizer.step()
 
-            cur_training_loss_history.append(loss.item())
+            # cur_training_loss_history.append(loss.item())
+            running_loss += loss.item()
+            loss_sum += loss.item()
 
             if i % config['print_every'] == 0:
                 print("epoch %d / %d, iteration %d / %d, loss: %.8f" %\
-                    (epoch, config['num_epoch'], i, len(train_dataloader), loss))
-        
+                    (epoch, config['num_epoch'], i, len(train_dataloader), running_loss/config['print_every']))
+                running_loss = 0.0
+
         # calculate training and validation accuracy
         model.eval()
         train_acc = compute_accuracy(train_dataloader, model)
-        val_acc, cur_val_loss_history = compute_accuracy_and_loss(val_dataloader, model, criterion)
+        train_loss_avg = loss_sum/len(train_dataloader)
 
-        # log loss history
-        training_loss_history.append(cur_training_loss_history)
-        val_loss_history.append(cur_val_loss_history)
+        val_acc, val_loss_avg = compute_accuracy_and_loss(val_dataloader, model, criterion)
+
+        # log down info in tensorboard
+        writer.add_scalar('training loss', train_loss_avg, epoch)
+        writer.add_scalar('training accuracy', train_acc, epoch)
+        writer.add_scalar('validation loss', val_loss_avg, epoch)
+        writer.add_scalar('validation accuracy', val_acc, epoch)
+
+        # if we achieve best val acc, save the model.
+        if val_acc > best_acc:
+            best_acc = val_acc
+            
+            state = {'epoch': epoch,
+                    'model_state_dict': model.state_dict(),
+                    'optimizer_state_dict': optimizer.state_dict(),
+                    'loss': train_loss_avg,
+                    'acc': train_acc,
+                    'val_loss': val_loss_avg,
+                    'val_acc': val_acc}
+
+            torch.save(state, config['model_save_path']+'_best_val_acc.pt')
+        
+        # if we achieve best val loss, save the model
+        if val_loss_avg < best_loss:
+            best_loss = val_loss_avg
+            
+            state = {'epoch': epoch,
+                    'model_state_dict': model.state_dict(),
+                    'optimizer_state_dict': optimizer.state_dict(),
+                    'loss': train_loss_avg,
+                    'acc': train_acc,
+                    'val_loss': val_loss_avg,
+                    'val_acc': val_acc}
+
+            torch.save(state, config['model_save_path']+'_best_val_loss.pt')
+            
+
+        # append loss history
+        training_loss_history.append(train_loss_avg)
+        val_loss_history.append(val_loss_avg)
         train_acc_history.append(train_acc)
         val_acc_history.append(val_acc)    
 
@@ -96,12 +151,22 @@ def train(model, train_dataloader, val_dataloader, config):
             (epoch, config['num_epoch'], train_acc, val_acc))  
     
     # save model     
-    torch.save(model, config['model_save_path'])
+    state = {'epoch': epoch,
+            'model_state_dict': model.state_dict(),
+            'optimizer_state_dict': optimizer.state_dict(),
+            'loss': train_loss_avg,
+            'acc': train_acc,
+            'val_loss': val_loss_avg,
+            'val_acc': val_acc}
+
+    torch.save(state, config['model_save_path']+'_final_epo.pt')
     
-    # log loss historys
+    # log loss history
     history = {"train_acc":train_acc_history,"val_acc":val_acc_history,\
                 "train_loss_history":training_loss_history,"val_loss_history":val_loss_history}
     np.save(config['loss_history_path'],history)       
+
+    writer.close()
 
 def main():
    
@@ -115,6 +180,20 @@ def main():
 
     config = yaml.load(open(args.config_name))
 
+    print("Using the following params: ")
+    print("-------------path-------------")
+    print("data_folder: ",config['data_folder'])
+    print("model_save_path: ",config['model_save_path'])
+    print("log_writer_path: ",config['log_writer_path'])
+    print("loss_history_path: ",config['loss_history_path'])
+    print("--------network params--------")
+    print("window_size: ",config['window_size'])
+    print("shuffle: ",config['shuffle'])
+    print("batch_size: ",config['batch_size'])
+    print("init_lr: ",config['init_lr'])
+    print("num_epoch: ",config['num_epoch'])
+
+
     # load data   
     # data = load_data_from_mat(config['data_folder'],config['window_size'],0.7,0.15)
     
@@ -122,7 +201,8 @@ def main():
     train_data = contact_dataset(data_path=config['data_folder']+"train.npy",\
                                 label_path=config['data_folder']+"train_label.npy",\
                                 window_size=config['window_size'],device=device)
-    train_dataloader = DataLoader(dataset=train_data, batch_size=config['batch_size'])
+    train_dataloader = DataLoader(dataset=train_data, batch_size=config['batch_size'],\
+                                  shuffle=config['shuffle'])
     val_data = contact_dataset(data_path=config['data_folder']+"val.npy",\
                                 label_path=config['data_folder']+"val_label.npy",\
                                 window_size=config['window_size'],device=device)
@@ -136,15 +216,9 @@ def main():
     model = contact_cnn()
     model = model.to(device)
 
-    # if args.mode == 'train':
-
     train(model, train_dataloader, val_dataloader, config)
 
-    # elif args.mode == 'test':
-    #     pass
-    # else:
-    #     print('Your requested mode does not exist. :o')
-    #     sys.exit(2)
+   
 
 if __name__ == '__main__':
     main()

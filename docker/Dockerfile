@@ -9,3 +9,5 @@ USER root
 RUN apt-get update && apt-get install -y vim
 
 RUN pip install scipy
+
+RUN pip install tensorboard
