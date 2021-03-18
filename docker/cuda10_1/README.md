@@ -9,7 +9,7 @@ To build the docker image, run `docker build --tag justintzuyuan/pytorch_1.6_cud
 If you want to make any changes to this docker image, edit the `Dockerfile`. If any changes happends, remember to update the `LABEL version` inside. 
 
 ### How to run this docker container?
-`bash run_cuda_docker.bash [container_name]`. Change the home directly, disk volumn mapping in this bash file correspondingly.
+`bash run_contact_estimator_docker.bash [container_name]`. Change the home directly, disk volumn mapping in this bash file correspondingly.
 
 
 ### After the docker container is running 
