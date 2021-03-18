@@ -149,12 +149,14 @@ class contact_2d_cnn(nn.Module):
                       kernel_size=3,
                       stride=1,
                       padding=1),
+            nn.Dropout(p=0.5),
             nn.ReLU(),
             nn.Conv2d(in_channels=128,
                       out_channels=128,
                       kernel_size=3,
                       stride=1,
                       padding=1),
+            nn.Dropout(p=0.5),
             nn.ReLU(),
             nn.MaxPool2d(kernel_size=2,
                          stride=2)
@@ -166,18 +168,21 @@ class contact_2d_cnn(nn.Module):
                       kernel_size=3,
                       stride=1,
                       padding=1),
+            nn.Dropout(p=0.5),
             nn.ReLU(),
             nn.Conv2d(in_channels=256,
                       out_channels=256,
                       kernel_size=3,
                       stride=1,
                       padding=1),
+            nn.Dropout(p=0.5),
             nn.ReLU(),
             nn.Conv2d(in_channels=256,
                       out_channels=256,
                       kernel_size=3,
                       stride=1,
                       padding=1),
+            nn.Dropout(p=0.5),
             nn.ReLU(),
             nn.MaxPool2d(kernel_size=2,
                          stride=2)
@@ -189,45 +194,47 @@ class contact_2d_cnn(nn.Module):
                       kernel_size=3,
                       stride=1,
                       padding=1),
+            nn.Dropout(p=0.5),
             nn.ReLU(),
             nn.Conv2d(in_channels=512,
                       out_channels=512,
                       kernel_size=3,
                       stride=1,
                       padding=1),
+            nn.Dropout(p=0.5),
             nn.ReLU(),
             nn.Conv2d(in_channels=512,
                       out_channels=512,
                       kernel_size=3,
                       stride=1,
                       padding=1),
+            nn.Dropout(p=0.5),
             nn.ReLU(),
             nn.MaxPool2d(kernel_size=2,
                          stride=2)
         )
 
         self.fc = nn.Sequential(
-            nn.Linear(in_features=7936,
-                      out_features=1024),
+            nn.Linear(in_features=18432,
+                      out_features=2048),
             nn.ReLU(),
             nn.Dropout(p=0.5),
-            nn.Linear(in_features=1024,
-                      out_features=1024),
+            nn.Linear(in_features=2048,
+                      out_features=512),
             nn.ReLU(),
             nn.Dropout(p=0.5),
-            nn.Linear(in_features=1024,
+            nn.Linear(in_features=512,
                       out_features=16),
         )
 
     def forward(self, x):
         x = x.reshape(x.shape[0], 1, x.shape[1], x.shape[2])
-        # x = x.permute(0,2,1)
         block1_out = self.block1(x)
         block2_out = self.block2(block1_out)
         block3_out = self.block3(block2_out)
         block4_out = self.block4(block3_out)
 
         block4_out_reshape = block4_out.view(block4_out.shape[0], -1)
-
-        fc_out = self.fc(block3_out_reshape)
+        # print(block4_out_reshape.size())
+        fc_out = self.fc(block4_out_reshape)
         return fc_out

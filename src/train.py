@@ -57,7 +57,7 @@ def train(model, train_dataloader, val_dataloader, config):
     writer.add_text("data_folder: ",config['data_folder'])
     writer.add_text("model_save_path: ",config['model_save_path'])
     writer.add_text("log_writer_path: ",config['log_writer_path'])
-    writer.add_text("loss_history_path: ",config['loss_history_path'])
+    # writer.add_text("loss_history_path: ",config['loss_history_path'])
     writer.add_text("window_size: ",str(config['window_size']))
     writer.add_text("shuffle: ",str(config['shuffle']))
     writer.add_text("batch_size: ",str(config['batch_size']))
@@ -68,11 +68,11 @@ def train(model, train_dataloader, val_dataloader, config):
     criterion = nn.CrossEntropyLoss()
     optimizer = optim.Adam(model.parameters(), lr=config['init_lr'])
 
-    history = {}
-    val_loss_history = []
-    training_loss_history = []
-    train_acc_history = []
-    val_acc_history = []
+    # history = {}
+    # val_loss_history = []
+    # training_loss_history = []
+    # train_acc_history = []
+    # val_acc_history = []
     best_acc = 0
     best_loss = 1000000000
     for epoch in range(config['num_epoch']):
@@ -142,10 +142,10 @@ def train(model, train_dataloader, val_dataloader, config):
             
 
         # append loss history
-        training_loss_history.append(train_loss_avg)
-        val_loss_history.append(val_loss_avg)
-        train_acc_history.append(train_acc)
-        val_acc_history.append(val_acc)    
+        # training_loss_history.append(train_loss_avg)
+        # val_loss_history.append(val_loss_avg)
+        # train_acc_history.append(train_acc)
+        # val_acc_history.append(val_acc)    
 
         print("Finished epoch %d / %d, training acc: %.4f, validation acc: %.4f" %\
             (epoch, config['num_epoch'], train_acc, val_acc))  
@@ -162,9 +162,9 @@ def train(model, train_dataloader, val_dataloader, config):
     torch.save(state, config['model_save_path']+'_final_epo.pt')
     
     # log loss history
-    history = {"train_acc":train_acc_history,"val_acc":val_acc_history,\
-                "train_loss_history":training_loss_history,"val_loss_history":val_loss_history}
-    np.save(config['loss_history_path'],history)       
+    # history = {"train_acc":train_acc_history,"val_acc":val_acc_history,\
+    #             "train_loss_history":training_loss_history,"val_loss_history":val_loss_history}
+    # np.save(config['loss_history_path'],history)       
 
     writer.close()
 
@@ -185,7 +185,7 @@ def main():
     print("data_folder: ",config['data_folder'])
     print("model_save_path: ",config['model_save_path'])
     print("log_writer_path: ",config['log_writer_path'])
-    print("loss_history_path: ",config['loss_history_path'])
+    # print("loss_history_path: ",config['loss_history_path'])
     print("--------network params--------")
     print("window_size: ",config['window_size'])
     print("shuffle: ",config['shuffle'])
@@ -213,7 +213,7 @@ def main():
     # test_dataloader = DataLoader(dataset=test_data, batch_size=config['batch_size'])
 
     # init network
-    model = contact_cnn()
+    model = contact_2d_cnn()
     model = model.to(device)
 
     train(model, train_dataloader, val_dataloader, config)
