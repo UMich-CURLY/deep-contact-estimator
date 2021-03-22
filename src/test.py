@@ -47,8 +47,8 @@ def main():
 
     # init network
     model = contact_cnn()
-    # model.load_state_dict(torch.load(config['model_load_path']))
-    model = torch.load(config['model_load_path'])
+    checkpoint = torch.load(config['model_load_path'])
+    model.load_state_dict(checkpoint['model_state_dict'])
     model = model.eval().to(device)
 
     test_acc = compute_accuracy(test_dataloader, model)

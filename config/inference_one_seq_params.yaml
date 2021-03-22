@@ -1,12 +1,15 @@
-data_folder: "/home/justin/data/contact_data/numpy/"
-model_load_path: "/home/justin/code/deep-contact-estimator/results/0315_ws150_lr1e-4_2block_drop_out.weight"
+data_path: "/home/justin/data/contact_data/test_sequence/numpy/lcmlog-2021-02-21-5-short_network_data.npy"
+label_path: "/home/justin/data/contact_data/test_sequence/numpy/lcmlog-2021-02-21-5-short_network_data_label.npy"
+model_load_path: "/home/justin/code/deep-contact-estimator/results/0316_ws150_lr1e-4_2block_drop_out_best_val_acc.pt"
 
 # data params
 window_size: 150
 
 # network params
-batch_size: 30
+batch_size: 1
 
-save_to_mat: False
-mat_save_path: "/home/justin/code/deep-contact-estimator/results/0315_ws150_lr1e-4_2block_drop_out_contact_result.mat"
+save_mat: True
+mat_save_path: "/home/justin/code/deep-contact-estimator/inference_results/0316_ws150_lr1e-4_2block_drop_out_best_val_acc.mat"
 
+save_lcm: False
+lcm_save_path: "/home/justin/code/deep-contact-estimator/inference_results/0316_ws150_lr1e-4_2block_drop_out_best_val_acc.lcm"

@@ -1,6 +1,10 @@
 
-mat_folder: "/home/justin/data/contact_data/01_gate/"
-save_path: "/home/justin/data/contact_data/01_gait_numpy/"
+mat_folder: "/home/justin/data/contact_data/test_sequence/mat/"
+save_path: "/home/justin/data/contact_data/test_sequence/numpy/"
+
+# mode: "train": split data into train/val/test
+#       "inference": create numpy for one seq without spliting
+mode: "inference"
 
 train_ratio: 0.7
 val_ratio: 0.15

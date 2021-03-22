@@ -215,7 +215,7 @@ class contact_2d_cnn(nn.Module):
         )
 
         self.fc = nn.Sequential(
-            nn.Linear(in_features=18432,
+            nn.Linear(in_features=75776,
                       out_features=2048),
             nn.ReLU(),
             nn.Dropout(p=0.5),
@@ -231,10 +231,11 @@ class contact_2d_cnn(nn.Module):
         x = x.reshape(x.shape[0], 1, x.shape[1], x.shape[2])
         block1_out = self.block1(x)
         block2_out = self.block2(block1_out)
-        block3_out = self.block3(block2_out)
-        block4_out = self.block4(block3_out)
+        # block3_out = self.block3(block2_out)
+        # block4_out = self.block4(block3_out)
+        block2_out_reshape = block2_out.view(block2_out.shape[0], -1)
+        # block4_out_reshape = block4_out.view(block4_out.shape[0], -1)
 
-        block4_out_reshape = block4_out.view(block4_out.shape[0], -1)
-        # print(block4_out_reshape.size())
-        fc_out = self.fc(block4_out_reshape)
+        # print(block2_out_reshape.size())
+        fc_out = self.fc(block2_out_reshape)
         return fc_out
