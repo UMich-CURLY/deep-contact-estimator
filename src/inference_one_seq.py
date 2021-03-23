@@ -7,6 +7,10 @@ import yaml
 from tqdm import tqdm
 import scipy.io as sio
 
+import lcm
+from lcm_types.python import contact_t, leg_control_data_lcmt, microstrain_lcmt
+import time
+
 import torch.optim as optim
 
 from contact_cnn import *
@@ -48,16 +52,9 @@ def save2mat(pred, config):
     label_deci = torch.from_numpy(label_deci_np)
     label = decimal2binary(label_deci).reshape(-1,4)
 
-    print(type(label))
-    print(label.shape)
-    print(label[149])
-    print(type(pred))
-    print(pred.shape)
-    print(pred[0])
-
     out = {}
-    out['contacts'] = pred.cpu().numpy()
-    out['ground_truth'] = label[config['window_size']-1:,:].numpy()
+    out['contacts_est'] = pred.cpu().numpy()
+    out['contacts_gt'] = label[config['window_size']-1:,:].numpy()
     out['q'] = data[config['window_size']-1:,:12]
     out['qd'] = data[config['window_size']-1:,12:24]
     out['imu_acc'] = data[config['window_size']-1:,24:27]
@@ -68,6 +65,47 @@ def save2mat(pred, config):
     
     sio.savemat(config['mat_save_path'],out)
 
+    print("Saved data to mat!")
+
+def save2lcm(pred, config):
+    mat_data = sio.loadmat(config['mat_data_path'])
+    log = lcm.EventLog(config['lcm_save_path'], mode='w', overwrite=True)
+    
+    utime = int(time.time() * 10**6)
+
+    imu_time = mat_data['imu_time'].flatten().tolist()
+
+
+    
+    for idx,_ in enumerate(imu_time[config['window_size']-1:]):
+
+        data_idx = idx + config['window_size']-1
+        
+        leg_control_data_msg = leg_control_data_lcmt()
+        leg_control_data_msg.q = mat_data['q'][data_idx]
+        leg_control_data_msg.p = mat_data['p'][data_idx]
+        leg_control_data_msg.qd = mat_data['qd'][data_idx]
+        leg_control_data_msg.v = mat_data['v'][data_idx]
+        leg_control_data_msg.tau_est = mat_data['tau_est'][data_idx]
+        log.write_event(utime + int(10**6 * imu_time[data_idx]),\
+                    'leg_control_data', leg_control_data_msg.encode())
+        
+        contact_msg = contact_t()
+        contact_msg.num_legs = 4
+        contact_msg.timestamp = imu_time[data_idx]
+        contact_msg.contact = pred[idx]
+        log.write_event(utime + int(10**6 * imu_time[data_idx]),\
+                        'contact', contact_msg.encode())
+        
+        imu_msg = microstrain_lcmt()
+        imu_msg.acc = mat_data['imu_acc'][data_idx]
+        imu_msg.omega = mat_data['imu_omega'][data_idx]
+        imu_msg.rpy = mat_data['imu_rpy'][data_idx]
+        imu_msg.quat = mat_data['imu_quat'][data_idx]
+        log.write_event(utime + int(10**6 * imu_time[data_idx]),\
+                        'microstrain', imu_msg.encode())
+        
+    print("Saved data to lcm!")
 
 
 
@@ -100,7 +138,7 @@ def main():
         save2mat(pred,config)
 
     if(config['save_lcm']):
-        pass
+        save2lcm(pred,config)
 
 if __name__ == '__main__':
     main()

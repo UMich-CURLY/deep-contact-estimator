@@ -1,5 +1,6 @@
 data_path: "/home/justin/data/contact_data/test_sequence/numpy/lcmlog-2021-02-21-5-short_network_data.npy"
 label_path: "/home/justin/data/contact_data/test_sequence/numpy/lcmlog-2021-02-21-5-short_network_data_label.npy"
+mat_data_path: "/home/justin/data/contact_data/test_sequence/mat/lcmlog-2021-02-21-5-short_network_data.mat"
 model_load_path: "/home/justin/code/deep-contact-estimator/results/0316_ws150_lr1e-4_2block_drop_out_best_val_acc.pt"
 
 # data params
@@ -11,5 +12,5 @@ batch_size: 1
 save_mat: True
 mat_save_path: "/home/justin/code/deep-contact-estimator/inference_results/0316_ws150_lr1e-4_2block_drop_out_best_val_acc.mat"
 
-save_lcm: False
+save_lcm: True
 lcm_save_path: "/home/justin/code/deep-contact-estimator/inference_results/0316_ws150_lr1e-4_2block_drop_out_best_val_acc.lcm"
