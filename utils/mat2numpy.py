@@ -44,7 +44,7 @@ def mat2numpy(data_pth, save_pth, train_ratio=0.7, val_ratio=0.15):
     - 
     """
 
-    num_features = 66    
+    num_features = 54    
     train_data = np.zeros((0,num_features))
     val_data = np.zeros((0,num_features))
     test_data = np.zeros((0,num_features))
@@ -69,9 +69,10 @@ def mat2numpy(data_pth, save_pth, train_ratio=0.7, val_ratio=0.15):
         tau_est = raw_data['tau_est']
         acc = raw_data['imu_acc']
         omega = raw_data['imu_omega']
+        F = raw_data['F']
         
         # concatenate current data. First we try without GRF
-        cur_data = np.concatenate((q,qd,acc,omega,p,v,tau_est),axis=1)
+        cur_data = np.concatenate((q,qd,acc,omega,p,v),axis=1)
         
         # separate data into train/val/test
         num_data = np.shape(q)[0]

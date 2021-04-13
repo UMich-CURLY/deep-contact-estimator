@@ -213,7 +213,7 @@ def main():
     # test_dataloader = DataLoader(dataset=test_data, batch_size=config['batch_size'])
 
     # init network
-    model = contact_2d_cnn()
+    model = contact_cnn()
     model = model.to(device)
 
     train(model, train_dataloader, val_dataloader, config)
