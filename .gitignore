@@ -1,5 +1,6 @@
 __pycache__/
 results/
 logs/
+inference_results/
 .vscode
 *.txt

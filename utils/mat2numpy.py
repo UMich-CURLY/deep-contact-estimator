@@ -8,8 +8,77 @@ import scipy.io as sio
 import math
 import yaml
 
+def mat2numpy_one_seq(data_pth, save_pth):
+    """
+    Load data from .mat file and split into train/val/test.
 
-def mat2numpy(data_pth, save_pth, train_ratio=0.7, val_ratio=0.15):
+    Inputs:
+    - data_pth: path to the data folder
+    - train_ratio: ratio of training data
+    - val_ratio: ratio of validation data
+
+    Data should be stored in .mat file, and contain:
+    - q: joint encoder value (num_data,12)
+    - qd: joint angular velocity (num_data,12)
+    - p: foot position from FK (num_data,12)
+    - v: foot velocity from FK (num_data,12)
+    - tau_est: estimated control torque (num_data,12)
+    - imu_acc: linear acceleration from imu (num_data,3)
+    - imu_omega: angular velocity from imu (num_data,3)
+    - contacts: contact data (num_data,4)
+                contacts are stored as binary values, in the order
+                of right_front, left_front, right_hind, left_hind.
+
+                FRONT
+                1 0  RIGHT
+                3 2
+                BACK
+
+                Contact value will be treated as binary values in the
+                order of contacts[0], contacts[1], contacts[2], contacts[3]
+                and be converted to decimal value in this function.
+
+                Ex. [1,0,0,1] -> 9
+                    [0,1,1,0] -> 6
+                     
+    - F (optional): ground reaction force
+
+    Output:
+    """
+
+    num_features = 66    
+    out = {}
+    for data_name in glob.glob(data_pth+'*'): 
+        
+        print("loading... ", data_name)
+
+        # load data
+        raw_data = sio.loadmat(data_name)
+
+        contacts = raw_data['contacts']
+        q = raw_data['q']
+        p = raw_data['p']
+        qd = raw_data['qd']
+        v = raw_data['v']
+        tau_est = raw_data['tau_est']
+        acc = raw_data['imu_acc']
+        omega = raw_data['imu_omega']
+        
+        # concatenate current data. First we try without GRF
+        data = np.concatenate((q,qd,acc,omega,p,v,tau_est),axis=1)
+        
+        # convert labels from binary to decimal
+        label = binary2decimal(contacts).reshape((-1,1)) 
+
+        print("Saving data to: "+save_pth+os.path.splitext(os.path.basename(data_name))[0]+".npy")
+
+        np.save(save_pth+os.path.splitext(os.path.basename(data_name))[0]+".npy",data)
+        np.save(save_pth+os.path.splitext(os.path.basename(data_name))[0]+"_label.npy",label)
+
+        print("Done!")
+
+
+def mat2numpy_split(data_pth, save_pth, train_ratio=0.7, val_ratio=0.15):
     """
     Load data from .mat file, concatenate into numpy array, and save as train/val/test.
     Inputs:
@@ -79,8 +148,6 @@ def mat2numpy(data_pth, save_pth, train_ratio=0.7, val_ratio=0.15):
         num_train = int(train_ratio*num_data)
         num_val = int(val_ratio*num_data)
         num_test = num_data-num_train-num_val
-
-        # normalize data
         cur_val = cur_data[:num_val,:]
         cur_test = cur_data[num_val:num_val+num_test,:]
         cur_train = cur_data[num_val+num_test:,:]
@@ -92,7 +159,7 @@ def mat2numpy(data_pth, save_pth, train_ratio=0.7, val_ratio=0.15):
 
         
         # convert labels from binary to decimal
-        cur_label = binary_to_decimal(contacts).reshape((-1,1))   
+        cur_label = binary2decimal(contacts).reshape((-1,1))   
 
         # stack labels 
         val_label = np.vstack((val_label,cur_label[:num_val,:]))
@@ -116,20 +183,22 @@ def mat2numpy(data_pth, save_pth, train_ratio=0.7, val_ratio=0.15):
     print("Done!")
     # return data
 
-def binary_to_decimal(a, axis=-1):
+def binary2decimal(a, axis=-1):
     return np.right_shift(np.packbits(a, axis=axis), 8 - a.shape[axis]).squeeze()
 
 
 def main():
 
-    parser = argparse.ArgumentParser(description='Convert mat to numpy and separate train/val/test.')
+    parser = argparse.ArgumentParser(description='Convert mat to numpy.')
     parser.add_argument('--config_name', type=str, default=os.path.dirname(os.path.abspath(__file__))+'/../config/mat2numpy_config.yaml')
     args = parser.parse_args()
 
     config = yaml.load(open(args.config_name))
 
-    mat2numpy(config['mat_folder'],config['save_path'],config['train_ratio'],config['val_ratio'])
-
+    if config['mode']=='train':
+        mat2numpy_split(config['mat_folder'],config['save_path'],config['train_ratio'],config['val_ratio'])
+    elif config['mode']=='inference':
+        mat2numpy_one_seq(config['mat_folder'],config['save_path'])
 
 if __name__ == '__main__':
     main()
