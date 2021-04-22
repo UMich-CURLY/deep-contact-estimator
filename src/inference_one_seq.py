@@ -47,6 +47,7 @@ def decimal2binary(x):
 
 
 def save2mat(pred, config):
+    mat_raw_data = sio.loadmat(config['mat_data_path'])
     data = np.load(config['data_path'])
     label_deci_np = np.load(config['label_path'])
     label_deci = torch.from_numpy(label_deci_np)
@@ -61,8 +62,14 @@ def save2mat(pred, config):
     out['imu_omega'] = data[config['window_size']-1:,27:30]
     out['p'] = data[config['window_size']-1:,30:42]
     out['v'] = data[config['window_size']-1:,42:54]
-    out['tau_est'] = data[config['window_size']-1:,54:66]
-    
+
+    # out['tau_est'] = data[config['window_size']-1:,54:66]
+    # data not used in the network but needed for visualization.
+    out['control_time'] = mat_raw_data['control_time'].flatten().tolist()[config['window_size']-1:]
+    out['imu_time'] = mat_raw_data['imu_time'].flatten().tolist()[config['window_size']-1:]
+    out['tau_est'] = mat_raw_data['tau_est'][config['window_size']-1:]
+    out['F'] = mat_raw_data['F'][config['window_size']-1:]
+
     sio.savemat(config['mat_save_path'],out)
 
     print("Saved data to mat!")
