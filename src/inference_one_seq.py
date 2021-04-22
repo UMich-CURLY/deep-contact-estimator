@@ -101,6 +101,10 @@ def save2lcm(pred, config):
         contact_msg.num_legs = 4
         contact_msg.timestamp = imu_time[data_idx]
         contact_msg.contact = pred[idx]
+
+        # if we want to use GT contact for varification
+        # contact_msg.contact = mat_data['contacts'][data_idx]
+        
         log.write_event(utime + int(10**6 * imu_time[data_idx]),\
                         'contact', contact_msg.encode())
         
