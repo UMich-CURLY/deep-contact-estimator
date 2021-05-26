@@ -2,7 +2,7 @@ import os
 import argparse
 import glob
 import sys
-sys.path.append('.')
+sys.path.append('..')
 import yaml
 from tqdm import tqdm
 
@@ -16,7 +16,7 @@ def compute_accuracy(dataloader, model):
     num_correct = 0
     num_data = 0
     with torch.no_grad():
-        for sample in tqdm(dataloader):
+        for sample in tqdm(dataloader): # tqdm shows a smart progress meter
             input_data = sample['data']
             gt_label = sample['label']
 

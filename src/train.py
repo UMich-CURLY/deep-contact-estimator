@@ -2,7 +2,7 @@ import os
 import argparse
 import glob
 import sys
-sys.path.append('.')
+sys.path.append('..')
 import yaml
 from tqdm import tqdm
 

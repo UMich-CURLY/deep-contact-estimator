@@ -1,11 +1,11 @@
 # Path to the data folder. Data should be separated into train.npy, train_label.npy, val.npy, val_label.npy.
-data_folder: "/home/justin/data/contact_data/numpy_without_tau_GRF/"
+data_folder: "/home/tingjun/Desktop/Cheetah Data/contact_data/numpy_without_tau_GRF/"
 
 # Path to save the trained model. 
 # Please leave the filename extension out.
 # It will automatically generate ${name}_best_loss.pt, ${name}_best_acc.pt, ${name}_final_epo.pt.
-model_save_path: "/home/justin/code/deep-contact-estimator/results/0412_1dcnn_64_128_no_tao_GRF"
-log_writer_path: "/home/justin/code/deep-contact-estimator/logs/0412_1dcnn_64_128_no_tao_GRF"
+model_save_path: "/home/tingjun/Desktop/Cheetah_code/deep-contact-estimator/results/0412_1dcnn_64_128_no_tao_GRF"
+log_writer_path: "/home/tingjun/Desktop/Cheetah_code/deep-contact-estimator/logs/0412_1dcnn_64_128_no_tao_GRF"
 # loss_history_path: "/home/justin/code/deep-contact-estimator/results/0318_ws150_lr1e-4_2block_drop_out_history.npy"
 
 model_description: "1D CNN 2block, 54-64-64-drop-pool-128-128-drop-pool-fc, without torque and GRE, shuffle train, batch: 30, ws:150, lr:1e-4"

@@ -1,7 +1,7 @@
-data_path: "/home/justin/data/contact_data/test_sequence/numpy/lcmlog-2021-02-21-5-short_network_data_no_torque_GRF.npy"
-label_path: "/home/justin/data/contact_data/test_sequence/numpy/lcmlog-2021-02-21-5-short_network_data_no_torque_GRF_label.npy"
-mat_data_path: "/home/justin/data/contact_data/test_sequence/mat/lcmlog-2021-02-21-5-short_network_data.mat"
-model_load_path: "/home/justin/code/deep-contact-estimator/results/0412_1dcnn_64_128_no_tao_GRF_best_val_acc.pt"
+data_path: "/home/tingjun/Desktop/Cheetah Data/contact_data/test_sequence/numpy_without_tau_GRF/lcmlog-2021-02-21-5-short_network_data_no_torque_GRF.npy"
+label_path: "/home/tingjun/Desktop/Cheetah Data/contact_data/test_sequence/numpy_without_tau_GRF/lcmlog-2021-02-21-5-short_network_data_no_torque_GRF_label.npy"
+mat_data_path: "/home/tingjun/Desktop/Cheetah Data/contact_data/test_sequence/mat/lcmlog-2021-02-21-5-short_network_data.mat"
+model_load_path: "/home/tingjun/Desktop/Cheetah_code/deep-contact-estimator/results/0412_1dcnn_64_128_no_tao_GRF_best_val_acc.pt"
 
 # data params
 window_size: 150
@@ -10,7 +10,7 @@ window_size: 150
 batch_size: 1
 
 save_mat: True
-mat_save_path: "/home/justin/code/deep-contact-estimator/inference_results/0412_1dcnn_64_128_no_tao_GRF_best_val_acc_with_GRF.mat"
+mat_save_path: "/home/tingjun/Desktop/Cheetah_code/deep-contact-estimator/inference_results/0412_1dcnn_64_128_no_tao_GRF_best_val_acc_with_GRF.mat"
 
 save_lcm: True
-lcm_save_path: "/home/justin/code/deep-contact-estimator/inference_results/0412_1dcnn_64_128_no_tao_GRF_best_val_acc_1.lcm"
+lcm_save_path: "/home/tingjun/Desktop/Cheetah_code/deep-contact-estimator/inference_results/0412_1dcnn_64_128_no_tao_GRF_best_val_acc_1.lcm"
