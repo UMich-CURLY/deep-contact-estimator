@@ -148,7 +148,7 @@ def train(model, train_dataloader, val_dataloader, config):
         # val_acc_history.append(val_acc)    
 
         print("Finished epoch %d / %d, training acc: %.4f, validation acc: %.4f" %\
-            (epoch, config['num_epoch'], train_acc, val_acc))  
+            (epoch, config['num_epoch'], train_acc, val_acc))
     
     # save model     
     state = {'epoch': epoch,
