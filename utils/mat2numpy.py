@@ -68,7 +68,7 @@ def mat2numpy_one_seq(data_pth, save_pth):
         data = np.concatenate((q,qd,acc,omega,p,v,tau_est),axis=1)
         
         # convert labels from binary to decimal
-        label = binary2decimal(contacts).reshape((-1,1)) 
+        label = binary2decimal(contacts).reshape((-1,1))
 
         print("Saving data to: "+save_pth+os.path.splitext(os.path.basename(data_name))[0]+".npy")
 
