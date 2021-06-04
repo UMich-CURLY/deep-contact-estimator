@@ -1,6 +1,7 @@
 
 mat_folder: "/home/tingjun/Desktop/Cheetah Data/contact_data/test_sequence/mat/"
 save_path: "/home/tingjun/Desktop/Cheetah Data/contact_data/test_sequence/numpy/"
+save_path_test_lcm: "/home/tingjun/Desktop/Cheetah Data/contact_data/numpy_without_tau_GRF/"
 
 # mode: "train": split data into train/val/test
 #       "inference": create numpy for one seq without spliting

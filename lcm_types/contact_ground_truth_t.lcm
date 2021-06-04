@@ -1,0 +1,8 @@
+package python;
+
+struct contact_ground_truth_t
+{
+    int8_t  num_legs;
+    double  timestamp;
+    int8_t  contact[num_legs];
+}

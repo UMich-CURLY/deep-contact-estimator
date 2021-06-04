@@ -3,13 +3,13 @@ import argparse
 import glob
 import sys
 
-sys.path.append('.')
+sys.path.append('..')
 import yaml
 from tqdm import tqdm
 import scipy.io as sio
 
 import lcm
-from lcm_types.python import contact_t, leg_control_data_lcmt, microstrain_lcmt
+from lcm_types.python import contact_t, leg_control_data_lcmt, microstrain_lcmt, contact_ground_truth_t
 import time
 
 import torch.optim as optim
@@ -102,10 +102,15 @@ def save2lcm(pred, config):
         contact_msg.contact = pred[idx]
 
         # if we want to use GT contact for varification
-        # contact_msg.contact = mat_data['contacts'][data_idx]
+        contact_ground_truth_msg = contact_ground_truth_t()
+        contact_ground_truth_msg.num_legs = 4
+        contact_ground_truth_msg.timestamp = imu_time[data_idx]
+        contact_ground_truth_msg.contact = mat_data['contacts'][data_idx]
 
         log.write_event(utime + int(10 ** 6 * imu_time[data_idx]), \
                         'contact', contact_msg.encode())
+        log.write_event(utime + int(10 ** 6 * imu_time[data_idx]), \
+                        'contact_ground_truth', contact_ground_truth_msg.encode())
 
         imu_msg = microstrain_lcmt()
         imu_msg.acc = mat_data['imu_acc'][data_idx]

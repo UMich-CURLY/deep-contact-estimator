@@ -9,6 +9,8 @@ class contact_cnn(nn.Module):
     def __init__(self):
         super(contact_cnn, self).__init__()
         self.block1 = nn.Sequential(
+            # q, dq, p_f, v_f have 3 directions in each leg, a and omega have 3 directions in the robot:
+            # (4 * 3) * 4 + 2 * 3 = 54 (input)
             nn.Conv1d(in_channels=54,
                       out_channels=64,
                       kernel_size=3,
