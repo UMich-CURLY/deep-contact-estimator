@@ -27,6 +27,7 @@ def compute_accuracy(dataloader, model):
             num_correct += (prediction == gt_label).sum().item()
     return num_correct / num_data
 
+
 def compute_prediction(dataloader, model):
     num_correct = 0
     num_data = 0

@@ -41,7 +41,9 @@ def my_handler(channel, data):
         cnn_input.v = np.array(leg_control_data_msg.v)
         cnn_input.leg_control_data_ready = True
 
-    if channel == "microstrain":
+    # If the frequency of microstrain is doubled, we also need to double the frequency of leg_control_data
+    # Or slow down the frequency of microstrain
+    if channel == "microstrain" and cnn_input.leg_control_data_ready:
         microstrain_msg = microstrain_lcmt.decode(data)
         cnn_input.omega = np.array(microstrain_msg.omega)
         cnn_input.acc = np.array(microstrain_msg.acc)
@@ -54,8 +56,6 @@ def my_handler(channel, data):
 
     if channel == "contact_ground_truth":
         contact_ground_truth_msg = contact_ground_truth_t.decode(data)
-        # print("num_leg is: %s" % str(contact_ground_truth_msg.num_legs))
-        # print("contact state is: %s" % str(contact_ground_truth_msg.contact))
         cnn_input.new_label = binary2decimal(np.array(contact_ground_truth_msg.contact))
         cnn_input.label_ready = True
 
@@ -99,12 +99,12 @@ try:
 
                 # Publish channel:
                 contact_msg = contact_t()
+                # This is just for presenting the result. In actual deployment, we don't have the gt_label
                 prediction = pass_to_cnn.receive_msg(cnn_input.cnn_input_matrix, cnn_input.label)
                 contact_msg.num_legs = 4
                 contact_msg.contact = decimal2binary(prediction, contact_msg.num_legs)
                 print(contact_msg.contact)
                 lc.publish("contact", contact_msg.encode())
-
 
 
 except KeyboardInterrupt:
