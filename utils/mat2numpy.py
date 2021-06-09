@@ -46,7 +46,7 @@ def mat2numpy_one_seq(data_pth, save_pth):
     Output:
     """
 
-    num_features = 66    
+    num_features = 54
     out = {}
     for data_name in glob.glob(data_pth+'*'): 
         
@@ -65,7 +65,7 @@ def mat2numpy_one_seq(data_pth, save_pth):
         omega = raw_data['imu_omega']
         
         # concatenate current data. First we try without GRF
-        data = np.concatenate((q,qd,acc,omega,p,v,tau_est),axis=1)
+        data = np.concatenate((q,qd,acc,omega,p,v),axis=1)
         
         # convert labels from binary to decimal
         label = binary2decimal(contacts).reshape((-1,1)) 

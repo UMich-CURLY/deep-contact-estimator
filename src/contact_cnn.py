@@ -118,11 +118,7 @@ class contact_cnn(nn.Module):
 
         # block4_out_reshape = block4_out.view(block4_out.shape[0], -1)
         block2_out_reshape = block2_out.view(block2_out.shape[0], -1)
-<<<<<<< Updated upstream
         #print(block2_out_reshape.size())
-=======
-        print(block2_out_reshape.size())
->>>>>>> Stashed changes
         fc_out = self.fc(block2_out_reshape)
         return fc_out
 
