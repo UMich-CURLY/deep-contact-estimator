@@ -13,17 +13,15 @@ from torch.utils.data import Dataset, DataLoader
 
 class contact_dataset(Dataset):
 
-    def __init__(self, data, label, window_size, device='cuda'):
+    def __init__(self, data, device='cuda'):
         """
         At initialization we load .npy files for data and label.
         self.data: a 2D array of all data points. rows are time axis, columns are features. (num_data, num_features)
         self.label: a vector of the corresponding contact states (in decimal). (num_data, 1)
         """
 
-        self.num_data = (data.shape[0] - window_size + 1)
-        self.window_size = window_size
+        self.num_data = 150
         self.data = torch.from_numpy(data).type('torch.FloatTensor').to(device)
-        self.label = torch.from_numpy(label).type('torch.LongTensor').to(device)
 
     def __len__(self):
         return self.num_data
@@ -51,22 +49,6 @@ class contact_dataset(Dataset):
         # this_data = torch.zeros((self.window_size, list(self.data.size())[1]))
         # this_label = torch.zeros((list(self.label.size())[1]))
 
-        this_data = (self.data[idx:idx + self.window_size, :] - torch.mean(self.data[idx:idx + self.window_size, :],
-                                                                           dim=0)) \
-                    / torch.std(self.data[idx:idx + self.window_size, :], dim=0)
-        this_label = self.label[idx + self.window_size - 1]
+        this_data = (self.data - torch.mean(self.data, dim=0)) / torch.std(self.data, dim=0)
+        return this_data
 
-        sample = {'data': this_data, 'label': this_label}
-
-        return sample
-
-# def main():
-#     parser = argparse.ArgumentParser(description='Train network')
-#     parser.add_argument('--data_folder', type=str, help='path to contact dataset', default="/home/justin/data/2021-02-21_contact_data_in_lab/cnn_data/")
-#     args = parser.parse_args()
-
-#     data = load_data_from_mat(args.data_folder,0.7,0.15)
-
-
-# if __name__ == '__main__':
-#     main()

@@ -100,7 +100,7 @@ try:
                 # Publish channel:
                 contact_msg = contact_t()
                 # This is just for presenting the result. In actual deployment, we don't have the gt_label
-                prediction = pass_to_cnn.receive_msg(cnn_input.cnn_input_matrix, cnn_input.label)
+                prediction = pass_to_cnn.receive_input(cnn_input.cnn_input_matrix)
                 contact_msg.num_legs = 4
                 contact_msg.contact = decimal2binary(prediction, contact_msg.num_legs)
                 print(contact_msg.contact)
