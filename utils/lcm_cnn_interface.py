@@ -9,10 +9,6 @@ from src import pass_to_cnn
 from CNN_INPUT import CNNInput
 import lcm
 import numpy as np
-# Testing section:
-import yaml
-import argparse
-import os
 
 
 def binary2decimal(a, axis=-1):
@@ -49,23 +45,11 @@ def my_handler(channel, data):
         cnn_input.acc = np.array(microstrain_msg.acc)
         cnn_input.microstrain_ready = True
 
-    if channel == "contact":
-        contact_msg = contact_t.decode(data)
-        print("num_leg is: %s" % str(contact_msg.num_legs))
-        print("contact state is: %s" % str(contact_msg.contact))
-
-    if channel == "contact_ground_truth":
-        contact_ground_truth_msg = contact_ground_truth_t.decode(data)
-        cnn_input.new_label = binary2decimal(np.array(contact_ground_truth_msg.contact))
-        cnn_input.label_ready = True
-
 
 # Define LCM subscription channels:
 lc = lcm.LCM()
 subscription1 = lc.subscribe("microstrain", my_handler)
 subscription2 = lc.subscribe("leg_control_data", my_handler)
-subscription3 = lc.subscribe("contact_ground_truth", my_handler)
-# subscription4 = lc.subscribe("contact", my_handler)
 
 # Define cnn input class:
 input_rows = 150
@@ -73,11 +57,6 @@ input_cols = 54
 cnn_input = CNNInput(input_rows, input_cols)
 
 # For testing:
-parser = argparse.ArgumentParser(description='Convert mat to numpy.')
-parser.add_argument('--config_name', type=str,
-                    default=os.path.dirname(os.path.abspath(__file__)) + '/../config/mat2numpy_config.yaml')
-args = parser.parse_args()
-config = yaml.load(open(args.config_name))
 
 try:
     while True:
@@ -85,18 +64,13 @@ try:
         lc.handle()
 
         # Check whether the input is enough:
-        input_ready = cnn_input.leg_control_data_ready and cnn_input.microstrain_ready and cnn_input.label_ready
+        input_ready = cnn_input.leg_control_data_ready and cnn_input.microstrain_ready
         if input_ready:
             # Put the current input to the input matrix
             cnn_input.build_input_matrix()
             cnn_input.leg_control_data_ready = False
             cnn_input.microstrain_ready = False
-            cnn_input.label_ready = False
             if cnn_input.data_require == 0:
-                # Save to path:
-                # np.save(config['save_path_test_lcm'] + "test_lcm.npy", cnn_input.cnn_input_matrix)
-                # np.save(config['save_path_test_lcm'] + "test_label_lcm.npy", cnn_input.label)
-
                 # Publish channel:
                 contact_msg = contact_t()
                 # This is just for presenting the result. In actual deployment, we don't have the gt_label
@@ -112,5 +86,4 @@ except KeyboardInterrupt:
 
 lc.unsubscribe(subscription1)
 lc.unsubscribe(subscription2)
-lc.unsubscribe(subscription3)
-# lc.unsubscribe(subscription4)
+

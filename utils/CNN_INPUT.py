@@ -15,7 +15,6 @@ class CNNInput:
         print("shape of the CNN input matrix is: ", np.shape(self.cnn_input_matrix))
         self.leg_control_data_ready = False
         self.microstrain_ready = False
-        self.label_ready = False
         self.data_require = num_rows
 
     def build_input_matrix(self):
