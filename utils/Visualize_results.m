@@ -58,7 +58,7 @@ for i = 1:4
     hold on
     plot(find(contacts_est(:,i)),p(contacts_est(:,i),3*i), "g*");
     hold on
-    plot(find(contacts_gt(:,i)),p(contacts_gt(:,i),3*i), "r*");
+%     plot(find(contacts_gt(:,i)),p(contacts_gt(:,i),3*i), "r*");
     
 %     legend("foot_pos","contacts");
     legend("foot_pos","contacts","gt");

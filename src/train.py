@@ -17,6 +17,7 @@ def compute_accuracy(dataloader, model):
 
     num_correct = 0
     num_data = 0
+    correct_per_leg = np.zeros(4)
     for sample in tqdm(dataloader):
         input_data = sample['data']
         gt_label = sample['label']
@@ -24,16 +25,22 @@ def compute_accuracy(dataloader, model):
         output = model(input_data)
         _, prediction = torch.max(output,1)
 
+
+        bin_pred = decimal2binary(prediction)
+        bin_gt = decimal2binary(gt_label)
+
+        correct_per_leg += (bin_pred==bin_gt).sum(axis=0).cpu().numpy()
         num_data += input_data.size(0)
         num_correct += (prediction==gt_label).sum().item()
 
-    return num_correct/num_data
+    return num_correct/num_data, correct_per_leg/num_data
 
 def compute_accuracy_and_loss(dataloader, model, criterion):
 
     num_correct = 0
     num_data = 0
     loss_sum = 0
+    correct_per_leg = np.zeros(4)
     with torch.no_grad():
         for sample in tqdm(dataloader):
             input_data = sample['data']
@@ -44,12 +51,22 @@ def compute_accuracy_and_loss(dataloader, model, criterion):
 
             loss = criterion(output, gt_label)
 
+            bin_pred = decimal2binary(prediction)
+            bin_gt = decimal2binary(gt_label)
+
+            correct_per_leg += (bin_pred==bin_gt).sum(axis=0).cpu().numpy()
             num_data += input_data.size(0)
             num_correct += (prediction==gt_label).sum().item()
 
             loss_sum += loss.item()
 
-    return num_correct/num_data, loss_sum/len(dataloader)
+    return num_correct/num_data, correct_per_leg/num_data, loss_sum/len(dataloader)
+
+def decimal2binary(x):
+    mask = 2**torch.arange(4-1,-1,-1).to(x.device, x.dtype)
+
+    return x.unsqueeze(-1).bitwise_and(mask).ne(0).byte()
+
 
 def train(model, train_dataloader, val_dataloader, config):
 
@@ -74,6 +91,7 @@ def train(model, train_dataloader, val_dataloader, config):
     # train_acc_history = []
     # val_acc_history = []
     best_acc = 0
+    best_leg_acc = 0
     best_loss = 1000000000
     for epoch in range(config['num_epoch']):
         running_loss = 0.0
@@ -101,16 +119,29 @@ def train(model, train_dataloader, val_dataloader, config):
 
         # calculate training and validation accuracy
         model.eval()
-        train_acc = compute_accuracy(train_dataloader, model)
+        train_acc, train_acc_per_leg = compute_accuracy(train_dataloader, model)
         train_loss_avg = loss_sum/len(train_dataloader)
 
-        val_acc, val_loss_avg = compute_accuracy_and_loss(val_dataloader, model, criterion)
+        val_acc, val_acc_per_leg, val_loss_avg = compute_accuracy_and_loss(val_dataloader, model, criterion)
+
+        train_acc_per_leg_avg = (np.sum(train_acc_per_leg)/4.0)
+        val_acc_per_leg_avg = (np.sum(val_acc_per_leg)/4.0)
 
         # log down info in tensorboard
         writer.add_scalar('training loss', train_loss_avg, epoch)
         writer.add_scalar('training accuracy', train_acc, epoch)
+        writer.add_scalar('training acc leg0', train_acc_per_leg[0], epoch)
+        writer.add_scalar('training acc leg1', train_acc_per_leg[1], epoch)
+        writer.add_scalar('training acc leg2', train_acc_per_leg[2], epoch)
+        writer.add_scalar('training acc leg3', train_acc_per_leg[3], epoch)
+        writer.add_scalar('training acc leg avg', train_acc_per_leg_avg, epoch)
         writer.add_scalar('validation loss', val_loss_avg, epoch)
         writer.add_scalar('validation accuracy', val_acc, epoch)
+        writer.add_scalar('validation acc leg0', val_acc_per_leg[0], epoch)
+        writer.add_scalar('validation acc leg1', val_acc_per_leg[1], epoch)
+        writer.add_scalar('validation acc leg2', val_acc_per_leg[2], epoch)
+        writer.add_scalar('validation acc leg3', val_acc_per_leg[3], epoch)
+        writer.add_scalar('validation acc leg avg', val_acc_per_leg_avg, epoch)
 
         # if we achieve best val acc, save the model.
         if val_acc > best_acc:
@@ -126,6 +157,20 @@ def train(model, train_dataloader, val_dataloader, config):
 
             torch.save(state, config['model_save_path']+'_best_val_acc.pt')
         
+        # if we achieve best val acc, save the model.
+        if val_acc_per_leg_avg > best_leg_acc:
+            val_acc = val_acc_per_leg_avg
+            
+            state = {'epoch': epoch,
+                    'model_state_dict': model.state_dict(),
+                    'optimizer_state_dict': optimizer.state_dict(),
+                    'loss': train_loss_avg,
+                    'acc': train_acc,
+                    'val_loss': val_loss_avg,
+                    'val_acc': val_acc}
+
+            torch.save(state, config['model_save_path']+'_best_val_leg_acc.pt')
+
         # if we achieve best val loss, save the model
         if val_loss_avg < best_loss:
             best_loss = val_loss_avg
@@ -148,7 +193,11 @@ def train(model, train_dataloader, val_dataloader, config):
         # val_acc_history.append(val_acc)    
 
         print("Finished epoch %d / %d, training acc: %.4f, validation acc: %.4f" %\
-            (epoch, config['num_epoch'], train_acc, val_acc))  
+            (epoch, config['num_epoch'], train_acc, val_acc)) 
+        print("train leg0 acc: %.4f, train leg1 acc: %.4f, train leg2 acc: %.4f, train leg3 acc: %.4f, train leg acc avg: %.4f" %\
+            (train_acc_per_leg[0],train_acc_per_leg[1],train_acc_per_leg[2],train_acc_per_leg[3],train_acc_per_leg_avg))    
+        print("val leg0 acc: %.4f, val leg1 acc: %.4f, val leg2 acc: %.4f, val leg3 acc: %.4f, val leg acc avg: %.4f" %\
+            (val_acc_per_leg[0],val_acc_per_leg[1],val_acc_per_leg[2],val_acc_per_leg[3],val_acc_per_leg_avg))
     
     # save model     
     state = {'epoch': epoch,

@@ -180,6 +180,14 @@ def mat2numpy_split(data_pth, save_pth, train_ratio=0.7, val_ratio=0.15):
     np.save(save_pth+"val_label.npy",val_label)
     np.save(save_pth+"test_label.npy",test_label)
 
+    print("Generated ", train_data.shape[0], " training data.")
+    print("Generated ", val_data.shape[0], " validation data.")
+    print("Generated ", test_data.shape[0], " test data.")
+    
+    print(train_data.shape[0])
+    print(val_data.shape[0])
+    print(test_data.shape[0])
+
     print("Done!")
     # return data
 

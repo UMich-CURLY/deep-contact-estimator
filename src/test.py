@@ -87,5 +87,12 @@ def main():
     print("Accuracy of leg 3 is: %.4f" % acc_per_leg[3])
     print("Accuracy is: %.4f" % (np.sum(acc_per_leg)/4.0))
 
+    print(test_acc)
+    print(acc_per_leg[0])
+    print(acc_per_leg[1])
+    print(acc_per_leg[2])
+    print(acc_per_leg[3])
+    print((np.sum(acc_per_leg)/4.0))
+
 if __name__ == '__main__':
     main()
