@@ -13,14 +13,11 @@ from utils.data_handler_np import *
 
 
 def compute_prediction(dataloader, model):
-    num_correct = 0
-    num_data = 0
     with torch.no_grad():
         for input_data in dataloader:  # tqdm shows a smart progress meter, but here we don't need it
-
             output = model(input_data)
             _, prediction = torch.max(output, 1)
-            print("Prediction: ", prediction)
+            # print("Prediction: ", prediction)
             return prediction
 
 
@@ -46,5 +43,5 @@ def receive_input(feature_matrix):
 
     test_predict = compute_prediction(test_dataloader, model)
 
-    print("Test prediction is: %.4f" % test_predict)
+    # print("Test prediction is: %.4f" % test_predict)
     return test_predict

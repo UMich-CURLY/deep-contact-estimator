@@ -1,5 +1,6 @@
 # This file takes in and decode lcm messages, then reconstruct the data to a CNN input matrix
 import sys
+
 sys.path.append("..")
 from lcm_types.python import contact_ground_truth_t
 from lcm_types.python import contact_t
@@ -9,6 +10,7 @@ from src import pass_to_cnn
 from CNN_INPUT import CNNInput
 import lcm
 import numpy as np
+import threading
 
 
 def binary2decimal(a, axis=-1):
@@ -46,6 +48,35 @@ def my_handler(channel, data):
         cnn_input.microstrain_ready = True
 
 
+def listener():
+    while True:
+        lc.handle()
+
+
+def publisher():
+    while True:
+        mutex.acquire()
+        try:
+            input_ready = cnn_input.leg_control_data_ready and cnn_input.microstrain_ready
+            if input_ready:
+                # Put the current input to the input matrix
+                cnn_input.build_input_matrix()
+                cnn_input.leg_control_data_ready = False
+                cnn_input.microstrain_ready = False
+                if cnn_input.data_require == 0:
+                    print(111111111111111111)
+                    # Publish channel:
+                    contact_msg = contact_t()
+                    # This is just for presenting the result. In actual deployment, we don't have the gt_label
+                    prediction = pass_to_cnn.receive_input(cnn_input.cnn_input_matrix)
+                    contact_msg.num_legs = 4
+                    contact_msg.contact = decimal2binary(prediction, contact_msg.num_legs)
+                    print(contact_msg.contact)
+                    lc.publish("contact", contact_msg.encode())
+        finally:
+            mutex.release()
+
+
 # Define LCM subscription channels:
 lc = lcm.LCM()
 subscription1 = lc.subscribe("microstrain", my_handler)
@@ -55,35 +86,22 @@ subscription2 = lc.subscribe("leg_control_data", my_handler)
 input_rows = 150
 input_cols = 54
 cnn_input = CNNInput(input_rows, input_cols)
+count = 0
 
-# For testing:
+# Multithreading:
+t1 = threading.Thread(target=listener)
+t2 = threading.Thread(target=publisher)
+mutex = threading.Lock()
 
 try:
-    while True:
-        # handle the next message
-        lc.handle()
-
-        # Check whether the input is enough:
-        input_ready = cnn_input.leg_control_data_ready and cnn_input.microstrain_ready
-        if input_ready:
-            # Put the current input to the input matrix
-            cnn_input.build_input_matrix()
-            cnn_input.leg_control_data_ready = False
-            cnn_input.microstrain_ready = False
-            if cnn_input.data_require == 0:
-                # Publish channel:
-                contact_msg = contact_t()
-                # This is just for presenting the result. In actual deployment, we don't have the gt_label
-                prediction = pass_to_cnn.receive_input(cnn_input.cnn_input_matrix)
-                contact_msg.num_legs = 4
-                contact_msg.contact = decimal2binary(prediction, contact_msg.num_legs)
-                print(contact_msg.contact)
-                lc.publish("contact", contact_msg.encode())
-
+    # t1.start()
+    t2.start()
+    listener()
 
 except KeyboardInterrupt:
+    # t1.join()
+    t2.join()
     pass
 
 lc.unsubscribe(subscription1)
 lc.unsubscribe(subscription2)
-
