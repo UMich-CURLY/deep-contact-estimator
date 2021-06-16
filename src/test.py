@@ -8,8 +8,34 @@ from tqdm import tqdm
 
 import torch.optim as optim
 
+from sklearn.metrics import precision_score
+from sklearn.metrics import recall_score
+from sklearn.metrics import jaccard_score
+
 from contact_cnn import *
 from utils.data_handler import *
+
+def compute_precision(bin_pred_arr, bin_gt_arr, pred_arr, gt_arr):
+
+
+    precision_of_class = precision_score(gt_arr,pred_arr,average='weighted')
+    precision_of_all_legs = precision_score(bin_gt_arr.flatten(),bin_pred_arr.flatten())
+    precision_of_legs = []
+    for i in range(4):
+        precision_of_legs.append(precision_score(bin_gt_arr[:,i],bin_pred_arr[:,i]))
+
+    return precision_of_class, precision_of_legs, precision_of_all_legs
+
+def compute_jaccard(bin_pred_arr, bin_gt_arr, pred_arr, gt_arr):
+
+
+    jaccard_of_class = jaccard_score(gt_arr,pred_arr,average='weighted')
+    jaccard_of_all_legs = jaccard_score(bin_gt_arr.flatten(),bin_pred_arr.flatten())
+    jaccard_of_legs = []
+    for i in range(4):
+        jaccard_of_legs.append(jaccard_score(bin_gt_arr[:,i],bin_pred_arr[:,i]))
+
+    return jaccard_of_class, jaccard_of_legs, jaccard_of_all_legs
 
 def compute_accuracy(dataloader, model):
     # compute accuracy in batch
@@ -17,6 +43,10 @@ def compute_accuracy(dataloader, model):
     num_correct = 0
     num_data = 0
     correct_per_leg = np.zeros(4)
+    bin_pred_arr = np.zeros((0,4))
+    bin_gt_arr = np.zeros((0,4))
+    pred_arr = np.zeros((0))
+    gt_arr = np.zeros((0))
     with torch.no_grad():
         for sample in tqdm(dataloader):
             input_data = sample['data']
@@ -24,33 +54,39 @@ def compute_accuracy(dataloader, model):
 
             output = model(input_data)
 
-            normalized_output = (output-torch.min(output))/(torch.max(output)-torch.min(output))
-            normalized_output = normalized_output/normalized_output.sum()
+            # normalized_output = (output-torch.min(output))/(torch.max(output)-torch.min(output))
+            # normalized_output = normalized_output/normalized_output.sum()
 
-            _, prediction = torch.max(normalized_output,1)
-            top2_val, top2_idx = torch.topk(normalized_output,2,dim=1)
-            top2_ratio = top2_val[0,1]/top2_val[0,0]
+            _, prediction = torch.max(output,1)
+            # top2_val, top2_idx = torch.topk(normalized_output,2,dim=1)
+            # top2_ratio = top2_val[0,1]/top2_val[0,0]
 
             
 
             bin_pred = decimal2binary(prediction)
-            bin_2ndbest = decimal2binary(top2_idx[0,1])
+            # bin_2ndbest = decimal2binary(top2_idx[0,1])
             bin_gt = decimal2binary(gt_label)
-            
-            
-            if top2_ratio > 0.92:
-                # print("----------------")
-                # print(bin_pred[0])
-                # print(bin_2ndbest)
-                new_bin_pred = torch.logical_and(bin_pred,bin_2ndbest).type(torch.uint8)
-                bin_pred = new_bin_pred
+
+            bin_pred_arr = np.vstack((bin_pred_arr,bin_pred.cpu().numpy()))
+            bin_gt_arr = np.vstack((bin_gt_arr,bin_gt.cpu().numpy()))
+
+            # print(np.shape(prediction.cpu().numpy()))
+            pred_arr = np.hstack((pred_arr,prediction.cpu().numpy()))
+            gt_arr = np.hstack((gt_arr,gt_label.cpu().numpy()))
+
+            # if top2_ratio > 0.92:
+            #     # print("----------------")
+            #     # print(bin_pred[0])
+            #     # print(bin_2ndbest)
+            #     new_bin_pred = torch.logical_and(bin_pred,bin_2ndbest).type(torch.uint8)
+            #     bin_pred = new_bin_pred
 
             correct_per_leg += (bin_pred==bin_gt).sum(axis=0).cpu().numpy()
             num_data += input_data.size(0)
             num_correct += (prediction==gt_label).sum().item()
 
 
-    return num_correct/num_data, correct_per_leg/num_data
+    return num_correct/num_data, correct_per_leg/num_data, bin_pred_arr, bin_gt_arr, pred_arr, gt_arr
 
 def decimal2binary(x):
     mask = 2**torch.arange(4-1,-1,-1).to(x.device, x.dtype)
@@ -74,11 +110,14 @@ def main():
 
     # init network
     model = contact_cnn()
+
     checkpoint = torch.load(config['model_load_path'])
     model.load_state_dict(checkpoint['model_state_dict'])
     model = model.eval().to(device)
 
-    test_acc, acc_per_leg = compute_accuracy(test_dataloader, model)
+    test_acc, acc_per_leg, bin_pred_arr, bin_gt_arr, pred_arr, gt_arr = compute_accuracy(test_dataloader, model)
+    precision_of_class, precision_of_legs, precision_of_all_legs = compute_precision(bin_pred_arr,bin_gt_arr,pred_arr, gt_arr)
+    jaccard_of_class, jaccard_of_legs, jaccard_of_all_legs = compute_jaccard(bin_pred_arr,bin_gt_arr,pred_arr, gt_arr)
 
     print("Test accuracy in terms of class is: %.4f" % test_acc)
     print("Accuracy of leg 0 is: %.4f" % acc_per_leg[0])
@@ -86,6 +125,20 @@ def main():
     print("Accuracy of leg 2 is: %.4f" % acc_per_leg[2])
     print("Accuracy of leg 3 is: %.4f" % acc_per_leg[3])
     print("Accuracy is: %.4f" % (np.sum(acc_per_leg)/4.0))
+    print("---------------")
+    print("Precision of class is: %.4f" % precision_of_class)
+    print("Precision of leg 0 is: %.4f" % precision_of_legs[0])
+    print("Precision of leg 1 is: %.4f" % precision_of_legs[1])
+    print("Precision of leg 2 is: %.4f" % precision_of_legs[2])
+    print("Precision of leg 3 is: %.4f" % precision_of_legs[3])
+    print("Precision of all legs is: %.4f" % precision_of_all_legs)
+    print("---------------")
+    print("jaccard of class is: %.4f" % jaccard_of_class)
+    print("jaccard of leg 0 is: %.4f" % jaccard_of_legs[0])
+    print("jaccard of leg 1 is: %.4f" % jaccard_of_legs[1])
+    print("jaccard of leg 2 is: %.4f" % jaccard_of_legs[2])
+    print("jaccard of leg 3 is: %.4f" % jaccard_of_legs[3])
+    print("jaccard of all legs is: %.4f" % jaccard_of_all_legs)
 
     print(test_acc)
     print(acc_per_leg[0])
@@ -93,6 +146,20 @@ def main():
     print(acc_per_leg[2])
     print(acc_per_leg[3])
     print((np.sum(acc_per_leg)/4.0))
+
+    print("---------------")
+    print(precision_of_class)
+    print(precision_of_legs[0])
+    print(precision_of_legs[1])
+    print(precision_of_legs[2])
+    print(precision_of_legs[3])
+    print(precision_of_all_legs)
+    print(jaccard_of_class)
+    print(jaccard_of_legs[0])
+    print(jaccard_of_legs[1])
+    print(jaccard_of_legs[2])
+    print(jaccard_of_legs[3])
+    print(jaccard_of_all_legs)
 
 if __name__ == '__main__':
     main()

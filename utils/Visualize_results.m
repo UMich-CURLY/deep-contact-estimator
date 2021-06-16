@@ -69,11 +69,11 @@ end
 for i = 1:4
     figure(i)
     
-    plot(1:size(v),v(:,3*i-1));
+    plot(1:size(v),v(:,3*i));
     hold on
-    plot(find(contacts_est(:,i)),v(contacts_est(:,i),3*i-1), "g*");
+    plot(find(contacts_est(:,i)),v(contacts_est(:,i),3*i), "g*");
     hold on
-    plot(find(contacts_gt(:,i)),v(contacts_gt(:,i),3*i-1), "r*");
+    plot(find(contacts_gt(:,i)),v(contacts_gt(:,i),3*i), "r*");
     
 %     legend("foot_pos","contacts");
     legend("foot_pos","contacts","gt");
@@ -140,8 +140,8 @@ end
 
 
 %% 
-start_idx = 600;
-end_idx = 1500;
+start_idx = 2600;
+end_idx = 3200;
 range = start_idx:end_idx;
 l = ['RF','LF','RH','LH'];
 

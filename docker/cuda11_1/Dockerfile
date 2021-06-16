@@ -7,7 +7,7 @@ USER root
 # scipy, tensorboard
 RUN pip install scipy
 RUN pip install tensorboard
-
+RUN pip install -U scikit-learn
 
 # build essential, cmake, vim, git
 ENV DEBIAN_FRONTEND=noninteractive

@@ -20,7 +20,7 @@ def inference(dataloader, model, device):
 
     num_correct = 0
     num_data = 0
-    num_outlier = 0
+    # num_outlier = 0
     correct_per_leg = np.zeros(4)
     infer_results = torch.empty(0,4,dtype=torch.uint8).to(device)
     with torch.no_grad():
@@ -28,22 +28,22 @@ def inference(dataloader, model, device):
             input_data = sample['data']
             gt_label = sample['label']
             
-            top2_ratio = 0
+            # top2_ratio = 0
             # print("----------------")
 
             output = model(input_data)
             
             
-            normalized_output = (output-torch.min(output))/(torch.max(output)-torch.min(output))
-            normalized_output = normalized_output/normalized_output.sum()
+            # normalized_output = (output-torch.min(output))/(torch.max(output)-torch.min(output))
+            # normalized_output = normalized_output/normalized_output.sum()
             # output = normalized_output
             
             # print(output)
             # print(normalized_output)
 
-            _, prediction = torch.max(normalized_output,1)
-            top2_val, top2_idx = torch.topk(normalized_output,2,dim=1)
-            top2_ratio = top2_val[0,1]/top2_val[0,0]
+            _, prediction = torch.max(output,1)
+            # top2_val, top2_idx = torch.topk(normalized_output,2,dim=1)
+            # top2_ratio = top2_val[0,1]/top2_val[0,0]
 
             # print("top2_val: ",top2_val[0,0].item(),top2_val[0,1].item())
             # print("top2_ratio: ",top2_ratio.item())
@@ -56,22 +56,22 @@ def inference(dataloader, model, device):
             
             
             bin_pred = decimal2binary(prediction)
-            bin_2ndbest = decimal2binary(top2_idx[0,1])
+            # bin_2ndbest = decimal2binary(top2_idx[0,1])
             bin_gt = decimal2binary(gt_label).view(-1,4)
 
             # print(bin_pred[0])
             # print(bin_2ndbest)
             # print(bin_gt[0])
 
-            if top2_ratio > 1:
-                # print("----------------")
-                # print(bin_pred[0])
-                # print(bin_2ndbest)
-                new_bin_pred = torch.logical_and(bin_pred,bin_2ndbest).type(torch.uint8)
-                bin_pred = new_bin_pred
-                # print(new_bin_pred[0])
-                num_outlier += 1
-                # print("fix!")
+            # if top2_ratio > 1:
+            #     # print("----------------")
+            #     # print(bin_pred[0])
+            #     # print(bin_2ndbest)
+            #     new_bin_pred = torch.logical_and(bin_pred,bin_2ndbest).type(torch.uint8)
+            #     bin_pred = new_bin_pred
+            #     # print(new_bin_pred[0])
+            #     num_outlier += 1
+            #     # print("fix!")
 
             infer_results = torch.cat((infer_results, bin_pred), 0)
 

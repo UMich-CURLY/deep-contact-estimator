@@ -24,3 +24,12 @@ legend("Traning Loss","Training Accuracy")
 xlabel("Epoch",'FontSize',20)
 ylabel("Loss/Accuracy",'FontSize',20)
 ylim([0 1.1])
+
+%%
+
+figure(4)
+
+plot(loss(:,1),loss(:,2),'Color',[0 0.4470 0.7410], 'linewidth',2);
+title("Validation Loss",'FontSize',20)
+xlabel("Epoch",'FontSize',20)
+ylabel("Loss",'FontSize',20)
