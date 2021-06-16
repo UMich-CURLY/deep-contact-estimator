@@ -1,6 +1,5 @@
 # This file takes in and decode lcm messages, then reconstruct the data to a CNN input matrix
 import sys
-
 sys.path.append("..")
 from lcm_types.python import contact_ground_truth_t
 from lcm_types.python import contact_t
@@ -11,6 +10,8 @@ from CNN_INPUT import CNNInput
 import lcm
 import numpy as np
 import threading
+import queue
+import time
 
 
 def binary2decimal(a, axis=-1):
@@ -33,49 +34,63 @@ def decimal2binary(num, length):
 def my_handler(channel, data):
     if channel == "leg_control_data":
         leg_control_data_msg = leg_control_data_lcmt.decode(data)
-        cnn_input.q = np.array(leg_control_data_msg.q)
-        cnn_input.qd = np.array(leg_control_data_msg.qd)
-        cnn_input.p = np.array(leg_control_data_msg.p)
-        cnn_input.v = np.array(leg_control_data_msg.v)
+        cnn_input_leg_list = [leg_control_data_msg.q, leg_control_data_msg.qd,
+                              leg_control_data_msg.p, leg_control_data_msg.v]
+        # cnn_input.q = np.array(leg_control_data_msg.q)
+        # cnn_input.qd = np.array(leg_control_data_msg.qd)
+        # cnn_input.p = np.array(leg_control_data_msg.p)
+        # cnn_input.v = np.array(leg_control_data_msg.v)
+        cnn_input_leg_q.put(cnn_input_leg_list)
         cnn_input.leg_control_data_ready = True
 
     # If the frequency of microstrain is doubled, we also need to double the frequency of leg_control_data
     # Or slow down the frequency of microstrain
     if channel == "microstrain" and cnn_input.leg_control_data_ready:
         microstrain_msg = microstrain_lcmt.decode(data)
-        cnn_input.omega = np.array(microstrain_msg.omega)
-        cnn_input.acc = np.array(microstrain_msg.acc)
+        cnn_input_mcst_list = [microstrain_msg.omega, microstrain_msg.acc]
+        # cnn_input.omega = np.array(microstrain_msg.omega)
+        # cnn_input.acc = np.array(microstrain_msg.acc)
+        cnn_input_mcst_q.put(cnn_input_mcst_list)
         cnn_input.microstrain_ready = True
 
 
-def listener():
+def listen_and_publish():
     while True:
         lc.handle()
+        input_ready = cnn_input.leg_control_data_ready and cnn_input.microstrain_ready
+        if input_ready:
+            cnn_input_q.put(cnn_input)
+            cnn_input.leg_control_data_ready = False
+            cnn_input.microstrain_ready = False
 
 
-def publisher():
+def get_cnn_output():
     while True:
-        mutex.acquire()
-        try:
-            input_ready = cnn_input.leg_control_data_ready and cnn_input.microstrain_ready
-            if input_ready:
-                # Put the current input to the input matrix
-                cnn_input.build_input_matrix()
-                cnn_input.leg_control_data_ready = False
-                cnn_input.microstrain_ready = False
-                if cnn_input.data_require == 0:
-                    print(111111111111111111)
-                    # Publish channel:
-                    contact_msg = contact_t()
-                    # This is just for presenting the result. In actual deployment, we don't have the gt_label
-                    prediction = pass_to_cnn.receive_input(cnn_input.cnn_input_matrix)
-                    contact_msg.num_legs = 4
-                    contact_msg.contact = decimal2binary(prediction, contact_msg.num_legs)
-                    print(contact_msg.contact)
-                    lc.publish("contact", contact_msg.encode())
-        finally:
-            mutex.release()
+        # Put the current input to the input matrix
+        if not cnn_input_leg_q.empty() and not cnn_input_mcst_q.empty():
+            # Assign values:
+            leg_input = cnn_input_leg_q.get()
+            mcst_input = cnn_input_mcst_q.get()
+            cnn_input.q = np.array(leg_input[0])
+            cnn_input.qd = np.array(leg_input[1])
+            cnn_input.p = np.array(leg_input[2])
+            cnn_input.v = np.array(leg_input[3])
+            cnn_input.omega = np.array(mcst_input[0])
+            cnn_input.acc = np.array(mcst_input[1])
 
+            # Build the input matrix and identify the if there are enough valid rows in the matrix:
+            cnn_input.build_input_matrix()
+            if cnn_input.data_require > 0:
+                continue
+            # Calculate and publish messages:`
+            contact_msg = contact_t()
+            prediction = pass_to_cnn.receive_input(cnn_input.cnn_input_matrix, input_rows, input_cols)
+            cnn_input.count += 1
+            contact_msg.timestamp = cnn_input.count
+            contact_msg.num_legs = 4
+            contact_msg.contact = decimal2binary(prediction, contact_msg.num_legs)
+            # print(contact_msg.contact)
+            lc.publish("contact", contact_msg.encode())
 
 # Define LCM subscription channels:
 lc = lcm.LCM()
@@ -87,20 +102,21 @@ input_rows = 150
 input_cols = 54
 cnn_input = CNNInput(input_rows, input_cols)
 count = 0
+cnn_input_q = queue.Queue()
+cnn_input_leg_q = queue.Queue()
+cnn_input_mcst_q = queue.Queue()
+cnn_output_q = queue.Queue()
+
 
 # Multithreading:
-t1 = threading.Thread(target=listener)
-t2 = threading.Thread(target=publisher)
-mutex = threading.Lock()
+cnn_output_thread = threading.Thread(target=get_cnn_output)
 
 try:
-    # t1.start()
-    t2.start()
-    listener()
+    cnn_output_thread.start()
+    listen_and_publish()
 
 except KeyboardInterrupt:
-    # t1.join()
-    t2.join()
+    cnn_output_thread.join()
     pass
 
 lc.unsubscribe(subscription1)
