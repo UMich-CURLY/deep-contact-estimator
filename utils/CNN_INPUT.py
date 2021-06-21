@@ -1,4 +1,5 @@
 import numpy as np
+from src.contact_cnn import *
 
 
 class CNNInput:
@@ -10,17 +11,12 @@ class CNNInput:
         self.omega = np.zeros(3)
         self.acc = np.zeros(3)
         self.count = 0
-        # self.q = np.array(q)
-        # self.qd = np.array(qd)
-        # self.p = np.array(p)
-        # self.v = np.array(v)
-        # self.omega = np.array(omega)
-        # self.acc = np.array(acc)
 
         self.cnn_input_matrix = np.zeros((num_rows, num_features))
         self.label = np.zeros((num_rows))
         self.new_label = np.zeros(1)
         print("shape of the CNN input matrix is: ", np.shape(self.cnn_input_matrix))
+        self.model = contact_cnn()
         self.leg_control_data_ready = False
         self.microstrain_ready = False
         self.label_ready = False
