@@ -36,10 +36,6 @@ def my_handler(channel, data):
         leg_control_data_msg = leg_control_data_lcmt.decode(data)
         cnn_input_leg_list = [leg_control_data_msg.q, leg_control_data_msg.qd,
                               leg_control_data_msg.p, leg_control_data_msg.v]
-        # cnn_input.q = np.array(leg_control_data_msg.q)
-        # cnn_input.qd = np.array(leg_control_data_msg.qd)
-        # cnn_input.p = np.array(leg_control_data_msg.p)
-        # cnn_input.v = np.array(leg_control_data_msg.v)
         cnn_input_leg_q.put(cnn_input_leg_list)
         cnn_input.leg_control_data_ready = True
 
@@ -48,10 +44,12 @@ def my_handler(channel, data):
     if channel == "microstrain" and cnn_input.leg_control_data_ready:
         microstrain_msg = microstrain_lcmt.decode(data)
         cnn_input_mcst_list = [microstrain_msg.omega, microstrain_msg.acc]
-        # cnn_input.omega = np.array(microstrain_msg.omega)
-        # cnn_input.acc = np.array(microstrain_msg.acc)
         cnn_input_mcst_q.put(cnn_input_mcst_list)
         cnn_input.microstrain_ready = True
+
+    if channel == "contact_ground_truth":
+        contact_ground_truth_msg = contact_ground_truth_t.decode(data)
+        gt_label_q.put(binary2decimal(np.array(contact_ground_truth_msg.contact)))
 
 
 def listen_and_publish():
@@ -71,6 +69,8 @@ def get_cnn_output():
             # Assign values:
             leg_input = cnn_input_leg_q.get()
             mcst_input = cnn_input_mcst_q.get()
+            # Delete the following line in actual deployment:
+            gt_label = gt_label_q.get()
             cnn_input.q = np.array(leg_input[0])
             cnn_input.qd = np.array(leg_input[1])
             cnn_input.p = np.array(leg_input[2])
@@ -78,24 +78,28 @@ def get_cnn_output():
             cnn_input.omega = np.array(mcst_input[0])
             cnn_input.acc = np.array(mcst_input[1])
 
+            # Delete the following line in actual deployment:
+            cnn_input.new_label = np.array(gt_label)
+
             # Build the input matrix and identify the if there are enough valid rows in the matrix:
             cnn_input.build_input_matrix()
             if cnn_input.data_require > 0:
                 continue
             # Calculate and publish messages:`
             contact_msg = contact_t()
-            prediction = pass_to_cnn.receive_input(cnn_input.cnn_input_matrix, input_rows, input_cols)
+            prediction = pass_to_cnn.receive_input(cnn_input.cnn_input_matrix, input_rows, input_cols, cnn_input.label)
             cnn_input.count += 1
             contact_msg.timestamp = cnn_input.count
             contact_msg.num_legs = 4
             contact_msg.contact = decimal2binary(prediction, contact_msg.num_legs)
-            # print(contact_msg.contact)
+            print(contact_msg.contact)
             lc.publish("contact", contact_msg.encode())
 
 # Define LCM subscription channels:
 lc = lcm.LCM()
 subscription1 = lc.subscribe("microstrain", my_handler)
 subscription2 = lc.subscribe("leg_control_data", my_handler)
+subscription3 = lc.subscribe("contact_ground_truth", my_handler)
 
 # Define cnn input class:
 input_rows = 150
@@ -106,6 +110,7 @@ cnn_input_q = queue.Queue()
 cnn_input_leg_q = queue.Queue()
 cnn_input_mcst_q = queue.Queue()
 cnn_output_q = queue.Queue()
+gt_label_q = queue.Queue()
 
 
 # Multithreading:

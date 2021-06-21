@@ -22,12 +22,12 @@ def compute_accuracy(dataloader, model):
 
             output = model(input_data)
             _, prediction = torch.max(output,1)
-            # print("shape of gt_label: ", gt_label.shape)
+            # print("gt_label: ", gt_label)
+            # print("prediction: " , prediction)
 
             num_data += input_data.size(0)
             num_correct += (prediction==gt_label).sum().item()
-    print("number of input data:", num_data)
-    print("number of correct predictions: ", num_correct)
+
     return num_correct/num_data
 
 
@@ -41,10 +41,12 @@ def main():
 
     config = yaml.load(open(args.config_name))
 
-    test_data = contact_dataset(data_path=config['data_folder']+"test_lcm.npy",\
-                                label_path=config['data_folder']+"test_label_lcm.npy",\
+    test_data = contact_dataset(data_path=config['data_folder']+"test.npy",\
+                                label_path=config['data_folder']+"test_label.npy",\
                                 window_size=config['window_size'], device=device)
-    test_dataloader = DataLoader(dataset=test_data, batch_size=config['batch_size'])
+    # test_dataloader = DataLoader(dataset=test_data, batch_size=config['batch_size'])
+    test_dataloader = DataLoader(dataset=test_data, batch_size=1)
+
 
 
     # init network
