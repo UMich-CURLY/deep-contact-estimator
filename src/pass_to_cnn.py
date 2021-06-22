@@ -12,8 +12,8 @@ def compute_prediction(dataloader, model, gt_label):
     with torch.no_grad():
         output = model(dataloader)
         _, prediction = torch.max(output, 1)
-        print("gt_label: ", gt_label)
-        print("Prediction: ", prediction)
+        # print("gt_label: ", gt_label)
+        # print("Prediction: ", prediction)
         return prediction
 
 

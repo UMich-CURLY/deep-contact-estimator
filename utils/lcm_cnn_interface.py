@@ -40,53 +40,46 @@ def decimal2binary(num, length):
         res = [0] + res
     return res
 
-# TODO: Delete the following lines in actual deployment
-msg_in = []
-leg_msg = []
-mcst_msg = []
+leg_msg3 = []
+leg_msg6 = []
+leg_msg9 = []
+leg_msg12 = []
 
 
-def my_handler(channel, data):
-    if channel == "leg_control_data":
-        leg_control_data_msg = leg_control_data_lcmt.decode(data)
-        cnn_input_leg_list = [leg_control_data_msg.q, leg_control_data_msg.qd,
-                              leg_control_data_msg.p, leg_control_data_msg.v]
-        cnn_input_leg_q.put(cnn_input_leg_list)
-        leg_msg.append(leg_control_data_msg.q)
-        # latest_leg_data = cnn_input_leg_list
-        # cnn_input.leg_control_data_ready = True
 
-    # If the frequency of microstrain is doubled, we also need to double the frequency of leg_control_data
-    # Or slow down the frequency of microstrain
-    if channel == "microstrain":
-        microstrain_msg = microstrain_lcmt.decode(data)
-        cnn_input_mcst_list = [microstrain_msg.omega, microstrain_msg.acc]
-        cnn_input_mcst_q.put(cnn_input_mcst_list)
-        mcst_msg.append(microstrain_msg.omega)
+def receive_leg_control_data(channel, data):
+    leg_control_data_msg = leg_control_data_lcmt.decode(data)
+    cnn_input_leg_list = [leg_control_data_msg.q, leg_control_data_msg.qd,
+                            leg_control_data_msg.p, leg_control_data_msg.v]
+    cnn_input_leg_q.put(cnn_input_leg_list)
+    leg_msg3.append(leg_control_data_msg.p[2])
+    leg_msg6.append(leg_control_data_msg.p[5])
+    leg_msg9.append(leg_control_data_msg.p[8])
+    leg_msg12.append(leg_control_data_msg.p[11])
 
-        # cnn_input_leg_q.put(cnn_input_leg_list)
+    # cnn_input.leg_control_data_ready = True
 
-        # cnn_input.microstrain_ready = True
 
-    if channel == "contact_ground_truth":
-        contact_ground_truth_msg = contact_ground_truth_t.decode(data)
-        gt_label_q.put(binary2decimal(np.array(contact_ground_truth_msg.contact)))
+def receive_microstrain_data(channel, data):
+    microstrain_msg = microstrain_lcmt.decode(data)
+    cnn_input_mcst_list = [microstrain_msg.omega, microstrain_msg.acc]
+    cnn_input_mcst_q.put(cnn_input_mcst_list)
+    # cnn_input.microstrain_ready = True
+
+
+def receive_contact_ground_truth_data(channel, data):
+    contact_ground_truth_msg = contact_ground_truth_t.decode(data)
+    gt_label_q.put(binary2decimal(np.array(contact_ground_truth_msg.contact)))
+
 
 
 # Get message from lcm
 def listener():
     # TODO: Delete the following lines in actual deployment
-    msg_count = 0
+
 
     while True:
         lc.handle()
-        msg_count += 1
-        msg_in.append(msg_count)
-        # input_ready = cnn_input.leg_control_data_ready and cnn_input.microstrain_ready
-        # if input_ready:
-        #     cnn_input_q.put(cnn_input)
-        #     cnn_input.leg_control_data_ready = False
-        #     cnn_input.microstrain_ready = False
 
 
 # Load CNN model:
@@ -112,7 +105,7 @@ def get_cnn_output():
     label_pred1 = []
     label_pred2 = []
     label_pred3 = []
-
+    correct = 0
     while True:
         # Put the current input to the input matrix
         if not cnn_input_leg_q.empty() and not cnn_input_mcst_q.empty():
@@ -138,13 +131,16 @@ def get_cnn_output():
                 continue
             # Calculate and publish messages:`            
             contact_msg = contact_t()
-            prediction = pass_to_cnn.receive_input(cnn_input.cnn_input_matrix, input_rows, input_cols, cnn_input.label, cnn_input.model)
+            prediction = pass_to_cnn.receive_input(cnn_input.cnn_input_matrix, input_rows, input_cols, 
+                                                   cnn_input.label, cnn_input.model)
             cnn_input.count += 1
             contact_msg.timestamp = cnn_input.count
+            if int(prediction) == gt_label:
+                correct += 1
             contact_msg.num_legs = 4
             contact_msg.contact = decimal2binary(prediction, contact_msg.num_legs)
             # print(contact_msg.contact)
-            lc.publish("contact", contact_msg.encode())
+            lc.publish("contact_est", contact_msg.encode())
             label_pred0.append(contact_msg.contact[0])
             label_pred1.append(contact_msg.contact[1])
             label_pred2.append(contact_msg.contact[2])
@@ -153,28 +149,28 @@ def get_cnn_output():
             # toc = time.perf_counter()
             # print(f"Building and publish time = {toc - tic:0.4f} seconds")
 
+        # TODO: delete the following after debugging:
         if keyboard.is_pressed('s'):  # if key 's' is pressed
             data = {"pred0": label_pred0, "pred1": label_pred1, "pred2": label_pred2, "pred3": label_pred3}
-            data_leg = {"leg": leg_msg}
-            data_mcst = {"mcst": mcst_msg}
-            data_msg_in = {"msgs": msg_in}
+            data_leg = {"leg1": leg_msg3, "leg2": leg_msg6, "leg3": leg_msg9, "leg4": leg_msg12}
             df = pd.DataFrame(data)
             df_leg = pd.DataFrame(data_leg)
-            df_mcst = pd.DataFrame(data_mcst)
-            df_msg_in = pd.DataFrame(data_msg_in)
             df.to_csv('compare.csv', mode='a', index=False)
-            df_leg.to_csv('df_leg.csv', mode='a', index=False)
-            df_mcst.to_csv('df_mcst.csv', mode='a', index=False)
-            df_msg_in.to_csv('df_msg_in.csv', mode='a', index=False)
+            df_leg.to_csv('leg.csv', mode='a', index=False)
+            print("\ncount = ", cnn_input.count)
+            accuracy = correct / (cnn_input.count - 149)
+            print("\naccuracy is ", accuracy)
+
             print('\nYou Pressed Save Key! File is saved!')
             break  # finishing the loop
             
 
 # Define LCM subscription channels:
 lc = lcm.LCM()
-subscription1 = lc.subscribe("microstrain", my_handler)
-subscription2 = lc.subscribe("leg_control_data", my_handler)
-subscription3 = lc.subscribe("contact_ground_truth", my_handler)
+subscription1 = lc.subscribe("microstrain", receive_microstrain_data)
+subscription2 = lc.subscribe("leg_control_data", receive_leg_control_data)
+subscription3 = lc.subscribe("contact_ground_truth", receive_contact_ground_truth_data)
+
 
 # Initialize cnn input class and model:
 input_rows = 150
@@ -204,3 +200,4 @@ except KeyboardInterrupt:
 
 lc.unsubscribe(subscription1)
 lc.unsubscribe(subscription2)
+lc.unsubscribe(subscription3)
