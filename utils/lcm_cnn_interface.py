@@ -19,6 +19,10 @@ import torch
 import os
 import yaml
 
+# TODO: delete later:
+import pandas as pd
+import keyboard
+
 
 
 def binary2decimal(a, axis=-1):
@@ -39,19 +43,29 @@ def decimal2binary(num, length):
 
 def my_handler(channel, data):
     if channel == "leg_control_data":
+        tic = time.perf_counter()
         leg_control_data_msg = leg_control_data_lcmt.decode(data)
         cnn_input_leg_list = [leg_control_data_msg.q, leg_control_data_msg.qd,
                               leg_control_data_msg.p, leg_control_data_msg.v]
         cnn_input_leg_q.put(cnn_input_leg_list)
-        cnn_input.leg_control_data_ready = True
+        toc = time.perf_counter()
+        print(f"Listening to leg costs {toc - tic:04f} seconds")
+        # latest_leg_data = cnn_input_leg_list
+        # cnn_input.leg_control_data_ready = True
 
     # If the frequency of microstrain is doubled, we also need to double the frequency of leg_control_data
     # Or slow down the frequency of microstrain
-    if channel == "microstrain" and cnn_input.leg_control_data_ready:
+    if channel == "microstrain":
+        tic = time.perf_counter()
         microstrain_msg = microstrain_lcmt.decode(data)
         cnn_input_mcst_list = [microstrain_msg.omega, microstrain_msg.acc]
         cnn_input_mcst_q.put(cnn_input_mcst_list)
-        cnn_input.microstrain_ready = True
+        toc = time.perf_counter()
+        print(f"Listening to microstrain costs {toc - tic:04f} seconds")
+
+        # cnn_input_leg_q.put(cnn_input_leg_list)
+
+        # cnn_input.microstrain_ready = True
 
     if channel == "contact_ground_truth":
         contact_ground_truth_msg = contact_ground_truth_t.decode(data)
@@ -62,11 +76,11 @@ def my_handler(channel, data):
 def listener():
     while True:
         lc.handle()
-        input_ready = cnn_input.leg_control_data_ready and cnn_input.microstrain_ready
-        if input_ready:
-            cnn_input_q.put(cnn_input)
-            cnn_input.leg_control_data_ready = False
-            cnn_input.microstrain_ready = False
+        # input_ready = cnn_input.leg_control_data_ready and cnn_input.microstrain_ready
+        # if input_ready:
+        #     cnn_input_q.put(cnn_input)
+        #     cnn_input.leg_control_data_ready = False
+        #     cnn_input.microstrain_ready = False
 
 
 # Load CNN model:
@@ -87,6 +101,11 @@ def load_cnn_model():
 
 # Get and publish the output from CNN network
 def get_cnn_output():
+    label_pred0 = []
+    label_pred1 = []
+    label_pred2 = []
+    label_pred3 = []
+
     while True:
         # Put the current input to the input matrix
         if not cnn_input_leg_q.empty() and not cnn_input_mcst_q.empty():
@@ -119,9 +138,20 @@ def get_cnn_output():
             contact_msg.contact = decimal2binary(prediction, contact_msg.num_legs)
             print(contact_msg.contact)
             lc.publish("contact", contact_msg.encode())
+            label_pred0.append(contact_msg.contact[0])
+            label_pred1.append(contact_msg.contact[1])
+            label_pred2.append(contact_msg.contact[2])
+            label_pred3.append(contact_msg.contact[3])
 
             toc = time.perf_counter()
             print(f"Building and publish time = {toc - tic:0.4f} seconds")
+
+        if keyboard.is_pressed('s'):  # if key 'q' is pressed 
+            data = {"pred0": label_pred0, "pred1": label_pred1, "pred2": label_pred2, "pred3": label_pred3}
+            df = pd.DataFrame(data)
+            df.to_csv('compare.csv', mode='a', index=False)
+            print('You Pressed Save Key! File is saved!')
+            break  # finishing the loop
             
 
 # Define LCM subscription channels:

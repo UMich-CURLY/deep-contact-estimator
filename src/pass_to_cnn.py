@@ -23,9 +23,12 @@ def receive_input(feature_matrix, input_rows, input_cols, label_matrix, model):
 
     test_data = torch.from_numpy(feature_matrix).type('torch.FloatTensor').to(device)
     label_data = torch.from_numpy(label_matrix).type('torch.FloatTensor').to(device)
-    gt_label = label_data[149]
+    gt_label = label_data[-1]
 
+    test_data = (test_data-torch.mean(test_data,dim=0))\
+                            /torch.std(test_data,dim=0)
     test_dataloader = test_data.view(-1, input_rows, input_cols)
+    
 
     # prediction takes about 0.0012 s
     test_predict = compute_prediction(test_dataloader, model, gt_label)
