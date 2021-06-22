@@ -40,28 +40,29 @@ def decimal2binary(num, length):
         res = [0] + res
     return res
 
+# TODO: Delete the following lines in actual deployment
+msg_in = []
+leg_msg = []
+mcst_msg = []
+
 
 def my_handler(channel, data):
     if channel == "leg_control_data":
-        tic = time.perf_counter()
         leg_control_data_msg = leg_control_data_lcmt.decode(data)
         cnn_input_leg_list = [leg_control_data_msg.q, leg_control_data_msg.qd,
                               leg_control_data_msg.p, leg_control_data_msg.v]
         cnn_input_leg_q.put(cnn_input_leg_list)
-        toc = time.perf_counter()
-        print(f"Listening to leg costs {toc - tic:04f} seconds")
+        leg_msg.append(leg_control_data_msg.q)
         # latest_leg_data = cnn_input_leg_list
         # cnn_input.leg_control_data_ready = True
 
     # If the frequency of microstrain is doubled, we also need to double the frequency of leg_control_data
     # Or slow down the frequency of microstrain
     if channel == "microstrain":
-        tic = time.perf_counter()
         microstrain_msg = microstrain_lcmt.decode(data)
         cnn_input_mcst_list = [microstrain_msg.omega, microstrain_msg.acc]
         cnn_input_mcst_q.put(cnn_input_mcst_list)
-        toc = time.perf_counter()
-        print(f"Listening to microstrain costs {toc - tic:04f} seconds")
+        mcst_msg.append(microstrain_msg.omega)
 
         # cnn_input_leg_q.put(cnn_input_leg_list)
 
@@ -74,8 +75,13 @@ def my_handler(channel, data):
 
 # Get message from lcm
 def listener():
+    # TODO: Delete the following lines in actual deployment
+    msg_count = 0
+
     while True:
         lc.handle()
+        msg_count += 1
+        msg_in.append(msg_count)
         # input_ready = cnn_input.leg_control_data_ready and cnn_input.microstrain_ready
         # if input_ready:
         #     cnn_input_q.put(cnn_input)
@@ -101,6 +107,7 @@ def load_cnn_model():
 
 # Get and publish the output from CNN network
 def get_cnn_output():
+    # TODO: Delete the following lines in actual deployment
     label_pred0 = []
     label_pred1 = []
     label_pred2 = []
@@ -109,7 +116,7 @@ def get_cnn_output():
     while True:
         # Put the current input to the input matrix
         if not cnn_input_leg_q.empty() and not cnn_input_mcst_q.empty():
-            tic = time.perf_counter()
+            # tic = time.perf_counter()
             # Assign values:
             leg_input = cnn_input_leg_q.get()
             mcst_input = cnn_input_mcst_q.get()
@@ -136,21 +143,30 @@ def get_cnn_output():
             contact_msg.timestamp = cnn_input.count
             contact_msg.num_legs = 4
             contact_msg.contact = decimal2binary(prediction, contact_msg.num_legs)
-            print(contact_msg.contact)
+            # print(contact_msg.contact)
             lc.publish("contact", contact_msg.encode())
             label_pred0.append(contact_msg.contact[0])
             label_pred1.append(contact_msg.contact[1])
             label_pred2.append(contact_msg.contact[2])
             label_pred3.append(contact_msg.contact[3])
 
-            toc = time.perf_counter()
-            print(f"Building and publish time = {toc - tic:0.4f} seconds")
+            # toc = time.perf_counter()
+            # print(f"Building and publish time = {toc - tic:0.4f} seconds")
 
-        if keyboard.is_pressed('s'):  # if key 'q' is pressed 
+        if keyboard.is_pressed('s'):  # if key 's' is pressed
             data = {"pred0": label_pred0, "pred1": label_pred1, "pred2": label_pred2, "pred3": label_pred3}
+            data_leg = {"leg": leg_msg}
+            data_mcst = {"mcst": mcst_msg}
+            data_msg_in = {"msgs": msg_in}
             df = pd.DataFrame(data)
+            df_leg = pd.DataFrame(data_leg)
+            df_mcst = pd.DataFrame(data_mcst)
+            df_msg_in = pd.DataFrame(data_msg_in)
             df.to_csv('compare.csv', mode='a', index=False)
-            print('You Pressed Save Key! File is saved!')
+            df_leg.to_csv('df_leg.csv', mode='a', index=False)
+            df_mcst.to_csv('df_mcst.csv', mode='a', index=False)
+            df_msg_in.to_csv('df_msg_in.csv', mode='a', index=False)
+            print('\nYou Pressed Save Key! File is saved!')
             break  # finishing the loop
             
 
