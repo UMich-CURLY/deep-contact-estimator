@@ -6,7 +6,7 @@ from torch.autograd import Variable
 import onnx
 import argparse
 from src.contact_cnn import *
-import torch
+from utils.data_handler import *
 import os
 import yaml
 print(torch.__version__)
@@ -25,8 +25,17 @@ model.load_state_dict(checkpoint['model_state_dict'])
 model = model.eval().to(device)
 
 
-input_name = ['input']
-output_name = ['output']
-input = Variable(torch.randn(1, 3, 224, 224)).cuda()
-# model = torchvision.models.resnet50(pretrained=True).cuda()
-torch.onnx.export(model, input, 'resnet50.onnx', input_names=input_name, output_names=output_name, verbose=True)
+test_data = contact_dataset(data_path=config['data_folder']+"test_lcm.npy",\
+                            label_path=config['data_folder']+"test_label_lcm.npy",\
+                            window_size=config['window_size'], device=device)
+test_dataloader = DataLoader(dataset=test_data, batch_size=1)
+for i in test_dataloader:
+    print(i['data'].shape)
+    input = i['data']
+    output = model(input)
+
+ONNX_FILE_PATH = '/home/tingjun/Desktop/Cheetah_code/deep-contact-estimator/results/0412_1dcnn_64_128_no_tao_GRF.onnx'
+torch.onnx.export(model, input, ONNX_FILE_PATH, input_names=['input'], output_names=['output'], export_params=True)
+
+onnx_model = onnx.load(ONNX_FILE_PATH)
+onnx.checker.check_model(onnx_model)

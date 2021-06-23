@@ -44,8 +44,8 @@ def main():
     test_data = contact_dataset(data_path=config['data_folder']+"test.npy",\
                                 label_path=config['data_folder']+"test_label.npy",\
                                 window_size=config['window_size'], device=device)
-    # test_dataloader = DataLoader(dataset=test_data, batch_size=config['batch_size'])
-    test_dataloader = DataLoader(dataset=test_data, batch_size=1)
+    test_dataloader = DataLoader(dataset=test_data, batch_size=config['batch_size'])
+    # test_dataloader = DataLoader(dataset=test_data, batch_size=1)
 
 
 
