@@ -1,5 +1,5 @@
-data_folder: "/home/justin/data/contact_data/numpy/"
-model_load_path: "/home/justin/code/deep-contact-estimator/results/0316_ws150_lr1e-4_2block_drop_out_best_val_acc.pt"
+data_folder: "/home/justin/data/contact_data/individual_test/sidewalk/numpy/"
+model_load_path: "/home/justin/code/deep-contact-estimator/results/0616_2blocks_best_val_loss.pt"
 
 # data params
 window_size: 150
@@ -8,5 +8,5 @@ window_size: 150
 batch_size: 30
 
 save_to_mat: False
-mat_save_path: "/home/justin/code/deep-contact-estimator/results/0316_ws150_lr1e-4_2block_drop_out_best_val_acc.mat"
+mat_save_path: "/home/justin/code/deep-contact-estimator/results/0616_2blocks_best_val_loss.mat"
 
