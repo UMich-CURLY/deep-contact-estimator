@@ -5,3 +5,4 @@ inference_results/
 .vscode
 *.txt
 .idea
+*.o

@@ -1,5 +1,3 @@
-package python;
-
 struct contact_ground_truth_t
 {
     int8_t  num_legs;
