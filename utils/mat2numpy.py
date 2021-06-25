@@ -10,19 +10,18 @@ import yaml
 
 def mat2numpy_one_seq(data_pth, save_pth):
     """
-    Load data from .mat file and split into train/val/test.
+    Load data from .mat file and genearate numpy files without splitting into train/val/test.
 
     Inputs:
-    - data_pth: path to the data folder
-    - train_ratio: ratio of training data
-    - val_ratio: ratio of validation data
+    - data_pth: path to mat data folder
+    - save_pth: path to numpy saving directory.
 
     Data should be stored in .mat file, and contain:
-    - q: joint encoder value (num_data,12)
+    - q: joint encoder value (num0_data,12)
     - qd: joint angular velocity (num_data,12)
     - p: foot position from FK (num_data,12)
     - v: foot velocity from FK (num_data,12)
-    - tau_est: estimated control torque (num_data,12)
+    
     - imu_acc: linear acceleration from imu (num_data,3)
     - imu_omega: angular velocity from imu (num_data,3)
     - contacts: contact data (num_data,4)
@@ -40,14 +39,13 @@ def mat2numpy_one_seq(data_pth, save_pth):
 
                 Ex. [1,0,0,1] -> 9
                     [0,1,1,0] -> 6
-                     
+
+    - tau_est (optional): estimated control torque (num_data,12)
     - F (optional): ground reaction force
 
     Output:
     """
 
-    num_features = 54
-    out = {}
     for data_name in glob.glob(data_pth+'*'): 
         
         print("loading... ", data_name)
@@ -60,11 +58,13 @@ def mat2numpy_one_seq(data_pth, save_pth):
         p = raw_data['p']
         qd = raw_data['qd']
         v = raw_data['v']
-        tau_est = raw_data['tau_est']
         acc = raw_data['imu_acc']
         omega = raw_data['imu_omega']
-        
-        # concatenate current data. First we try without GRF
+
+        # tau_est = raw_data['tau_est']
+        # F = raw_data['F']
+
+        # concatenate current data. 
         data = np.concatenate((q,qd,acc,omega,p,v),axis=1)
         
         # convert labels from binary to decimal
@@ -91,7 +91,6 @@ def mat2numpy_split(data_pth, save_pth, train_ratio=0.7, val_ratio=0.15):
     - qd: joint angular velocity (num_data,12)
     - p: foot position from FK (num_data,12)
     - v: foot velocity from FK (num_data,12)
-    - tau_est: estimated control torque (num_data,12)
     - imu_acc: linear acceleration from imu (num_data,3)
     - imu_omega: angular velocity from imu (num_data,3)
     - contacts: contact data (num_data,4)
@@ -107,6 +106,7 @@ def mat2numpy_split(data_pth, save_pth, train_ratio=0.7, val_ratio=0.15):
                 Ex. [1,0,0,1] -> 9
                     [0,1,1,0] -> 6
                      
+    - tau_est (optional): estimated control torque (num_data,12)
     - F (optional): ground reaction force
 
     Output:
@@ -120,7 +120,6 @@ def mat2numpy_split(data_pth, save_pth, train_ratio=0.7, val_ratio=0.15):
     train_label = np.zeros((0,1))
     val_label = np.zeros((0,1))
     test_label = np.zeros((0,1))
-    data = {}
 
     # for all dataset in the folder
     for data_name in glob.glob(data_pth+'*'): 
@@ -135,10 +134,11 @@ def mat2numpy_split(data_pth, save_pth, train_ratio=0.7, val_ratio=0.15):
         p = raw_data['p']
         qd = raw_data['qd']
         v = raw_data['v']
-        tau_est = raw_data['tau_est']
         acc = raw_data['imu_acc']
         omega = raw_data['imu_omega']
-        F = raw_data['F']
+
+        # tau_est = raw_data['tau_est']
+        # F = raw_data['F']
         
         # concatenate current data. First we try without GRF
         cur_data = np.concatenate((q,qd,acc,omega,p,v),axis=1)

@@ -61,7 +61,6 @@ class contact_cnn(nn.Module):
         x = x.permute(0,2,1)
         block1_out = self.block1(x)
         block2_out = self.block2(block1_out)
-
         block2_out_reshape = block2_out.view(block2_out.shape[0], -1)
         fc_out = self.fc(block2_out_reshape)
         return fc_out
@@ -105,10 +104,7 @@ class contact_cnn_1block(nn.Module):
     def forward(self, x):
         x = x.permute(0,2,1)
         block1_out = self.block1(x)
-
         block1_out_reshape = block1_out.view(block1_out.shape[0], -1)
-
-        # print(block1_out_reshape.size())
         fc_out = self.fc(block1_out_reshape)
         return fc_out
 
@@ -280,8 +276,6 @@ class contact_cnn_4blocks(nn.Module):
         block4_out = self.block4(block3_out)
 
         block4_out_reshape = block4_out.view(block4_out.shape[0], -1)
-        # block2_out_reshape = block2_out.view(block2_out.shape[0], -1)
-        # print(block4_out_reshape.size())
         fc_out = self.fc(block4_out_reshape)
         return fc_out
 
@@ -390,16 +384,10 @@ class contact_cnn_256(nn.Module):
         )
 
     def forward(self, x):
-        # x = x.reshape(x.shape[0], 1, x.shape[1], x.shape[2])
         x = x.permute(0,2,1)
         block1_out = self.block1(x)
         block2_out = self.block2(block1_out)
-        # block3_out = self.block3(block2_out)
-        # block4_out = self.block4(block3_out)
-
-        # block4_out_reshape = block4_out.view(block4_out.shape[0], -1)
         block2_out_reshape = block2_out.view(block2_out.shape[0], -1)
-        # print(block2_out_reshape.size())
         fc_out = self.fc(block2_out_reshape)
         return fc_out
 
@@ -514,10 +502,6 @@ class contact_2d_cnn(nn.Module):
         block2_out = self.block2(block1_out)
         block3_out = self.block3(block2_out)
         block4_out = self.block4(block3_out)
-        
-        # block2_out_reshape = block2_out.view(block2_out.shape[0], -1)
-
         block4_out_reshape = block4_out.view(block4_out.shape[0], -1)
-        #print(block4_out_reshape.size())
         fc_out = self.fc(block4_out_reshape)
         return fc_out

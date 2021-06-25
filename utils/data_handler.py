@@ -40,6 +40,8 @@ class contact_dataset(Dataset):
         to inference along the time axis. After this, at each time step we will have
         window_size x num_features. Thus we can take window_size of data into consideration each time.
 
+        The data is normalized along time domain.
+
         Ex. If the window size = 10. new_data[0,:,:] = data[0:10,:], new_data[1,:,:] = data[1:11,:].
                                      new_label[0] = label[9],        new_label[1] = label[10].
         
@@ -48,11 +50,7 @@ class contact_dataset(Dataset):
         - label: (batch_size, 1)
         """
         if torch.is_tensor(idx):
-            idx = idx.tolist()
-
-        # this_data = torch.zeros((self.window_size, list(self.data.size())[1]))
-        # this_label = torch.zeros((list(self.label.size())[1]))
-        
+            idx = idx.tolist()    
         
         this_data = (self.data[idx:idx+self.window_size,:]-torch.mean(self.data[idx:idx+self.window_size,:],dim=0))\
                             /torch.std(self.data[idx:idx+self.window_size,:],dim=0)

@@ -17,79 +17,44 @@ from contact_cnn import *
 from utils.data_handler import *
 
 def inference(dataloader, model, device):
+    
+    infer_results = torch.empty(0,4,dtype=torch.uint8).to(device)
+    with torch.no_grad():
+        for sample in tqdm(dataloader):
+            input_data = sample['data']
+            output = model(input_data)
+            _, prediction = torch.max(output,1)
+            bin_pred = decimal2binary(prediction)
+            infer_results = torch.cat((infer_results, bin_pred), 0)
+
+    return infer_results
+
+
+def inference_and_compute_acc(dataloader, model, device):
 
     num_correct = 0
     num_data = 0
-    # num_outlier = 0
     correct_per_leg = np.zeros(4)
     infer_results = torch.empty(0,4,dtype=torch.uint8).to(device)
     with torch.no_grad():
         for sample in tqdm(dataloader):
             input_data = sample['data']
             gt_label = sample['label']
-            
-            # top2_ratio = 0
-            # print("----------------")
+
 
             output = model(input_data)
-            
-            
-            # normalized_output = (output-torch.min(output))/(torch.max(output)-torch.min(output))
-            # normalized_output = normalized_output/normalized_output.sum()
-            # output = normalized_output
-            
-            # print(output)
-            # print(normalized_output)
-
             _, prediction = torch.max(output,1)
-            # top2_val, top2_idx = torch.topk(normalized_output,2,dim=1)
-            # top2_ratio = top2_val[0,1]/top2_val[0,0]
-
-            # print("top2_val: ",top2_val[0,0].item(),top2_val[0,1].item())
-            # print("top2_ratio: ",top2_ratio.item())
-            
-            # print(top2_idx)
-
-            # print(prediction)
-            # print(top2_idx[0,1])
-            # print(gt_label)
-            
-            
             bin_pred = decimal2binary(prediction)
-            # bin_2ndbest = decimal2binary(top2_idx[0,1])
             bin_gt = decimal2binary(gt_label).view(-1,4)
-
-            # print(bin_pred[0])
-            # print(bin_2ndbest)
-            # print(bin_gt[0])
-
-            # if top2_ratio > 1:
-            #     # print("----------------")
-            #     # print(bin_pred[0])
-            #     # print(bin_2ndbest)
-            #     new_bin_pred = torch.logical_and(bin_pred,bin_2ndbest).type(torch.uint8)
-            #     bin_pred = new_bin_pred
-            #     # print(new_bin_pred[0])
-            #     num_outlier += 1
-            #     # print("fix!")
-
             infer_results = torch.cat((infer_results, bin_pred), 0)
 
-            
- 
-            
-            
+
             correct_per_leg += (bin_pred==bin_gt).sum(axis=0).cpu().numpy()
-
-
             num_data += input_data.size(0)
             num_correct += (prediction==gt_label).sum().item()
 
-        # print("num_data: ",num_data)
-        # print("num_outlier: ",num_outlier)
-            
+    # return infer_results
     return infer_results, num_correct/num_data,  correct_per_leg/num_data
-
 
 def decimal2binary(x):
     mask = 2**torch.arange(4-1,-1,-1).to(x.device, x.dtype)
@@ -191,14 +156,19 @@ def main():
     model.load_state_dict(checkpoint['model_state_dict'])
     model = model.eval().to(device)
 
-    pred, acc, acc_per_leg = inference(dataloader, model, device)
+    pred = []
+    if(config['calculate_accuracy']):
+        pred, acc, acc_per_leg = inference_and_compute_acc(dataloader, model, device)
+        print("Accuracy in terms of class: %.4f" % acc)
+        print("Accuracy of leg 0 is: %.4f" % acc_per_leg[0])
+        print("Accuracy of leg 1 is: %.4f" % acc_per_leg[1])
+        print("Accuracy of leg 2 is: %.4f" % acc_per_leg[2])
+        print("Accuracy of leg 3 is: %.4f" % acc_per_leg[3])
+        print("Accuracy is: %.4f" % (np.sum(acc_per_leg)/4.0))
+    else:
+        pred = inference(dataloader, model, device)
 
-    print("Accuracy in terms of class: %.4f" % acc)
-    print("Accuracy of leg 0 is: %.4f" % acc_per_leg[0])
-    print("Accuracy of leg 1 is: %.4f" % acc_per_leg[1])
-    print("Accuracy of leg 2 is: %.4f" % acc_per_leg[2])
-    print("Accuracy of leg 3 is: %.4f" % acc_per_leg[3])
-    print("Accuracy is: %.4f" % (np.sum(acc_per_leg)/4.0))
+    
 
     if(config['save_mat']):
         save2mat(pred,config)

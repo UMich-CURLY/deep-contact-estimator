@@ -140,12 +140,12 @@ end
 
 
 %% 
-start_idx = 2600;
-end_idx = 3200;
+start_idx = 3000;
+end_idx = 4000;
 range = start_idx:end_idx;
 l = ['RF','LF','RH','LH'];
 
-for i = 3
+for i = 4
     figure(i+12);
     
     
@@ -153,13 +153,13 @@ for i = 3
     est_idx = find(contacts_est(range,i));
     
     subplot(4,1,1);
-    plot(imu_time(range),v(range,3*i-2),'linewidth',2,'Color',[0 0.4470 0.7410]);
-    hold on
-    plot(imu_time(range),v(range,3*i-1),'linewidth',2,'Color',[0.4660 0.6740 0.1880]);
-    hold on
-%     plot(imu_time(range),p(range,3*i),'linewidth',2,'Color',[0.4660 0.6740 0.1880]);
+%     plot(imu_time(range),v(range,3*i-2),'linewidth',2,'Color',[0 0.4470 0.7410]);
 %     hold on
-    plot(imu_time(range),v(range,3*i),'linewidth',2,'Color',[0.4940 0.1840 0.5560]);
+%     plot(imu_time(range),v(range,3*i-1),'linewidth',2,'Color',[0.4660 0.6740 0.1880]);
+%     hold on
+    plot(imu_time(range),p(range,3*i),'linewidth',2,'Color',[0.4660 0.6740 0.1880]);
+%     hold on
+%     plot(imu_time(range),v(range,3*i),'linewidth',2,'Color',[0.4940 0.1840 0.5560]);
     for j = 1:size(gt_idx)
         idx = gt_idx(j)+start_idx;
         if idx >= start_idx && idx<=end_idx
@@ -167,18 +167,18 @@ for i = 3
         end
     end
     title("Foot Velocity with Ground Truth Contact",'FontSize',14)
-    legend({"v_{x}","v_{y}","v_{z}",'Ground Truth Contacts'},'FontSize',14);
+    legend({"v_{z}",'Ground Truth Contacts'},'FontSize',14);
 %     legend({'v_{z}','Ground Truth Contacts'},'FontSize',14)
     ylabel('Velocity (m/s)');
     
     subplot(4,1,2);
-    plot(imu_time(range),v(range,3*i-2),'linewidth',2,'Color',[0 0.4470 0.7410]);
-    hold on
-    plot(imu_time(range),v(range,3*i-1),'linewidth',2,'Color',[0.4660 0.6740 0.1880]);
-    hold on
-%     plot(imu_time(range),p(range,3*i),'linewidth',2,'Color',[0.4660 0.6740 0.1880]);
+%     plot(imu_time(range),v(range,3*i-2),'linewidth',2,'Color',[0 0.4470 0.7410]);
 %     hold on
-    plot(imu_time(range),v(range,3*i),'linewidth',2,'Color',[0.4940 0.1840 0.5560]);
+%     plot(imu_time(range),v(range,3*i-1),'linewidth',2,'Color',[0.4660 0.6740 0.1880]);
+%     hold on
+    plot(imu_time(range),p(range,3*i),'linewidth',2,'Color',[0.4660 0.6740 0.1880]);
+%     hold on
+%     plot(imu_time(range),v(range,3*i),'linewidth',2,'Color',[0.4940 0.1840 0.5560]);
     for j = 1:size(est_idx)
         idx = est_idx(j)+start_idx;
         if idx >= start_idx && idx<=end_idx
@@ -186,7 +186,7 @@ for i = 3
         end
     end
     title("Foot Velocity with Estimated Contact",'FontSize',14)
-    legend({"v_{x}","v_{y}","v_{z}",'Estimated Contacts'}, 'FontSize', 14);
+    legend({"v_{z}",'Estimated Contacts'}, 'FontSize', 14);
 %     legend({'v_{z}','Estimated Contacts'},'FontSize',14)
     ylabel('Velocity (m/s)');
     

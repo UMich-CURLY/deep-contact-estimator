@@ -54,32 +54,18 @@ def compute_accuracy(dataloader, model):
 
             output = model(input_data)
 
-            # normalized_output = (output-torch.min(output))/(torch.max(output)-torch.min(output))
-            # normalized_output = normalized_output/normalized_output.sum()
-
             _, prediction = torch.max(output,1)
-            # top2_val, top2_idx = torch.topk(normalized_output,2,dim=1)
-            # top2_ratio = top2_val[0,1]/top2_val[0,0]
 
             
 
             bin_pred = decimal2binary(prediction)
-            # bin_2ndbest = decimal2binary(top2_idx[0,1])
             bin_gt = decimal2binary(gt_label)
 
             bin_pred_arr = np.vstack((bin_pred_arr,bin_pred.cpu().numpy()))
             bin_gt_arr = np.vstack((bin_gt_arr,bin_gt.cpu().numpy()))
 
-            # print(np.shape(prediction.cpu().numpy()))
             pred_arr = np.hstack((pred_arr,prediction.cpu().numpy()))
             gt_arr = np.hstack((gt_arr,gt_label.cpu().numpy()))
-
-            # if top2_ratio > 0.92:
-            #     # print("----------------")
-            #     # print(bin_pred[0])
-            #     # print(bin_2ndbest)
-            #     new_bin_pred = torch.logical_and(bin_pred,bin_2ndbest).type(torch.uint8)
-            #     bin_pred = new_bin_pred
 
             correct_per_leg += (bin_pred==bin_gt).sum(axis=0).cpu().numpy()
             num_data += input_data.size(0)
@@ -140,26 +126,26 @@ def main():
     print("jaccard of leg 3 is: %.4f" % jaccard_of_legs[3])
     print("jaccard of all legs is: %.4f" % jaccard_of_all_legs)
 
-    print(test_acc)
-    print(acc_per_leg[0])
-    print(acc_per_leg[1])
-    print(acc_per_leg[2])
-    print(acc_per_leg[3])
-    print((np.sum(acc_per_leg)/4.0))
+    # print(test_acc)
+    # print(acc_per_leg[0])
+    # print(acc_per_leg[1])
+    # print(acc_per_leg[2])
+    # print(acc_per_leg[3])
+    # print((np.sum(acc_per_leg)/4.0))
 
-    print("---------------")
-    print(precision_of_class)
-    print(precision_of_legs[0])
-    print(precision_of_legs[1])
-    print(precision_of_legs[2])
-    print(precision_of_legs[3])
-    print(precision_of_all_legs)
-    print(jaccard_of_class)
-    print(jaccard_of_legs[0])
-    print(jaccard_of_legs[1])
-    print(jaccard_of_legs[2])
-    print(jaccard_of_legs[3])
-    print(jaccard_of_all_legs)
+    # print("---------------")
+    # print(precision_of_class)
+    # print(precision_of_legs[0])
+    # print(precision_of_legs[1])
+    # print(precision_of_legs[2])
+    # print(precision_of_legs[3])
+    # print(precision_of_all_legs)
+    # print(jaccard_of_class)
+    # print(jaccard_of_legs[0])
+    # print(jaccard_of_legs[1])
+    # print(jaccard_of_legs[2])
+    # print(jaccard_of_legs[3])
+    # print(jaccard_of_all_legs)
 
 if __name__ == '__main__':
     main()
