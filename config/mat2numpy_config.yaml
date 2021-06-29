@@ -3,7 +3,7 @@ mat_folder: "/home/justin/data/contact_data/test_sequence/mat/"
 save_path: "/home/justin/data/contact_data/test_sequence/numpy/"
 
 # mode: "train": split data into train/val/test
-#       "inference": create numpy for one seq without spliting
+#       "inference": create numpy for one sequence without spliting
 mode: "inference"
 
 train_ratio: 0.7

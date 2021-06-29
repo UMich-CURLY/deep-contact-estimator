@@ -1,6 +1,6 @@
-data_path: "/home/justin/data/contact_data/test_sequence/numpy/lcmlog-sidewalk_network_data.npy"
-label_path: "/home/justin/data/contact_data/test_sequence/numpy/lcmlog-sidewalk_network_data_label.npy"
-mat_data_path: "/home/justin/data/contact_data/test_sequence/mat/lcmlog-sidewalk_network_data.mat"
+data_path: "/home/justin/data/contact_data/test_sequence/numpy/lcmlog-forest2_network_data.npy"
+label_path: "/home/justin/data/contact_data/test_sequence/numpy/lcmlog-forest2_network_data_label.npy"
+mat_data_path: "/home/justin/data/contact_data/test_sequence/mat/lcmlog-forest2_network_data.mat"
 model_load_path: "/home/justin/code/deep-contact-estimator/results/0616_2blocks_best_val_loss.pt"
 
 # data params
@@ -11,8 +11,8 @@ batch_size: 1
 
 calculate_accuracy: False
 
-save_mat: False
-mat_save_path: "/home/justin/code/deep-contact-estimator/inference_results/lcmlog-sidewalk_network_data.mat"
+save_mat: True
+mat_save_path: "/home/justin/code/deep-contact-estimator/inference_results/lcmlog-forest2_network_data.mat"
 
-save_lcm: False
-lcm_save_path: "/home/justin/code/deep-contact-estimator/inference_results/lcmlog-sidewalk_network_data.lcm"
+save_lcm: True
+lcm_save_path: "/home/justin/code/deep-contact-estimator/inference_results/lcmlog-forest2_network_data.lcm"

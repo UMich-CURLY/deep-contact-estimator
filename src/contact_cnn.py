@@ -155,10 +155,7 @@ class contact_cnn_1conv_2blocks(nn.Module):
         x = x.permute(0,2,1)
         block1_out = self.block1(x)
         block2_out = self.block2(block1_out)
-        
         block2_out_reshape = block2_out.view(block2_out.shape[0], -1)
-
-        # print(block2_out_reshape.size())
         fc_out = self.fc(block2_out_reshape)
         return fc_out
 
@@ -268,7 +265,6 @@ class contact_cnn_4blocks(nn.Module):
         )
 
     def forward(self, x):
-        # x = x.reshape(x.shape[0], 1, x.shape[1], x.shape[2])
         x = x.permute(0,2,1)
         block1_out = self.block1(x)
         block2_out = self.block2(block1_out)

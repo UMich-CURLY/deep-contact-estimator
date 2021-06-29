@@ -132,7 +132,6 @@ def main():
     # print(acc_per_leg[2])
     # print(acc_per_leg[3])
     # print((np.sum(acc_per_leg)/4.0))
-
     # print("---------------")
     # print(precision_of_class)
     # print(precision_of_legs[0])
