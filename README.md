@@ -3,8 +3,18 @@ Deep Contact Estimator <a name="TOP"></a>
 The deep contact estimator takes in proprioceptive measurements from a quadruped robot and estimates the current contact state of the robot.
 
 ## Contact Data Sets
-* We created contact data sets using an MIT mini cheetah robot.
+* We created contact data sets using an MIT mini cheetah robot on 8 different terrains.
 * The contact data sets can be downloaded [here](https://drive.google.com/drive/folders/1-6Su1HfE2KC1vMg4nkzsFy0X-OSzNMCS?usp=sharing).
+* The 8 different terrains in the data sets:
+![Terrain Types](figures/ground_type_image.png?raw=true "Title")
+
+## Result
+* Estimated ground reaction force and foot velocity overlapped with estimated contacts and ground truth contacts of one leg in the forest data set.
+![contact_results](figures/contact_v_F_forest.png?raw=true "Title")
+
+* The estimated contacts were used in a [contact-aided invariant extended kalman filtering](https://journals.sagepub.com/doi/full/10.1177/0278364919894385) to estimate the pose and velocity of a mini cheetah.
+* Below plot shows the trajectory of the inEKF with this contact estimator in a concrete sequence from the data sets.
+![inekf_lab](figures/inekf_05_lab_trajectory.png?raw=true "Title")
 
 ## Dependency
 * Python3
