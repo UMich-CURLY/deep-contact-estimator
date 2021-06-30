@@ -10,7 +10,7 @@ msg_types=../lcm_types/*.lcm
 all: lcm-cnn-interface 
 
 lcm-cnn-interface: lcm_cnn_interface.o 
-	$(CXX) -o $@ $^ $(LDFLAGS)
+	$(CXX) -pthread -o $@ $^ $(LDFLAGS)
 
 # %.o: %.cpp ../lcm_types/cpp/contact_ground_truth_t.hpp
 # 	$(CXX) $(CFLAGS) -I. -o $@ -c $<   
