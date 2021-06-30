@@ -15,7 +15,7 @@ The deep contact estimator takes in proprioceptive measurements from a quadruped
 * Lightweight Communications and Marshalling (LCM)
 
 ## Docker
-* We also provide [docker](https://docs.docker.com/get-started/) files for cuda 10.1 and 11.1 in [`docker/`](https://github.com/UMich-CURLY/deep-contact-estimator/tree/master/docker).
+* We provide [docker](https://docs.docker.com/get-started/) files for cuda 10.1 and 11.1 in [`docker/`](https://github.com/UMich-CURLY/deep-contact-estimator/tree/master/docker).
 * Detailed tutorial on how to build the docker container can be found in the README in each docker folder.
 
 ## Process Training Data
@@ -47,7 +47,7 @@ The deep contact estimator takes in proprioceptive measurements from a quadruped
 1. Generate a complete test sequence following the steps in [Process Test Sequence](#process-test-sequence).
 2. Modify `config/inference_one_seq_params.yaml`.
 3. Set `calculate_accuracy` to `True` if you wish to also compute the accuracy of the sequence. (Note: This requires ground truth labels and will slow down the inference process.)
-4. Set `save_mat` to `True` if you want the result to be generated in `.mat` file for MATLAB.
+4. Set `save_mat` to `True` if you would like the result to be generated in `.mat` file for MATLAB.
 5. Set `save_lcm` to `True` if you wish to generate results as a LCM log.
 6. Run `python3 src/inference_one_seq.py`.
 7. The saved LCM log can be used in [cheetah_inekf_ros](https://github.com/UMich-CURLY/cheetah_inekf_ros) for mini cheetah state estimation.
