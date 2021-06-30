@@ -1,8 +1,10 @@
 Deep Contact Estimator <a name="TOP"></a>
 ===================
+The deep contact estimator takes in proprioceptive measurements from a quadruped robot and estimates the current contact state of the robot.
 
 ## Contact Data Sets
-The contact data sets can be downloaded [here](https://drive.google.com/drive/folders/1-6Su1HfE2KC1vMg4nkzsFy0X-OSzNMCS?usp=sharing).
+* We created contact data sets using an MIT mini cheetah robot.
+* The contact data sets can be downloaded [here](https://drive.google.com/drive/folders/1-6Su1HfE2KC1vMg4nkzsFy0X-OSzNMCS?usp=sharing).
 
 ## Dependency
 * Python3
