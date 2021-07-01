@@ -43,7 +43,7 @@ The deep contact estimator takes in proprioceptive measurements from a quadruped
 * However, instead of putting all training data into the `mat` folder, you should only put the reserved test sequence in the folder.
 
 ## Train the Network
-1. To train the network, first you need to modify the params in `config/network_params.yaml'.
+1. To train the network, first you need to modify the params in `config/network_params.yaml`.
 2. Run `python3 src/train.py`.
 3. The log will be saved as [Tensorboard](https://pytorch.org/docs/stable/tensorboard.html) format in `log_writer_path` you defined.
 
