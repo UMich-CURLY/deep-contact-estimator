@@ -21,7 +21,7 @@ class Logger : public ILogger
 
 // Importing An ONNX Model Using the C++ Parser API:
 nvinfer1::IBuilder * builder = createInferBuilder(gLogger);
-const auto explicitBatch = 1U << static_cast<uint32_t>(nvInver1::NetworkDefinitionCreationFlag::kEXPLICIT_BATCH);  
+const auto explicitBatch = 1U << static_cast<uint32_t>(nvinfer1::NetworkDefinitionCreationFlag::kEXPLICIT_BATCH);  
 nvinfer1::INetworkDefinition* network = builder->createNetworkV2(explicitBatch);
 
 nvonnxparser::IParser* parser = 

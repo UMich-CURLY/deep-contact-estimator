@@ -13,8 +13,8 @@
 // mutex for critical section
 std::mutex mtx;
 
-std::queue<std::vector<std::vector<float>>> cnnInputLegQueue;
-std::queue<std::vector<std::vector<float>>> cnnInputIMUQueue;
+std::queue<float *> cnnInputLegQueue;
+std::queue<float *> cnnInputIMUQueue;
 std::queue<int> cnnInputGtLabelQueue;
 
 std::vector<std::vector<float>> cnnInputMatrix(150, std::vector<float>(54));
