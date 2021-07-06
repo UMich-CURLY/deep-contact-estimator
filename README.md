@@ -65,5 +65,17 @@ The deep contact estimator takes in proprioceptive measurements from a quadruped
 7. The saved LCM log can be used in [cheetah_inekf_ros](https://github.com/UMich-CURLY/cheetah_inekf_ros) for mini cheetah state estimation.
 
 ## Citation
-This work was submitted to a conference and is under review. 
+This work was submitted to a conference and is under review. For now, please cite the preprint version of the paper:
+
+* Tzu-Yuan Lin, Ray Zhang, Justin Yu, and Maani Ghaffari. "Deep Multi-Modal Contact Estimation for Invariant Observer Design on Quadruped Robots." arXiv preprint arXiv:2106.15713 (2021). [https://arxiv.org/abs/2106.15713](https://arxiv.org/abs/2106.15713)
+```
+@misc{lin2021deep,
+      title={Deep Multi-Modal Contact Estimation for Invariant Observer Design on Quadruped Robots}, 
+      author={Tzu-Yuan Lin and Ray Zhang and Justin Yu and Maani Ghaffari},
+      year={2021},
+      eprint={2106.15713},
+      archivePrefix={arXiv},
+      primaryClass={cs.RO}
+}
+```
 
