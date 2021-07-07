@@ -53,9 +53,13 @@ class contact_dataset(Dataset):
         # this_data = torch.zeros((self.window_size, list(self.data.size())[1]))
         # this_label = torch.zeros((list(self.label.size())[1]))
         
-        
+        print("the element in this data is: ", self.data[5][5])
         this_data = (self.data[idx:idx+self.window_size,:]-torch.mean(self.data[idx:idx+self.window_size,:],dim=0))\
                             /torch.std(self.data[idx:idx+self.window_size,:],dim=0)
+        print("the element in this_data is: ", this_data[1][1])
+        print("The shape of mean is: ", torch.mean(self.data[idx:idx+self.window_size,:],dim=0))
+        print("The shape of std is: ", torch.std(self.data[idx:idx+self.window_size,:],dim=0))
+
         this_label = self.label[idx+self.window_size-1] 
             
         sample = {'data': this_data, 'label': this_label}

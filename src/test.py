@@ -41,8 +41,8 @@ def main():
 
     config = yaml.load(open(args.config_name))
 
-    test_data = contact_dataset(data_path=config['data_folder']+"test.npy",\
-                                label_path=config['data_folder']+"test_label.npy",\
+    test_data = contact_dataset(data_path=config['data_folder']+"test_lcm.npy",\
+                                label_path=config['data_folder']+"test_label_lcm.npy",\
                                 window_size=config['window_size'], device=device)
     test_dataloader = DataLoader(dataset=test_data, batch_size=config['batch_size'])
     # test_dataloader = DataLoader(dataset=test_data, batch_size=1)

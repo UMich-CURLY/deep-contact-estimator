@@ -6,3 +6,4 @@ inference_results/
 *.txt
 .idea
 *.o
+*.bin
