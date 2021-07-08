@@ -2,8 +2,11 @@ __pycache__/
 results/
 logs/
 inference_results/
+build/
 .vscode
 *.txt
 .idea
 *.o
 *.bin
+*.onnx
+*.trt

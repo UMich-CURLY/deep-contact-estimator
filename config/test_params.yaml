@@ -1,5 +1,5 @@
 data_folder: "/home/tingjun/Desktop/Cheetah Data/contact_data/numpy_without_tau_GRF/"
-model_load_path: "/home/tingjun/Desktop/Cheetah_code/deep-contact-estimator/results/0412_1dcnn_64_128_no_tao_GRF_best_val_acc.pt"
+model_load_path: "/home/tingjun/Desktop/Cheetah_code/deep-contact-estimator/results/0616_2blocks_best_val_loss.pt"
 
 # data params
 window_size: 150
@@ -8,5 +8,5 @@ window_size: 150
 batch_size: 30
 
 save_to_mat: False
-mat_save_path: "/home/tingjun/Desktop/Cheetah_code/deep-contact-estimator/results/0412_1dcnn_64_128_no_tao_GRF_best_val_acc.mat"
+mat_save_path: "/home/tingjun/Desktop/Cheetah_code/deep-contact-estimator/results/0616_2blocks_best_val_loss.mat"
 

@@ -10,7 +10,7 @@ from utils.data_handler import *
 import os
 import yaml
 print(torch.__version__)
-
+print(onnx.__version__)
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 parser = argparse.ArgumentParser(description='Test the contcat network')
@@ -34,7 +34,7 @@ for i in test_dataloader:
     input = i['data']
     output = model(input)
 
-ONNX_FILE_PATH = '/home/tingjun/Desktop/Cheetah_code/deep-contact-estimator/results/0412_1dcnn_64_128_no_tao_GRF.onnx'
+ONNX_FILE_PATH = '/home/tingjun/Desktop/Cheetah_code/deep-contact-estimator/results/0616_2blocks_best_val_loss.onnx'
 torch.onnx.export(model, input, ONNX_FILE_PATH, input_names=['input'], output_names=['output'], export_params=True)
 
 onnx_model = onnx.load(ONNX_FILE_PATH)
