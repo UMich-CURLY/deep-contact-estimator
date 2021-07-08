@@ -1,8 +1,11 @@
+#ifndef lcm_cnn_interface_h
+#define lcm_cnn_interface_h
+
 #include <stdio.h>
 #include <iostream>
 #include <fstream>
 #include <math.h> 
-#include <Eigen/Dense>
+// #include <Eigen/Dense>
 #include <deque>
 #include <queue>
 #include <mutex>
@@ -36,14 +39,27 @@ std::queue<float *> cnnInputLegQueue;
 std::queue<float *> cnnInputIMUQueue;
 std::queue<int> cnnInputGtLabelQueue;
 
-const int input_h = 150;
-const int input_w = 54;
-std::vector<std::vector<float>> cnnInputMatrix(input_h, std::vector<float>(input_w));
-float cnnInputMatrix_normalized[input_h][input_w];
-std::vector<float> mean_vector(input_w, 0);
-std::vector<float> std_vector(input_w, 0);
-int dataRequire = 150;
-
-
 int arg_c;
 char** arg_v;
+
+class MatrixBuilder
+{
+public:
+    MatrixBuilder();
+
+    ~MatrixBuilder();
+
+    void BuildMatrix ();
+
+private:
+    int input_h;
+    int input_w;
+    std::vector<std::vector<float>> cnnInputMatrix;
+    float* cnnInputMatrix_normalized;
+    std::vector<float> mean_vector;
+    std::vector<float> std_vector;
+    int dataRequire;
+    samplesCommon::Args args;
+};
+
+#endif

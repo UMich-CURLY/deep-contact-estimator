@@ -1,5 +1,6 @@
 #include "lcm_cnn_interface.hpp" 
 
+
 class Handler 
 {
 public:
@@ -103,13 +104,6 @@ private:
     std::shared_ptr<nvinfer1::ICudaEngine> mEngine; //!< The TensorRT engine used to run the network
 
     //!
-    //! \brief Parses an ONNX model for MNIST and creates a TensorRT network
-    //!
-    bool constructNetwork(SampleUniquePtr<nvinfer1::IBuilder>& builder,
-        SampleUniquePtr<nvinfer1::INetworkDefinition>& network, SampleUniquePtr<nvinfer1::IBuilderConfig>& config,
-        SampleUniquePtr<nvonnxparser::IParser>& parser);
-
-    //!
     //! \brief Reads the input  and stores the result in a managed buffer
     //!
     bool processInput(const samplesCommon::BufferManager& buffers, const float* cnnInputMatrix_normalized);
@@ -134,7 +128,7 @@ bool OnnxToTensorRT::build()
     /// REMARK: we can deserialize a serialized engine if we have one:
     // -----------------------------------------------------------------------------------------------------------------------
     nvinfer1::IRuntime* runtime = nvinfer1::createInferRuntime(gLogger);
-    std::string cached_path = "/home/tingjun/Desktop/TensorRT_PROJECT_USE/engines/0616_2blocks_best_val_loss.trt";
+    std::string cached_path = "/home/tingjun/Desktop/Cheetah_Proj/deep-contact-estimator/engines/0616_2blocks_best_val_loss.trt";
     std::ifstream fin(cached_path);
     std::string cached_engine = "";
     while (fin.peek() != EOF) {
@@ -151,40 +145,11 @@ bool OnnxToTensorRT::build()
         return false;
     }
 
-    std::cout << "Successfully built the engine" << std::endl;
+    // std::cout << "Successfully built the engine" << std::endl;
 
     return true;
 }
 
-//!
-//! \brief Uses a ONNX parser to create the Onnx Network and marks the
-//!        output layers
-//!
-//! \param network Pointer to the network that will be populated with the Onnx network
-//!
-//! \param builder Pointer to the engine builder
-//!
-bool OnnxToTensorRT::constructNetwork(SampleUniquePtr<nvinfer1::IBuilder>& builder,
-    SampleUniquePtr<nvinfer1::INetworkDefinition>& network, SampleUniquePtr<nvinfer1::IBuilderConfig>& config,
-    SampleUniquePtr<nvonnxparser::IParser>& parser)
-{
-    auto parsed = parser->parseFromFile(
-        locateFile(mParams.onnxFileName, mParams.dataDirs).c_str(), static_cast<int>(gLogger.getReportableSeverity()));
-    if (!parsed)
-    {
-        return false;
-    }
-
-    builder->setMaxBatchSize(mParams.batchSize);
-    config->setMaxWorkspaceSize(16_MiB);
-    if (mParams.fp16)
-    {
-        config->setFlag(BuilderFlag::kFP16);
-    }
-    samplesCommon::enableDLA(builder.get(), config.get(), mParams.dlaCore);
-
-    return true;
-}
 
 //!
 //! \brief Runs the TensorRT inference engine for this sample
@@ -265,6 +230,7 @@ bool OnnxToTensorRT::processInput(const samplesCommon::BufferManager& buffers, c
     int number_of_items = 150 * 54;
     // hostDataBuffer.resize(number_of_items);
     for (int i = 0; i < inputH * inputW; i++) {
+        // std::cout <<  cnnInputMatrix_normalized[i] << std::endl;
         hostDataBuffer[i] = cnnInputMatrix_normalized[i];
     }
 
@@ -285,7 +251,6 @@ bool OnnxToTensorRT::verifyOutput(const samplesCommon::BufferManager& buffers)
     float val{0.0f};
     int idx{0};
 
-    gLogInfo << "Output: " << std::endl;
     float current_max = output[0];
     int output_idx = 0;
     for (int i = 1; i < outputSize; i++) {
@@ -307,14 +272,14 @@ samplesCommon::OnnxSampleParams initializeSampleParams(const samplesCommon::Args
     samplesCommon::OnnxSampleParams params;
     if (args.dataDirs.empty()) //!< Use default directories if user hasn't provided directory paths
     {
-        std::cout << "Using default directory" << endl;
+        // std::cout << "Using default directory" << endl;
         params.dataDirs.push_back("weights/");
         params.dataDirs.push_back("data/");
         // params.dataDirs.push_back("data/samples/mnist/");
     }
     else //!< Use the data directory provided by the user
     {
-        std::cout << "Using directory provided by the user" << endl;
+        // std::cout << "Using directory provided by the user" << endl;
         params.dataDirs = args.dataDirs;
     }
     params.onnxFileName = "0616_2blocks_best_val_loss.onnx";
@@ -348,18 +313,23 @@ void printHelpInfo()
     std::cout << "--fp16          Run in FP16 mode." << std::endl;
 }
 
-class MatrixBuilder
-{
-public:
-    MatrixBuilder() {
-        std::vector<float> mean_vector(input_w, 0);
-        std::vector<float> std_vector(input_w, 0);
-        int dataRequire = 150;
-        std::vector<std::vector<float>> cnnInputMatrix(input_h, std::vector<float>(input_w));
-        std::vector<std::vector<float>> cnnInputMatrix_normalized(input_h, std::vector<float>(input_w));
-    }
 
-    static void BuildMatrix (){
+MatrixBuilder::MatrixBuilder()
+{
+    input_h = 150;
+    input_w = 54;
+    dataRequire = 150;
+    cnnInputMatrix = std::vector<std::vector<float>> (input_h, std::vector<float>(input_w));
+    cnnInputMatrix_normalized = new float[input_h * input_w];
+    mean_vector = std::vector<float> (input_w, 0);
+    std_vector = std::vector<float> (input_w, 0);
+}
+
+MatrixBuilder::~MatrixBuilder() {
+    delete[] cnnInputMatrix_normalized;
+}
+
+void MatrixBuilder::BuildMatrix (){
         // Get leg input from queue
         while (true){
             if (!cnnInputLegQueue.empty() && !cnnInputIMUQueue.empty() && !cnnInputGtLabelQueue.empty()){
@@ -420,11 +390,11 @@ public:
                         for (int i = 0; i < input_h; ++i) {
                             std_vector[j] += std::pow((cnnInputMatrix[i][j] - mean_vector[j]), 2.0);
                         }
-                        std_vector[j] = std_vector[j] / (input_h - 1);
+                        std_vector[j] = std::sqrt(std_vector[j] / (input_h - 1));
 
                         // Normalize the matrix:
                         for (int i = 0; i < input_h; ++i) {
-                            cnnInputMatrix_normalized[i][j] = (cnnInputMatrix[i][j] - mean_vector[j]) / std_vector[j];
+                            cnnInputMatrix_normalized[i * input_w + j] = (cnnInputMatrix[i][j] - mean_vector[j]) / std_vector[j];
                         }
                     }
                     /// REMARK: write std::vector to a file:
@@ -456,13 +426,13 @@ public:
                     }
 
                     OnnxToTensorRT sample(initializeSampleParams(args));
-                    gLogInfo << "Building and running a GPU inference engine for Onnx MNIST" << std::endl;
+                    // gLogInfo << "Building and running a GPU inference engine for Onnx MNIST" << std::endl;
                     if (!sample.build())
                     {
                         std::cerr << "FAILED: Cannot build the engine" << std::endl;
                         return;
                     }
-                    if (!sample.infer(&cnnInputMatrix_normalized[0][0]))
+                    if (!sample.infer(&cnnInputMatrix_normalized[0]))
                     {
                         std::cerr << "FAILED: Cannot use the engine to infer a result" << std::endl;
                         return;
@@ -471,40 +441,13 @@ public:
             } 
         }
     }
-};
+
 
 
 int main(int argc, char** argv)
 {
     arg_c = argc;
     arg_v = argv;
-    /// TENSORRT: read from user input and build engine:
-    // samplesCommon::Args args;
-    // bool argsOK = samplesCommon::parseArgs(args, argc, argv);
-    // std::cout << "What is argc?  " << argc << std::endl;
-    // std::cout << "What is *argv?  " << *argv << std::endl;
-
-    // if (!argsOK)
-    // {
-    //     gLogError << "Invalid arguments" << std::endl;
-    //     printHelpInfo();
-    //     return EXIT_FAILURE;
-    // }
-    // if (args.help)
-    // {
-    //     printHelpInfo();
-    //     return EXIT_SUCCESS;
-    // }
-
-    // auto sampleTest = gLogger.defineTest(gSampleName, argc, argv);
-
-    // gLogger.reportTestStart(sampleTest);
-    // OnnxToTensorRT sample(initializeSampleParams(args));
-    // gLogInfo << "Building and running a GPU inference engine for Onnx MNIST" << std::endl;
-    // if (!sample.build())
-    // {
-    //     return gLogger.reportFail(sampleTest);
-    // }
 
     /// LCM: subscribe to channels:
     lcm::LCM lcm;
@@ -516,7 +459,8 @@ int main(int argc, char** argv)
     lcm.subscribe("contact_ground_truth", &Handler::receive_contact_ground_truth_msg, &handlerObject);
     
     std::cout << "Start Running LCM-CNN Interface" << std::endl;
-    std::thread MatrixThread (MatrixBuilder::BuildMatrix);
+    MatrixBuilder matrix_builder;
+    std::thread MatrixThread (&MatrixBuilder::BuildMatrix, &matrix_builder);
     while(0 == lcm.handle());
     MatrixThread.join();
 

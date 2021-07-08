@@ -4,7 +4,6 @@ logs/
 inference_results/
 build/
 .vscode
-*.txt
 .idea
 *.o
 *.bin
