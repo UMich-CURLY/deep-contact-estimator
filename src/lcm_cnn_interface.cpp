@@ -439,7 +439,22 @@ public:
                     // output.close();
                     std::cout << "The ground truth label is: " << gtLabel << std::endl;
 
-                    samplesCommon::Args& args;
+                    /// REMARK: Inference
+                    samplesCommon::Args args;
+                    bool argsOK = samplesCommon::parseArgs(args, arg_c, arg_v);
+
+                    if (!argsOK)
+                    {
+                        gLogError << "Invalid arguments" << std::endl;
+                        printHelpInfo();
+                        return;
+                    }
+                    if (args.help)
+                    {
+                        printHelpInfo();
+                        return;
+                    }
+
                     OnnxToTensorRT sample(initializeSampleParams(args));
                     gLogInfo << "Building and running a GPU inference engine for Onnx MNIST" << std::endl;
                     if (!sample.build())
@@ -461,6 +476,8 @@ public:
 
 int main(int argc, char** argv)
 {
+    arg_c = argc;
+    arg_v = argv;
     /// TENSORRT: read from user input and build engine:
     // samplesCommon::Args args;
     // bool argsOK = samplesCommon::parseArgs(args, argc, argv);
@@ -482,7 +499,7 @@ int main(int argc, char** argv)
     // auto sampleTest = gLogger.defineTest(gSampleName, argc, argv);
 
     // gLogger.reportTestStart(sampleTest);
-    // OnnxToTensorRT sample.initializeSampleParams(args);
+    // OnnxToTensorRT sample(initializeSampleParams(args));
     // gLogInfo << "Building and running a GPU inference engine for Onnx MNIST" << std::endl;
     // if (!sample.build())
     // {

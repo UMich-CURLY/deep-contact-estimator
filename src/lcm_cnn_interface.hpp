@@ -44,4 +44,6 @@ std::vector<float> mean_vector(input_w, 0);
 std::vector<float> std_vector(input_w, 0);
 int dataRequire = 150;
 
-// class OnnxToTensorRT {};
+
+int arg_c;
+char** arg_v;
