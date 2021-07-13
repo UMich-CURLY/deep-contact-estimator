@@ -228,7 +228,7 @@ bool OnnxToTensorRT::verifyOutput(const samplesCommon::BufferManager& buffers)
         cnn_output.contact[i] = binary[i];
     }
     lcm.publish("CNN_OUTPUT", &cnn_output);
-    // std::cout << "CNN output is: " << binary.size() << std::endl;
+    std::cout << "CNN output is: " << output_idx << "(in binary: " << binary << ")" << std::endl;
     return true;
 }
 
