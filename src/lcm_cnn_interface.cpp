@@ -1,72 +1,61 @@
 #include "lcm_cnn_interface.hpp" 
 
 
-class Handler 
+
+Handler::~Handler() {}
+
+void Handler::receive_leg_control_msg(const lcm::ReceiveBuffer* rbuf,
+                                const std::string& chan, 
+                                const leg_control_data_lcmt* msg)
 {
-public:
-    ~Handler() {}
+    int size = 12;
+    float* leg_control_data = new float[48]();
+    arrayCopy(leg_control_data, msg->q, size);
+    arrayCopy(leg_control_data + size, msg->qd, size);
+    arrayCopy(leg_control_data + size + size, msg->p, size);
+    arrayCopy(leg_control_data + size + size + size, msg->v, size);
+
+    cnnInputLegQueue.push(leg_control_data);
+}
+
+void Handler::receive_microstrain_msg(const lcm::ReceiveBuffer* rbuf,
+                                const std::string& chan, 
+                                const microstrain_lcmt* msg)
+{
+    float* microstrain_data = new float[6]();
+    int size = 3;
+    arrayCopy(microstrain_data, msg->acc, size);
+    arrayCopy(microstrain_data + size, msg->omega, size);
+
+    cnnInputIMUQueue.push(microstrain_data);
+}
+
+void Handler::receive_contact_ground_truth_msg(const lcm::ReceiveBuffer* rbuf,
+                                        const std::string& chan, 
+                                        const contact_ground_truth_t* msg)
+{
+    std::vector<int8_t> contact_ground_truth_label = msg->contact;
     
-    void receive_leg_control_msg(const lcm::ReceiveBuffer* rbuf,
-                                    const std::string& chan, 
-                                    const leg_control_data_lcmt* msg)
-    {
-        // std::cout << ++count << std::endl;
-        // printf("Received message on channel \"%s\":\n", chan.c_str());
-        int size = 12;
-        float* leg_control_data = new float[48]();
-        arrayCopy(leg_control_data, msg->q, size);
-        arrayCopy(leg_control_data + size, msg->qd, size);
-        arrayCopy(leg_control_data + size + size, msg->p, size);
-        arrayCopy(leg_control_data + size + size + size, msg->v, size);
+    int gt_label = contact_ground_truth_label[0] * 2 * 2 * 2 
+                + contact_ground_truth_label[1] * 2 * 2
+                + contact_ground_truth_label[2] * 2
+                + contact_ground_truth_label[3];
 
-        cnnInputLegQueue.push(leg_control_data);
+    cnnInputGtLabelQueue.push(gt_label);
+}
+
+
+void Handler::arrayCopy(float array1 [], const float array2 [], int size) {
+    for (int i = 0; i < size; ++i) {
+        array1[i] = array2[i];
     }
+}
 
-    void receive_microstrain_msg(const lcm::ReceiveBuffer* rbuf,
-            const std::string& chan, 
-            const microstrain_lcmt* msg)
-    {
-        // printf("Received message on channel \"%s\":\n", chan.c_str());
-        float* microstrain_data = new float[6]();
-        int size = 3;
-        arrayCopy(microstrain_data, msg->acc, size);
-        arrayCopy(microstrain_data + size, msg->omega, size);
-
-        cnnInputIMUQueue.push(microstrain_data);
-    }
-
-    void receive_contact_ground_truth_msg(const lcm::ReceiveBuffer* rbuf,
-            const std::string& chan, 
-            const contact_ground_truth_t* msg)
-    {
-        // printf("Received message on channel \"%s\":\n", chan.c_str());
-        std::vector<int8_t> contact_ground_truth_label = msg->contact;
-        
-        int gt_label = contact_ground_truth_label[0] * 2 * 2 * 2 
-                    + contact_ground_truth_label[1] * 2 * 2
-                    + contact_ground_truth_label[2] * 2
-                    + contact_ground_truth_label[3];
-        // std::cout << gt_label << std::endl;
-
-        cnnInputGtLabelQueue.push(gt_label);
-    }
-
-private:
-    
-    // Pass the begin pointer of array1 and array2 to copy array2 to
-    // array1 from a certain index.
-    void arrayCopy(float array1 [], const float array2 [], int size) {
-        for (int i = 0; i < size; ++i) {
-            array1[i] = array2[i];
-        }
-    }
-
-};
 
 const std::string gSampleName = "TensorRT.sample_onnx";
 
 
-OnnxToTensorRT::OnnxToTensorRT(const samplesCommon::OnnxSampleParams& params)
+TensorRTAccelerator::TensorRTAccelerator(const samplesCommon::OnnxSampleParams& params)
     : mParams(params),
       mEngine(nullptr)
 {
@@ -76,9 +65,9 @@ OnnxToTensorRT::OnnxToTensorRT(const samplesCommon::OnnxSampleParams& params)
     cnn_output.contact = {0, 0, 0, 0};
 }
 
-bool OnnxToTensorRT::build()
-{
 
+bool TensorRTAccelerator::buildFromSerializedEngine()
+{
     /// REMARK: we can deserialize a serialized engine if we have one:
     // -----------------------------------------------------------------------------------------------------------------------
     nvinfer1::IRuntime* runtime = nvinfer1::createInferRuntime(gLogger);
@@ -111,13 +100,7 @@ bool OnnxToTensorRT::build()
 }
 
 
-//!
-//! \brief Runs the TensorRT inference engine for this sample
-//!
-//! \details This function is the main execution function of the sample. It allocates the buffer,
-//!          sets inputs and executes the engine.
-//!
-bool OnnxToTensorRT::infer(float* cnnInputMatrix_normalized)
+bool TensorRTAccelerator::inferAndPublish(float* cnnInputMatrix_normalized)
 {
     // Create RAII buffer manager object
 
@@ -149,23 +132,15 @@ bool OnnxToTensorRT::infer(float* cnnInputMatrix_normalized)
         return false;
     }
     
-
-
     // Memcpy from device output buffers to host output buffers
     buffers.copyOutputToHost();
 
-    // Verify results
-    
-    if (!verifyOutput(buffers))
-    {
-        return false;
-    }
-        
-
+    // Get results from the engine and publish the output
+    publishOutput(getOutput(buffers));
     return true;
 }
 
-bool OnnxToTensorRT::serialize() {
+bool TensorRTAccelerator::serialize() {
     nvinfer1::IHostMemory *serializedModel = mEngine->serialize();
     std::string serialize_str;
     std::ofstream serialize_output_stream;
@@ -184,7 +159,7 @@ bool OnnxToTensorRT::serialize() {
 //!
 //! \brief Reads the input and stores the result in a managed buffer
 //!
-bool OnnxToTensorRT::processInput(const samplesCommon::BufferManager& buffers, const float* cnnInputMatrix_normalized)
+bool TensorRTAccelerator::processInput(const samplesCommon::BufferManager& buffers, const float* cnnInputMatrix_normalized)
 {   
     const int inputH = 150;
     const int inputW = 54;
@@ -197,18 +172,13 @@ bool OnnxToTensorRT::processInput(const samplesCommon::BufferManager& buffers, c
         hostDataBuffer[i] = cnnInputMatrix_normalized[i];
     }
 
-
     return true;
 }
 
-//!
-//! \brief Classifies digits and verify result
-//!
-//! \return whether the classification output matches expectations
-//!
-bool OnnxToTensorRT::verifyOutput(const samplesCommon::BufferManager& buffers)
+
+int TensorRTAccelerator::getOutput(const samplesCommon::BufferManager& buffers)
 {
-    const int outputSize = 16;
+    const int outputSize = 16; // 4 legs, 16 status
     
     float* output = static_cast<float*>(buffers.getHostBuffer(mParams.outputTensorNames[0]));
     float val{0.0f};
@@ -223,13 +193,17 @@ bool OnnxToTensorRT::verifyOutput(const samplesCommon::BufferManager& buffers)
             output_idx = i;
         }
     }
+    return output_idx;
+}
+
+
+void TensorRTAccelerator::publishOutput(int output_idx) {
     std::string binary = std::bitset<4>(output_idx).to_string(); // to binary
     for (int i = 0; i < cnn_output.num_legs; i++) {
         cnn_output.contact[i] = binary[i];
     }
     lcm.publish("CNN_OUTPUT", &cnn_output);
-    std::cout << "CNN output is: " << output_idx << "(in binary: " << binary << ")" << std::endl;
-    return true;
+    std::cout << "CNN output is: " << output_idx << " (in binary: " << binary << ")" << std::endl;
 }
 
 //!
@@ -292,7 +266,7 @@ MatrixBuilder::MatrixBuilder(const samplesCommon::Args &args)
     cnnInputMatrix_normalized = new float[input_h * input_w];
     mean_vector = std::vector<float> (input_w, 0);
     std_vector = std::vector<float> (input_w, 0);
-    if (!sample.build()) {
+    if (!sample.buildFromSerializedEngine()) {
         std::cerr << "FAILED: Cannot build the engine" << std::endl;
         return;
     }
@@ -384,7 +358,7 @@ void MatrixBuilder::BuildMatrix (){
                 cudaEventCreate(&stop);
                 cudaEventRecord(start);
 
-                if (!sample.infer(&cnnInputMatrix_normalized[0]))
+                if (!sample.inferAndPublish(&cnnInputMatrix_normalized[0]))
                 {
                     std::cerr << "FAILED: Cannot use the engine to infer a result" << std::endl;
                     return;
