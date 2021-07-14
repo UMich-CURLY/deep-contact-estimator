@@ -1,10 +1,8 @@
 #include "lcm_cnn_interface.hpp" 
 
-
-
 Handler::~Handler() {}
 
-void Handler::receive_leg_control_msg(const lcm::ReceiveBuffer* rbuf,
+void Handler::receiveLegControlMsg(const lcm::ReceiveBuffer* rbuf,
                                 const std::string& chan, 
                                 const leg_control_data_lcmt* msg)
 {
@@ -18,7 +16,7 @@ void Handler::receive_leg_control_msg(const lcm::ReceiveBuffer* rbuf,
     cnnInputLegQueue.push(leg_control_data);
 }
 
-void Handler::receive_microstrain_msg(const lcm::ReceiveBuffer* rbuf,
+void Handler::receiveMicrostrainMsg(const lcm::ReceiveBuffer* rbuf,
                                 const std::string& chan, 
                                 const microstrain_lcmt* msg)
 {
@@ -30,7 +28,7 @@ void Handler::receive_microstrain_msg(const lcm::ReceiveBuffer* rbuf,
     cnnInputIMUQueue.push(microstrain_data);
 }
 
-void Handler::receive_contact_ground_truth_msg(const lcm::ReceiveBuffer* rbuf,
+void Handler::receiveContactGroundTruthMsg(const lcm::ReceiveBuffer* rbuf,
                                         const std::string& chan, 
                                         const contact_ground_truth_t* msg)
 {
@@ -65,13 +63,15 @@ TensorRTAccelerator::TensorRTAccelerator(const samplesCommon::OnnxSampleParams& 
     cnn_output.contact = {0, 0, 0, 0};
 }
 
+TensorRTAccelerator::~TensorRTAccelerator() {};
+
 
 bool TensorRTAccelerator::buildFromSerializedEngine()
 {
     /// REMARK: we can deserialize a serialized engine if we have one:
     // -----------------------------------------------------------------------------------------------------------------------
     nvinfer1::IRuntime* runtime = nvinfer1::createInferRuntime(gLogger);
-    std::string cached_path = "/home/tingjun/Desktop/mini_cheetah/deep-contact-estimator/engines/0616_2blocks_best_val_loss.trt";
+    std::string cached_path = "/home/tingjun/Desktop/Cheetah_Proj/deep-contact-estimator/engines/0616_2blocks_best_val_loss.trt";
     std::ifstream fin(cached_path);
     std::string cached_engine = "";
     while (fin.peek() != EOF) {
@@ -100,7 +100,7 @@ bool TensorRTAccelerator::buildFromSerializedEngine()
 }
 
 
-bool TensorRTAccelerator::inferAndPublish(float* cnnInputMatrix_normalized)
+bool TensorRTAccelerator::inferAndPublish(float* cnn_input_matrix_normalized)
 {
     // Create RAII buffer manager object
 
@@ -115,7 +115,7 @@ bool TensorRTAccelerator::inferAndPublish(float* cnnInputMatrix_normalized)
 
 
     assert(mParams.inputTensorNames.size() == 1);
-    if (!processInput(buffers, cnnInputMatrix_normalized))
+    if (!processInput(buffers, cnn_input_matrix_normalized))
     {
         std::cerr << "Failed in reading input" << std::endl;
         return false;
@@ -146,7 +146,7 @@ bool TensorRTAccelerator::serialize() {
     std::ofstream serialize_output_stream;
     serialize_str.resize(serializedModel->size());
     memcpy((void*)serialize_str.data(), serializedModel->data(), serializedModel->size());
-    serialize_output_stream.open("/home/tingjun/Desktop/mini_cheetah/deep-contact-estimator/engines/0616_2blocks_best_val_loss.trt");
+    serialize_output_stream.open("/home/tingjun/Desktop/Cheetah_Proj/deep-contact-estimator/engines/0616_2blocks_best_val_loss.trt");
     
     serialize_output_stream << serialize_str;
     serialize_output_stream.close();
@@ -159,7 +159,7 @@ bool TensorRTAccelerator::serialize() {
 //!
 //! \brief Reads the input and stores the result in a managed buffer
 //!
-bool TensorRTAccelerator::processInput(const samplesCommon::BufferManager& buffers, const float* cnnInputMatrix_normalized)
+bool TensorRTAccelerator::processInput(const samplesCommon::BufferManager& buffers, const float* cnn_input_matrix_normalized)
 {   
     const int inputH = 150;
     const int inputW = 54;
@@ -168,8 +168,8 @@ bool TensorRTAccelerator::processInput(const samplesCommon::BufferManager& buffe
     int number_of_items = 150 * 54;
     // hostDataBuffer.resize(number_of_items);
     for (int i = 0; i < inputH * inputW; i++) {
-        // std::cout <<  cnnInputMatrix_normalized[i] << std::endl;
-        hostDataBuffer[i] = cnnInputMatrix_normalized[i];
+        // std::cout <<  cnn_input_matrix_normalized[i] << std::endl;
+        hostDataBuffer[i] = cnn_input_matrix_normalized[i];
     }
 
     return true;
@@ -214,19 +214,18 @@ samplesCommon::OnnxSampleParams initializeSampleParams(const samplesCommon::Args
     samplesCommon::OnnxSampleParams params;
     if (args.dataDirs.empty()) //!< Use default directories if user hasn't provided directory paths
     {
-        // std::cout << "Using default directory" << endl;
+        std::cout << "Using default directory" << endl;
         params.dataDirs.push_back("weights/");
         params.dataDirs.push_back("data/");
-        // params.dataDirs.push_back("data/samples/mnist/");
     }
     else //!< Use the data directory provided by the user
     {
-        // std::cout << "Using directory provided by the user" << endl;
+        std::cout << "Using directory provided by the user" << endl;
         params.dataDirs = args.dataDirs;
     }
     params.onnxFileName = "0616_2blocks_best_val_loss.onnx";
     params.inputTensorNames.push_back("input");
-    params.batchSize = 1;
+    params.batchSize = 1; //!< Takes in 1 batch every time
     params.outputTensorNames.push_back("output");
     params.dlaCore = args.useDLACore;
     params.int8 = args.runInInt8;
@@ -256,14 +255,14 @@ void printHelpInfo()
 }
 
 
-MatrixBuilder::MatrixBuilder(const samplesCommon::Args &args)
+LcmCnnInterface::LcmCnnInterface(const samplesCommon::Args &args)
     : input_h(150),
       input_w(54),
       data_require(150),
       sample(initializeSampleParams(args))
 {
-    cnnInputMatrix = std::vector<std::vector<float>> (input_h, std::vector<float>(input_w));
-    cnnInputMatrix_normalized = new float[input_h * input_w];
+    cnn_input_matrix = std::vector<std::vector<float>> (input_h, std::vector<float>(input_w));
+    cnn_input_matrix_normalized = new float[input_h * input_w];
     mean_vector = std::vector<float> (input_w, 0);
     std_vector = std::vector<float> (input_w, 0);
     if (!sample.buildFromSerializedEngine()) {
@@ -273,16 +272,14 @@ MatrixBuilder::MatrixBuilder(const samplesCommon::Args &args)
 
 }
 
-MatrixBuilder::~MatrixBuilder() {
-    delete[] cnnInputMatrix_normalized;
+LcmCnnInterface::~LcmCnnInterface() {
+    delete[] cnn_input_matrix_normalized;
 }
 
-void MatrixBuilder::BuildMatrix (){
+void LcmCnnInterface::buildMatrix (){
     // Get leg input from queue
     while (true){
         if (!cnnInputLegQueue.empty() && !cnnInputIMUQueue.empty() && !cnnInputGtLabelQueue.empty()){
-
-
             mtx.lock();
             // Get GTlabel from queue
             int gtLabel = cnnInputGtLabelQueue.front();
@@ -290,7 +287,7 @@ void MatrixBuilder::BuildMatrix (){
             mtx.unlock();
             // Start to build a new line and generate a new input
             std::vector<float> newLine(54);
-            int idx = 0; // keep track of the current newLine idx;
+            int idx = 0; //!< keep track of the current newLine idx;
             int legTypeDataNum = 12;
             int IMUTypeDataNum = 3;
             
@@ -322,58 +319,58 @@ void MatrixBuilder::BuildMatrix (){
             mtx.unlock();
 
             // Put the newLine to the InputMatrix and destroy the first line:
-            cnnInputMatrix.erase(cnnInputMatrix.begin());
-            cnnInputMatrix.push_back(newLine);
+            cnn_input_matrix.erase(cnn_input_matrix.begin());
+            cnn_input_matrix.push_back(newLine);
             data_require = std::max(data_require - 1, 0);
-            if (data_require == 0) {
-                /// REMARK: send to CNN network in TRT
-                // We need to normalize the input matrix, to do so,
-                // we need to calculate the mean value and standard
-                // deviation.
-                
-                for (int j = 0; j < input_w; ++j) {
-                    for (int i = 0; i < input_h; ++i) {
-                        mean_vector[j] += cnnInputMatrix[i][j];
-                    }
-                    mean_vector[j] = mean_vector[j] / input_h;
-
-                    for (int i = 0; i < input_h; ++i) {
-                        std_vector[j] += std::pow((cnnInputMatrix[i][j] - mean_vector[j]), 2.0);
-                    }
-                    std_vector[j] = std::sqrt(std_vector[j] / (input_h - 1));
-
-                    // Normalize the matrix:
-                    for (int i = 0; i < input_h; ++i) {
-                        cnnInputMatrix_normalized[i * input_w + j] = (cnnInputMatrix[i][j] - mean_vector[j]) / std_vector[j];
-                    }
-                }
-
+            if (data_require == 0) {            
+                normalizeAndInfer();   
                 std::cout << "The ground truth label is: " << gtLabel << std::endl;
-
-                /// REMARK: Inference
-                // gLogInfo << "Building and running a GPU inference engine for Onnx MNIST" << std::endl;
-
-                cudaEvent_t start, stop;
-                cudaEventCreate(&start);
-                cudaEventCreate(&stop);
-                cudaEventRecord(start);
-
-                if (!sample.inferAndPublish(&cnnInputMatrix_normalized[0]))
-                {
-                    std::cerr << "FAILED: Cannot use the engine to infer a result" << std::endl;
-                    return;
-                }
-
-
-                cudaEventRecord(stop);
-                cudaEventSynchronize(stop);
-                float milliseconds = 0;
-                cudaEventElapsedTime(&milliseconds, start, stop);
-                std::cout << "It's frequency is " << 1000 / milliseconds << "Hz" << std::endl;
-                
             }
         } 
     }
+}
+
+
+void LcmCnnInterface::normalizeAndInfer() {
+    /// REMARK: normalize input and send to CNN network in TRT
+    // We need to normalize the input matrix, to do so,
+    // we need to calculate the mean value and standard deviation.
+    for (int j = 0; j < input_w; ++j) {
+        // find mean:
+        for (int i = 0; i < input_h; ++i) {
+            mean_vector[j] += cnn_input_matrix[i][j];
+        }
+        mean_vector[j] = mean_vector[j] / input_h;
+        
+        // find std:
+        for (int i = 0; i < input_h; ++i) {
+            std_vector[j] += std::pow((cnn_input_matrix[i][j] - mean_vector[j]), 2.0);
+        }
+        std_vector[j] = std::sqrt(std_vector[j] / (input_h - 1));
+
+        // Normalize the matrix:
+        for (int i = 0; i < input_h; ++i) {
+            cnn_input_matrix_normalized[i * input_w + j] = (cnn_input_matrix[i][j] - mean_vector[j]) / std_vector[j];
+        }
+    }
+
+    /// REMARK: Inference (Here we added a timer to calculate the inference frequency)
+    cudaEvent_t start, stop;
+    cudaEventCreate(&start);
+    cudaEventCreate(&stop);
+    cudaEventRecord(start);
+
+    if (!sample.inferAndPublish(&cnn_input_matrix_normalized[0]))
+    {
+        std::cerr << "FAILED: Cannot use the engine to infer a result" << std::endl;
+        return;
+    }
+
+    cudaEventRecord(stop);
+    cudaEventSynchronize(stop);
+    float milliseconds = 0;
+    cudaEventElapsedTime(&milliseconds, start, stop);
+    std::cout << "It's frequency is " << 1000 / milliseconds << "Hz" << std::endl;
 }
 
 
@@ -384,15 +381,15 @@ int main(int argc, char** argv)
     if(!lcm.good())
         return 1;
     Handler handlerObject;
-    lcm.subscribe("leg_control_data", &Handler::receive_leg_control_msg, &handlerObject);
-    lcm.subscribe("microstrain", &Handler::receive_microstrain_msg, &handlerObject);
-    lcm.subscribe("contact_ground_truth", &Handler::receive_contact_ground_truth_msg, &handlerObject);
+    lcm.subscribe("leg_control_data", &Handler::receiveLegControlMsg, &handlerObject);
+    lcm.subscribe("microstrain", &Handler::receiveMicrostrainMsg, &handlerObject);
+    lcm.subscribe("contact_ground_truth", &Handler::receiveContactGroundTruthMsg, &handlerObject);
     
     std::cout << "Start Running LCM-CNN Interface" << std::endl;
     
+    // Takes input arguments
     samplesCommon::Args args;
     bool argsOK = samplesCommon::parseArgs(args, argc, argv);
-
     if (!argsOK)
     {
         gLogError << "Invalid arguments" << std::endl;
@@ -405,12 +402,11 @@ int main(int argc, char** argv)
         return -1;
     }
 
-    MatrixBuilder matrix_builder(args);
-    std::thread MatrixThread (&MatrixBuilder::BuildMatrix, &matrix_builder);
+    /// INTERFACE: use multiple threads to avoid missing messages:
+    LcmCnnInterface matrix_builder(args);
+    std::thread MatrixThread (&LcmCnnInterface::buildMatrix, &matrix_builder);
     while(0 == lcm.handle());
     MatrixThread.join();
-
-    // return gLogger.reportPass(sampleTest);
 
     return 0;
 }

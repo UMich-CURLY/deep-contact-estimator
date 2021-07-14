@@ -17,9 +17,6 @@
 #include "logger.h"
 #include "parserOnnxConfig.h"
 #include "NvInfer.h"
-
-
-#include "NvInfer.h"
 #include <cuda_runtime_api.h>
 
 #include <cstdlib>
@@ -33,10 +30,9 @@
 #include "../lcm_types/cpp/contact_t.hpp"
 #include "../lcm_types/cpp/contact_ground_truth_t.hpp"
 
-
 // mutex for critical section
 std::mutex mtx;
-
+// queues that need to be shared between Handler and LcmCnnInterface:
 std::queue<float *> cnnInputLegQueue;
 std::queue<float *> cnnInputIMUQueue;
 std::queue<int> cnnInputGtLabelQueue;
@@ -53,7 +49,7 @@ public:
     //! \brief Receives messages from the "leg_control_data" channel and  
     //! stores them in an array, then put the array pointer into a queue
     //!
-    void receive_leg_control_msg(const lcm::ReceiveBuffer* rbuf,
+    void receiveLegControlMsg(const lcm::ReceiveBuffer* rbuf,
                                  const std::string& chan, 
                                  const leg_control_data_lcmt* msg);
 
@@ -61,7 +57,7 @@ public:
     //! \brief Receives messages from the "microstrain" channel and  
     //! stores them in an array, then put the array pointer into a queue
     //!
-    void receive_microstrain_msg(const lcm::ReceiveBuffer* rbuf,
+    void receiveMicrostrainMsg(const lcm::ReceiveBuffer* rbuf,
                                  const std::string& chan, 
                                  const microstrain_lcmt* msg);
 
@@ -69,7 +65,7 @@ public:
     //! \brief Receives messages from the "contact_ground_truth" channel and  
     //! stores it in an array, then put the array pointer into a queue
     //!
-    void receive_contact_ground_truth_msg(const lcm::ReceiveBuffer* rbuf,
+    void receiveContactGroundTruthMsg(const lcm::ReceiveBuffer* rbuf,
                                           const std::string& chan, 
                                           const contact_ground_truth_t* msg);
 
@@ -97,7 +93,12 @@ public:
     //! \brief The constructor takes in parameters of the ONNX model
     //!
     TensorRTAccelerator(const samplesCommon::OnnxSampleParams& params);
-
+        
+    //!
+    //! \brief Destroy the class
+    //!
+    ~TensorRTAccelerator();
+    
     //!
     //! \brief Function builds the network engine from an ONNX model
     //!
@@ -155,27 +156,43 @@ private:
     void publishOutput(int output_idx);
 };
 
-
-class MatrixBuilder
+//!
+//! \brief The LcmCnnInterface class takes in pre-processed data from queues and
+//! send input to a deserialized TensorRT Engine to make inference
+//!
+class LcmCnnInterface
 {
 public:
-    MatrixBuilder(const samplesCommon::Args &args);
+    //!
+    //! \brief Initialize necessary variables, such as the TensorRT Engine.
+    //!
+    LcmCnnInterface(const samplesCommon::Args &args);
+    
+    //!
+    //! \brief Destroy the class
+    //!
+    ~LcmCnnInterface();
+    
+    //!
+    //! \brief Takes in preprocessed data from queues and build a 2D matrix
+    //! with size of input_h x input_w
+    //!
+    void buildMatrix();
 
-    ~MatrixBuilder();
-
-    void BuildMatrix();
-
-    void SendCNNOutput();
+    //!
+    //! \brief Normalize the matrix and change it into an 1D array, then make inference
+    //!
+    void normalizeAndInfer();
 
 private:
-    int input_h;
-    int input_w;
-    std::vector<std::vector<float>> cnnInputMatrix;
-    float* cnnInputMatrix_normalized;
-    std::vector<float> mean_vector;
-    std::vector<float> std_vector;
-    int data_require;
-    TensorRTAccelerator sample;
+    int input_h; //!< The number of rows of the input matrix
+    int input_w; //!< The number of columns of the input matrix
+    std::vector<std::vector<float>> cnn_input_matrix; //!< input_matrix as a 2D matrix before normalization
+    float* cnn_input_matrix_normalized; //!< input_matrix as an 1D array after normalization
+    std::vector<float> mean_vector; //!< mean value of each column
+    std::vector<float> std_vector; //!< standard deviation of each column
+    int data_require; //!< The number of data required to start the first inference
+    TensorRTAccelerator sample; //!< sample contains the engine and other related parameters
 };
 
 #endif
