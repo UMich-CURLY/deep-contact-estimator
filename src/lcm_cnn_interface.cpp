@@ -71,7 +71,7 @@ bool TensorRTAccelerator::buildFromSerializedEngine()
     /// REMARK: we can deserialize a serialized engine if we have one:
     // -----------------------------------------------------------------------------------------------------------------------
     nvinfer1::IRuntime* runtime = nvinfer1::createInferRuntime(sample::gLogger);
-    std::string cached_path = "/home/curly/Desktop/LCM_CNN_INTERFACE/deep-contact-estimator/engines/0616_2blocks_best_val_loss.trt";
+    std::string cached_path = "/home/tingjun/Desktop/Cheetah_Proj/deep-contact-estimator/engines/0616_2blocks_best_val_loss.trt";
     std::ifstream fin(cached_path);
     std::string cached_engine = "";
     while (fin.peek() != EOF) {
@@ -109,7 +109,7 @@ bool TensorRTAccelerator::inferAndPublish(float* cnn_input_matrix_normalized)
         return false;
     }
     
-    samplesCommon::BufferManager buffers(mEngine);
+    samplesCommon::BufferManager buffers(mEngine, mParams.batchSize);
 
     // Read the input data into the managed buffers
 
@@ -146,7 +146,7 @@ bool TensorRTAccelerator::serialize() {
     std::ofstream serialize_output_stream;
     serialize_str.resize(serializedModel->size());
     memcpy((void*)serialize_str.data(), serializedModel->data(), serializedModel->size());
-    serialize_output_stream.open("/home/curly/Desktop/LCM_CNN_INTERFACE/deep-contact-estimator/engines/0616_2blocks_best_val_loss.trt");
+    serialize_output_stream.open("/home/tingjun/Desktop/Cheetah_Proj/deep-contact-estimator/engines/0616_2blocks_best_val_loss.trt");
     
     serialize_output_stream << serialize_str;
     serialize_output_stream.close();
@@ -259,12 +259,17 @@ LcmCnnInterface::LcmCnnInterface(const samplesCommon::Args &args)
     : input_h(150),
       input_w(54),
       data_require(150),
-      sample(initializeSampleParams(args))
+      sample(initializeSampleParams(args)),
+      new_line(input_w, 0),
+      sum_of_rows(input_w, 0),
+      sum_of_rows_square(input_w, 0),
+      previous_first_row(input_w, 0),
+      cnn_input_matrix(input_h, std::vector<float>(input_w)),
+      mean_vector(input_w, 0),
+      std_vector(input_w, 0),
+      is_first_full_matrix(true)
 {
-    cnn_input_matrix = std::vector<std::vector<float>> (input_h, std::vector<float>(input_w));
     cnn_input_matrix_normalized = new float[input_h * input_w];
-    mean_vector = std::vector<float> (input_w, 0);
-    std_vector = std::vector<float> (input_w, 0);
     if (!sample.buildFromSerializedEngine()) {
         std::cerr << "FAILED: Cannot build the engine" << std::endl;
         return;
@@ -286,30 +291,29 @@ void LcmCnnInterface::buildMatrix (){
             cnnInputGtLabelQueue.pop();
             mtx.unlock();
             // Start to build a new line and generate a new input
-            std::vector<float> newLine(54);
-            int idx = 0; //!< keep track of the current newLine idx;
+            int idx = 0; //!< keep track of the current new_line idx;
             int legTypeDataNum = 12;
             int IMUTypeDataNum = 3;
             
             // get input data:
             mtx.lock();
             for (int i = 0; i < legTypeDataNum; ++i){
-                newLine[idx++] = cnnInputLegQueue.front()[i];
+                new_line[idx++] = cnnInputLegQueue.front()[i];
             }
             for (int i = 0; i < legTypeDataNum; ++i)
-                newLine[idx++] = cnnInputLegQueue.front()[i + legTypeDataNum];
+                new_line[idx++] = cnnInputLegQueue.front()[i + legTypeDataNum];
             
             for (int i = 0; i < IMUTypeDataNum; ++i)
-                newLine[idx++] = cnnInputIMUQueue.front()[i];
+                new_line[idx++] = cnnInputIMUQueue.front()[i];
 
             for (int i = 0; i < IMUTypeDataNum; ++i)
-                newLine[idx++] = cnnInputIMUQueue.front()[i + IMUTypeDataNum];
+                new_line[idx++] = cnnInputIMUQueue.front()[i + IMUTypeDataNum];
 
             for (int i = 0; i < legTypeDataNum; ++i)
-                newLine[idx++] = cnnInputLegQueue.front()[i + legTypeDataNum + legTypeDataNum];
+                new_line[idx++] = cnnInputLegQueue.front()[i + legTypeDataNum + legTypeDataNum];
 
             for (int i = 0; i < legTypeDataNum; ++i)
-                newLine[idx++] = cnnInputLegQueue.front()[i + legTypeDataNum + legTypeDataNum + legTypeDataNum];
+                new_line[idx++] = cnnInputLegQueue.front()[i + legTypeDataNum + legTypeDataNum + legTypeDataNum];
             
             // release memory:
             delete[] cnnInputLegQueue.front();
@@ -318,9 +322,9 @@ void LcmCnnInterface::buildMatrix (){
             cnnInputIMUQueue.pop();
             mtx.unlock();
 
-            // Put the newLine to the InputMatrix and destroy the first line:
+            // Put the new_line to the InputMatrix and destroy the first line:
             cnn_input_matrix.erase(cnn_input_matrix.begin());
-            cnn_input_matrix.push_back(newLine);
+            cnn_input_matrix.push_back(new_line);
             data_require = std::max(data_require - 1, 0);
             if (data_require == 0) {            
                 normalizeAndInfer();   
@@ -335,30 +339,28 @@ void LcmCnnInterface::normalizeAndInfer() {
     /// REMARK: normalize input and send to CNN network in TRT
     // We need to normalize the input matrix, to do so,
     // we need to calculate the mean value and standard deviation.
-    for (int j = 0; j < input_w; ++j) {
-        // find mean:
-        for (int i = 0; i < input_h; ++i) {
-            mean_vector[j] += cnn_input_matrix[i][j];
-        }
-        mean_vector[j] = mean_vector[j] / input_h;
-        
-        // find std:
-        for (int i = 0; i < input_h; ++i) {
-            std_vector[j] += std::pow((cnn_input_matrix[i][j] - mean_vector[j]), 2.0);
-        }
-        std_vector[j] = std::sqrt(std_vector[j] / (input_h - 1));
-
-        // Normalize the matrix:
-        for (int i = 0; i < input_h; ++i) {
-            cnn_input_matrix_normalized[i * input_w + j] = (cnn_input_matrix[i][j] - mean_vector[j]) / std_vector[j];
-        }
-    }
-
-    /// REMARK: Inference (Here we added a timer to calculate the inference frequency)
     cudaEvent_t start, stop;
     cudaEventCreate(&start);
     cudaEventCreate(&stop);
     cudaEventRecord(start);
+    if (is_first_full_matrix) {
+        runFullCalculation();
+        is_first_full_matrix = false;
+    }
+    else {
+        runSlidingWindow();
+    }
+    cudaEventRecord(stop);
+    cudaEventSynchronize(stop);
+    float milliseconds = 0;
+    cudaEventElapsedTime(&milliseconds, start, stop);
+    std::cout << "It's frequency is " << 1000 / milliseconds << " Hz" << std::endl;
+
+    /// REMARK: Inference (Here we added a timer to calculate the inference frequency)
+    // cudaEvent_t start, stop;
+    // cudaEventCreate(&start);
+    // cudaEventCreate(&stop);
+    // cudaEventRecord(start);
 
     if (!sample.inferAndPublish(&cnn_input_matrix_normalized[0]))
     {
@@ -366,11 +368,55 @@ void LcmCnnInterface::normalizeAndInfer() {
         return;
     }
 
-    cudaEventRecord(stop);
-    cudaEventSynchronize(stop);
-    float milliseconds = 0;
-    cudaEventElapsedTime(&milliseconds, start, stop);
-    std::cout << "It's frequency is " << 1000 / milliseconds << "Hz" << std::endl;
+    // cudaEventRecord(stop);
+    // cudaEventSynchronize(stop);
+    // float milliseconds = 0;
+    // cudaEventElapsedTime(&milliseconds, start, stop);
+    // std::cout << "It's frequency is " << 1000 / milliseconds << " Hz" << std::endl;
+    
+}
+
+void LcmCnnInterface::runFullCalculation() {
+    for (int j = 0; j < input_w; ++j) {
+        // find mean:
+        for (int i = 0; i < input_h; ++i) {
+            sum_of_rows[j] += cnn_input_matrix[i][j];
+            sum_of_rows_square[j] += std::pow(cnn_input_matrix[i][j], 2.0);
+        }
+        mean_vector[j] = sum_of_rows[j] / input_h;
+
+        // find std:
+        for (int i = 0; i < input_h; ++i) {
+            std_vector[j] += std::pow((cnn_input_matrix[i][j] - mean_vector[j]), 2.0);
+        }
+        std_vector[j] = std::sqrt(std_vector[j] / (input_h - 1));
+     
+        // Normalize the matrix:
+        for (int i = 0; i < input_h; ++i) {
+            cnn_input_matrix_normalized[i * input_w + j] = (cnn_input_matrix[i][j] - mean_vector[j]) / std_vector[j];
+        }
+        previous_first_row[j] = cnn_input_matrix[0][j];
+    }
+}
+
+void LcmCnnInterface::runSlidingWindow() {
+    for (int j = 0; j < input_w; ++j) {
+        // find mean:
+        sum_of_rows[j] = sum_of_rows[j] - previous_first_row[j] + new_line[j];
+        sum_of_rows_square[j] = sum_of_rows_square[j] - std::pow(previous_first_row[j], 2.0) + std::pow(new_line[j], 2.0);
+
+        mean_vector[j] = sum_of_rows[j] / input_h;
+
+        // find std:
+        std_vector[j] = sum_of_rows_square[j] - 2 * mean_vector[j] * sum_of_rows[j] + input_h * std::pow(mean_vector[j], 2.0);
+        std_vector[j] = std::sqrt(std_vector[j] / (input_h - 1));
+     
+        // Normalize the matrix:
+        for (int i = 0; i < input_h; ++i) {
+            cnn_input_matrix_normalized[i * input_w + j] = (cnn_input_matrix[i][j] - mean_vector[j]) / std_vector[j];
+        }
+        previous_first_row[j] = cnn_input_matrix[0][j];
+    }
 }
 
 
