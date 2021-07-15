@@ -71,7 +71,7 @@ bool TensorRTAccelerator::buildFromSerializedEngine()
     /// REMARK: we can deserialize a serialized engine if we have one:
     // -----------------------------------------------------------------------------------------------------------------------
     nvinfer1::IRuntime* runtime = nvinfer1::createInferRuntime(sample::gLogger);
-    std::string cached_path = "/home/tingjun/Desktop/Cheetah_Proj/deep-contact-estimator/engines/0616_2blocks_best_val_loss.trt";
+    std::string cached_path = "/home/curly/Desktop/LCM_CNN_INTERFACE/deep-contact-estimator/engines/0616_2blocks_best_val_loss.trt";
     std::ifstream fin(cached_path);
     std::string cached_engine = "";
     while (fin.peek() != EOF) {
@@ -109,7 +109,7 @@ bool TensorRTAccelerator::inferAndPublish(float* cnn_input_matrix_normalized)
         return false;
     }
     
-    samplesCommon::BufferManager buffers(mEngine, mParams.batchSize);
+    samplesCommon::BufferManager buffers(mEngine);
 
     // Read the input data into the managed buffers
 
@@ -146,7 +146,7 @@ bool TensorRTAccelerator::serialize() {
     std::ofstream serialize_output_stream;
     serialize_str.resize(serializedModel->size());
     memcpy((void*)serialize_str.data(), serializedModel->data(), serializedModel->size());
-    serialize_output_stream.open("/home/tingjun/Desktop/Cheetah_Proj/deep-contact-estimator/engines/0616_2blocks_best_val_loss.trt");
+    serialize_output_stream.open("/home/curly/Desktop/LCM_CNN_INTERFACE/deep-contact-estimator/engines/0616_2blocks_best_val_loss.trt");
     
     serialize_output_stream << serialize_str;
     serialize_output_stream.close();
