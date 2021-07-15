@@ -203,7 +203,7 @@ void TensorRTAccelerator::publishOutput(int output_idx) {
         cnn_output.contact[i] = binary[i];
     }
     lcm.publish("CNN_OUTPUT", &cnn_output);
-    std::cout << "CNN output is: " << output_idx << " (in binary: " << binary << ")" << std::endl;
+    // std::cout << "CNN output is: " << output_idx << " (in binary: " << binary << ")" << std::endl;
 }
 
 //!
@@ -328,7 +328,7 @@ void LcmCnnInterface::buildMatrix (){
             data_require = std::max(data_require - 1, 0);
             if (data_require == 0) {            
                 normalizeAndInfer();   
-                std::cout << "The ground truth label is: " << gtLabel << std::endl;
+                // std::cout << "The ground truth label is: " << gtLabel << std::endl;
             }
         } 
     }
@@ -339,10 +339,6 @@ void LcmCnnInterface::normalizeAndInfer() {
     /// REMARK: normalize input and send to CNN network in TRT
     // We need to normalize the input matrix, to do so,
     // we need to calculate the mean value and standard deviation.
-    cudaEvent_t start, stop;
-    cudaEventCreate(&start);
-    cudaEventCreate(&stop);
-    cudaEventRecord(start);
     if (is_first_full_matrix) {
         runFullCalculation();
         is_first_full_matrix = false;
@@ -350,17 +346,12 @@ void LcmCnnInterface::normalizeAndInfer() {
     else {
         runSlidingWindow();
     }
-    cudaEventRecord(stop);
-    cudaEventSynchronize(stop);
-    float milliseconds = 0;
-    cudaEventElapsedTime(&milliseconds, start, stop);
-    std::cout << "It's frequency is " << 1000 / milliseconds << " Hz" << std::endl;
 
     /// REMARK: Inference (Here we added a timer to calculate the inference frequency)
-    // cudaEvent_t start, stop;
-    // cudaEventCreate(&start);
-    // cudaEventCreate(&stop);
-    // cudaEventRecord(start);
+    cudaEvent_t start, stop;
+    cudaEventCreate(&start);
+    cudaEventCreate(&stop);
+    cudaEventRecord(start);
 
     if (!sample.inferAndPublish(&cnn_input_matrix_normalized[0]))
     {
@@ -368,11 +359,11 @@ void LcmCnnInterface::normalizeAndInfer() {
         return;
     }
 
-    // cudaEventRecord(stop);
-    // cudaEventSynchronize(stop);
-    // float milliseconds = 0;
-    // cudaEventElapsedTime(&milliseconds, start, stop);
-    // std::cout << "It's frequency is " << 1000 / milliseconds << " Hz" << std::endl;
+    cudaEventRecord(stop);
+    cudaEventSynchronize(stop);
+    float milliseconds = 0;
+    cudaEventElapsedTime(&milliseconds, start, stop);
+    std::cout << "It's frequency is " << 1000 / milliseconds << " Hz" << std::endl;
     
 }
 
