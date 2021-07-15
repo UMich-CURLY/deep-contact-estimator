@@ -184,15 +184,32 @@ public:
     //!
     void normalizeAndInfer();
 
+    //!
+    //! \brief When the current input matrix is the first full dimension matrix we have, we need to
+    //! run a full calculation for mean value and std. After that, we can use sliding
+    //! window to update mean value and std.
+    //!
+    void runFullCalculation();
+
+    //!
+    //! \brief Use sliding window to find current mean and std and normalize the matrix.
+    //!
+    void runSlidingWindow();
+
 private:
     int input_h; //!< The number of rows of the input matrix
     int input_w; //!< The number of columns of the input matrix
+    std::vector<float> new_line; //!< The latest data
     std::vector<std::vector<float>> cnn_input_matrix; //!< input_matrix as a 2D matrix before normalization
     float* cnn_input_matrix_normalized; //!< input_matrix as an 1D array after normalization
     std::vector<float> mean_vector; //!< mean value of each column
     std::vector<float> std_vector; //!< standard deviation of each column
     int data_require; //!< The number of data required to start the first inference
     TensorRTAccelerator sample; //!< sample contains the engine and other related parameters
+    std::vector<float> sum_of_rows; //!< the sum of elements in the same column;
+    std::vector<float> sum_of_rows_square; //!< the sum of the square of elements in the same column;
+    std::vector<float> previous_first_row; //!< save the value in previous row;
+    bool is_first_full_matrix; //!< indicates whether the current matrix is the first full matrix
 };
 
 #endif
