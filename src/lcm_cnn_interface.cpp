@@ -70,8 +70,8 @@ bool TensorRTAccelerator::buildFromSerializedEngine()
 {
     /// REMARK: we can deserialize a serialized engine if we have one:
     // -----------------------------------------------------------------------------------------------------------------------
-    nvinfer1::IRuntime* runtime = nvinfer1::createInferRuntime(gLogger);
-    std::string cached_path = "/home/tingjun/Desktop/Cheetah_Proj/deep-contact-estimator/engines/0616_2blocks_best_val_loss.trt";
+    nvinfer1::IRuntime* runtime = nvinfer1::createInferRuntime(sample::gLogger);
+    std::string cached_path = "/home/curly/Desktop/LCM_CNN_INTERFACE/deep-contact-estimator/engines/0616_2blocks_best_val_loss.trt";
     std::ifstream fin(cached_path);
     std::string cached_engine = "";
     while (fin.peek() != EOF) {
@@ -109,7 +109,7 @@ bool TensorRTAccelerator::inferAndPublish(float* cnn_input_matrix_normalized)
         return false;
     }
     
-    samplesCommon::BufferManager buffers(mEngine, mParams.batchSize);
+    samplesCommon::BufferManager buffers(mEngine);
 
     // Read the input data into the managed buffers
 
@@ -146,7 +146,7 @@ bool TensorRTAccelerator::serialize() {
     std::ofstream serialize_output_stream;
     serialize_str.resize(serializedModel->size());
     memcpy((void*)serialize_str.data(), serializedModel->data(), serializedModel->size());
-    serialize_output_stream.open("/home/tingjun/Desktop/Cheetah_Proj/deep-contact-estimator/engines/0616_2blocks_best_val_loss.trt");
+    serialize_output_stream.open("/home/curly/Desktop/LCM_CNN_INTERFACE/deep-contact-estimator/engines/0616_2blocks_best_val_loss.trt");
     
     serialize_output_stream << serialize_str;
     serialize_output_stream.close();
@@ -187,7 +187,7 @@ int TensorRTAccelerator::getOutput(const samplesCommon::BufferManager& buffers)
     float current_max = output[0];
     int output_idx = 0;
     for (int i = 1; i < outputSize; i++) {
-        // gLogInfo << "Leg status " << i << " is " << output[i] << std::endl;
+        // sample::gLogInfo << "Leg status " << i << " is " << output[i] << std::endl;
         if (output[i] > current_max) {
             current_max = output[i];
             output_idx = i;
@@ -392,7 +392,7 @@ int main(int argc, char** argv)
     bool argsOK = samplesCommon::parseArgs(args, argc, argv);
     if (!argsOK)
     {
-        gLogError << "Invalid arguments" << std::endl;
+        sample::gLogError << "Invalid arguments" << std::endl;
         printHelpInfo();
         return -1;
     }
