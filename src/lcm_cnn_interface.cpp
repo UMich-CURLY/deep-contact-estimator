@@ -6,13 +6,14 @@ void Handler::receiveLegControlMsg(const lcm::ReceiveBuffer* rbuf,
                                 const std::string& chan, 
                                 const leg_control_data_lcmt* msg)
 {
+
     int size = 12;
     float* leg_control_data = new float[48]();
     arrayCopy(leg_control_data, msg->q, size);
     arrayCopy(leg_control_data + size, msg->qd, size);
     arrayCopy(leg_control_data + size + size, msg->p, size);
     arrayCopy(leg_control_data + size + size + size, msg->v, size);
-
+	
     // cnnInputLegQueue.push(leg_control_data);
     // If the latest_idx reaches the limit of the buffer vector:
     if (latest_idx == cnn_input_leg_vector.size() - 1) {
