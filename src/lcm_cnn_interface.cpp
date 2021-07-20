@@ -298,7 +298,7 @@ LcmCnnInterface::~LcmCnnInterface() {
 void LcmCnnInterface::buildMatrix (){
     // Get leg input from queue
     while (true){
-        if (!cnnInputLegQueue.empty() && !cnnInputIMUQueue.empty() && !cnnInputGtLabelQueue.empty()){
+        if (!cnnInputLegQueue.empty() && !cnnInputIMUQueue.empty()){
             mtx.lock();
             // Get GTlabel from queue
             int gtLabel = cnnInputGtLabelQueue.front();
@@ -434,7 +434,7 @@ int main(int argc, char** argv)
     Handler handlerObject;
     lcm.subscribe("leg_control_data", &Handler::receiveLegControlMsg, &handlerObject);
     lcm.subscribe("microstrain", &Handler::receiveMicrostrainMsg, &handlerObject);
-    lcm.subscribe("contact_ground_truth", &Handler::receiveContactGroundTruthMsg, &handlerObject);
+    // lcm.subscribe("contact_ground_truth", &Handler::receiveContactGroundTruthMsg, &handlerObject);
     
     std::cout << "Start Running LCM-CNN Interface" << std::endl;
     
