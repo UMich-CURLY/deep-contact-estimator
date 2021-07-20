@@ -212,9 +212,10 @@ void TensorRTAccelerator::publishOutput(int output_idx) {
     std::string binary = std::bitset<4>(output_idx).to_string(); // to binary
     for (int i = 0; i < cnn_output.num_legs; i++) {
         cnn_output.contact[i] = binary[i];
-        myfile << cnn_output.contact[i] << ',';
+        // myfile << cnn_output.contact[i] << ',';
     }
-    myfile << '\n';
+    // myfile << '\n';
+    // myfile.flush();
     lcm.publish("CNN_OUTPUT", &cnn_output);
     // std::cout << "CNN output is: " << output_idx << " (in binary: " << binary << ")" << std::endl;
 }
@@ -453,12 +454,12 @@ int main(int argc, char** argv)
     }
 
     /// INTERFACE: use multiple threads to avoid missing messages:
-    myfile.open(PROGRAM_PATH + "contact_est_lcm.csv");
+    // myfile.open(PROGRAM_PATH + "contact_est_lcm.csv");
     LcmCnnInterface matrix_builder(args);
     std::thread MatrixThread (&LcmCnnInterface::buildMatrix, &matrix_builder);
     while(0 == lcm.handle());
     MatrixThread.join();
-    myfile.close();
+    // myfile.close();
 
 
     return 0;
