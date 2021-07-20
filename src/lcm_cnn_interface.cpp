@@ -383,7 +383,7 @@ void LcmCnnInterface::normalizeAndInfer() {
     cudaEventSynchronize(stop);
     float milliseconds = 0;
     cudaEventElapsedTime(&milliseconds, start, stop);
-    std::cout << "It's frequency is " << 1000 / milliseconds << " Hz" << std::endl;
+    // std::cout << "It's frequency is " << 1000 / milliseconds << " Hz" << std::endl;
     
 }
 
