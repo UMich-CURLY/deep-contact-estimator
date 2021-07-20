@@ -36,7 +36,8 @@ std::mutex mtx;
 std::queue<float *> cnnInputLegQueue;
 std::queue<float *> cnnInputIMUQueue;
 std::queue<int> cnnInputGtLabelQueue;
-// std::ofstream myfile;
+std::ofstream myfile;
+std::ofstream myfile_leg_p;
 std::string PROGRAM_PATH = "/media/jetson256g/code/LCM_CNN_INTERFACE/deep-contact-estimator/";
 
 std::vector<float *> cnn_input_leg_vector(1000);
