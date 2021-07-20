@@ -38,6 +38,9 @@ std::queue<float *> cnnInputIMUQueue;
 std::queue<int> cnnInputGtLabelQueue;
 // std::ofstream myfile;
 std::string PROGRAM_PATH = "/media/jetson256g/code/LCM_CNN_INTERFACE/deep-contact-estimator/";
+
+std::vector<float *> cnn_input_leg_vector;
+int latest_idx = -1;
 //!
 //! \brief The Handler class takes in LCM messages from subscribed channels and process them
 //! 
