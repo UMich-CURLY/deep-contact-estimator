@@ -299,11 +299,11 @@ void LcmCnnInterface::buildMatrix (){
     // Get leg input from queue
     while (true){
         if (!cnnInputLegQueue.empty() && !cnnInputIMUQueue.empty()){
-            mtx.lock();
-            // Get GTlabel from queue
-            int gtLabel = cnnInputGtLabelQueue.front();
-            cnnInputGtLabelQueue.pop();
-            mtx.unlock();
+            // mtx.lock();
+            // // Get GTlabel from queue
+            // int gtLabel = cnnInputGtLabelQueue.front();
+            // cnnInputGtLabelQueue.pop();
+            // mtx.unlock();
             // Start to build a new line and generate a new input
             int idx = 0; //!< keep track of the current new_line idx;
             int legTypeDataNum = 12;
