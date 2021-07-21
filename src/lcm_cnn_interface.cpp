@@ -41,7 +41,7 @@ void Handler::receiveMicrostrainMsg(const lcm::ReceiveBuffer* rbuf,
     //     cnnInputLegQueue.push(leg_control_data);
     // }
 
-    if (cnnInputLegQueue.size() > cnnInputIMUQueue.size()) {
+    if (cnnInputLegQueue.size() >= cnnInputIMUQueue.size()) {
         float* microstrain_data = new float[6]();
         int size = 3;
         arrayCopy(microstrain_data, msg->acc, size);

@@ -5,7 +5,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED TRUE)
 SET(common_dir /usr/src/tensorrt/samples/common)
 INCLUDE_DIRECTORIES(${common_dir})
 
-SET(cuda_dir /usr/local/cuda-10.2/targets/x86_64-linux/include)
+SET(cuda_dir /usr/local/cuda-10.2/targets/aarch64-linux/include)
 INCLUDE_DIRECTORIES(${cuda_dir})
 
 SET(LOG_CPP /usr/src/tensorrt/samples/common/logger.cpp)

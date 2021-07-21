@@ -118,7 +118,7 @@ bool OnnxToTensorRT::build()
     /// REMARK: we can deserialize a serialized engine if we have one:
     // -----------------------------------------------------------------------------------------------------------------------
     // nvinfer1::IRuntime* runtime = nvinfer1::createInferRuntime(sample::gLogger);
-    // std::string cached_path = "/home/tingjun/Desktop/mini_cheetah/deep-contact-estimator/engines/0616_2blocks_best_val_loss.trt";
+    // std::string cached_path = "/media/jetson256g/code/LCM_CNN_INTERFACE/deep-contact-estimator/engines/0616_2blocks_best_val_loss.trt";
     // std::ifstream fin(cached_path);
     // std::string cached_engine = "";
     // while (fin.peek() != EOF) {
@@ -245,7 +245,7 @@ bool OnnxToTensorRT::serialize() {
     std::ofstream serialize_output_stream;
     serialize_str.resize(serializedModel->size());
     memcpy((void*)serialize_str.data(), serializedModel->data(), serializedModel->size());
-    serialize_output_stream.open("/home/tingjun/Desktop/mini_cheetah/deep-contact-estimator/engines/0616_2blocks_best_val_loss.trt");
+    serialize_output_stream.open("/media/jetson256g/code/LCM_CNN_INTERFACE/deep-contact-estimator/engines/0616_2blocks_best_val_loss.trt");
     
     serialize_output_stream << serialize_str;
     serialize_output_stream.close();
@@ -304,11 +304,11 @@ bool OnnxToTensorRT::verifyOutput(const samplesCommon::BufferManager& buffers)
     float val{0.0f};
     int idx{0};
 
-    gLogInfo << "Output: " << std::endl;
+    sample::gLogInfo << "Output: " << std::endl;
     float current_max = output[0];
     int output_idx = 0;
     for (int i = 0; i < outputSize; i++) {
-        gLogInfo << "Probability of leg status " << i << " before normalization is: " << output[i] << std::endl;
+        sample::gLogInfo << "Probability of leg status " << i << " before normalization is: " << output[i] << std::endl;
         if (output[i] > current_max) {
             current_max = output[i];
             output_idx = i;
@@ -375,7 +375,7 @@ int main(int argc, char** argv)
 
     if (!argsOK)
     {
-        gLogError << "Invalid arguments" << std::endl;
+        sample::gLogError << "Invalid arguments" << std::endl;
         printHelpInfo();
         return EXIT_FAILURE;
     }
@@ -391,7 +391,7 @@ int main(int argc, char** argv)
 
     OnnxToTensorRT sample(initializeSampleParams(args));
 
-    gLogInfo << "Building and running a GPU inference engine for contact estimator ONNX model" << std::endl;
+    sample::gLogInfo << "Building and running a GPU inference engine for contact estimator ONNX model" << std::endl;
 
     if (!sample.build())
     {
