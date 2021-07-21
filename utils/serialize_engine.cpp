@@ -200,7 +200,7 @@ bool OnnxToTensorRT::infer()
     if (!mEngine) {
         std::cerr << "Failed to load mEngine" << std::endl;
     }
-    samplesCommon::BufferManager buffers(mEngine, mParams.batchSize);
+    samplesCommon::BufferManager buffers(mEngine);
     std::cout << "Successfuly built the buffer" << std::endl;
     auto context = SampleUniquePtr<nvinfer1::IExecutionContext>(mEngine->createExecutionContext());
     std::cout << "Successfully build an execution context" << std::endl;
