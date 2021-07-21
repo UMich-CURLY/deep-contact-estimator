@@ -6,7 +6,6 @@ build/
 .vscode
 .idea
 *.o
-*.bin
 *.onnx
 *.trt
 *.csv
