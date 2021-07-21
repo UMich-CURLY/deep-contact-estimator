@@ -9,3 +9,4 @@ build/
 *.bin
 *.onnx
 *.trt
+*.csv
