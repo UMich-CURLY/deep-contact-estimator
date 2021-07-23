@@ -29,6 +29,7 @@
 #include "../lcm_types/cpp/microstrain_lcmt.hpp"
 #include "../lcm_types/cpp/contact_t.hpp"
 #include "../lcm_types/cpp/contact_ground_truth_t.hpp"
+#include "../lcm_types/cpp/contact_est_lcmt.hpp"
 
 // mutex for critical section
 std::mutex mtx;
@@ -40,8 +41,9 @@ std::ofstream myfile;
 std::ofstream myfile_leg_p;
 std::string PROGRAM_PATH = "/media/jetson256g/code/LCM_CNN_INTERFACE/deep-contact-estimator/";
 
-std::vector<float *> cnn_input_leg_vector(1000);
+std::vector<float *> cnn_input_leg_vector (1000);
 int latest_idx = -1;
+
 //!
 //! \brief The Handler class takes in LCM messages from subscribed channels and process them
 //! 
@@ -121,7 +123,7 @@ public:
     //! \details This function is the main execution function of the sample. It allocates the buffer,
     //!          sets inputs and executes the engine.
     //!
-    bool inferAndPublish(float* cnnInputMatrix_normalized);
+    int infer(float* cnnInputMatrix_normalized);
 
     //!
     //! \brief Serialize the TensorRT engine and save it to disk for later use. The engine can be
@@ -135,8 +137,6 @@ private:
     nvinfer1::Dims mInputDims;  //!< The dimensions of the input to the network.
     nvinfer1::Dims mOutputDims; //!< The dimensions of the output to the network.
     int mNumber{0};             //!< The number to classify
-    lcm::LCM lcm;
-    contact_t cnn_output;
 
     std::shared_ptr<nvinfer1::ICudaEngine> mEngine; //!< The TensorRT engine used to run the network
     SampleUniquePtr<nvinfer1::IExecutionContext> context;
@@ -155,10 +155,7 @@ private:
     //!
     int getOutput(const samplesCommon::BufferManager& buffers);
 
-    //!
-    //! \brief Publish the output to "CNN_OUTPUT" channel
-    //!
-    void publishOutput(int output_idx);
+    
 };
 
 //!
@@ -190,6 +187,11 @@ public:
     void normalizeAndInfer();
 
     //!
+    //! \brief Publish the output to "CNN_OUTPUT" channel
+    //!
+    void publishOutput(int output_idx);
+    
+    //!
     //! \brief When the current input matrix is the first full dimension matrix we have, we need to
     //! run a full calculation for mean value and std. After that, we can use sliding
     //! window to update mean value and std.
@@ -215,6 +217,8 @@ private:
     std::vector<float> sum_of_rows_square; //!< the sum of the square of elements in the same column;
     std::vector<float> previous_first_row; //!< save the value in previous row;
     bool is_first_full_matrix; //!< indicates whether the current matrix is the first full matrix
+    lcm::LCM lcm;
+    contact_est_lcmt cnn_output;
 };
 
 #endif

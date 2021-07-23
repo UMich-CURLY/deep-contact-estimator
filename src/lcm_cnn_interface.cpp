@@ -123,7 +123,7 @@ bool TensorRTAccelerator::buildFromSerializedEngine()
 }
 
 
-bool TensorRTAccelerator::inferAndPublish(float* cnn_input_matrix_normalized)
+int TensorRTAccelerator::infer(float* cnn_input_matrix_normalized)
 {
     // Create RAII buffer manager object
 
@@ -158,9 +158,8 @@ bool TensorRTAccelerator::inferAndPublish(float* cnn_input_matrix_normalized)
     // Memcpy from device output buffers to host output buffers
     buffers.copyOutputToHost();
 
-    // Get results from the engine and publish the output
-    publishOutput(getOutput(buffers));
-    return true;
+    // Get results from the engine and return the output
+    return getOutput(buffers);
 }
 
 bool TensorRTAccelerator::serialize() {
@@ -219,18 +218,6 @@ int TensorRTAccelerator::getOutput(const samplesCommon::BufferManager& buffers)
     return output_idx;
 }
 
-
-void TensorRTAccelerator::publishOutput(int output_idx) {
-    std::string binary = std::bitset<4>(output_idx).to_string(); // to binary
-    for (int i = 0; i < cnn_output.num_legs; i++) {
-        cnn_output.contact[i] = binary[i];
-        myfile << cnn_output.contact[i] << ',';
-    }
-    myfile << '\n';
-    myfile.flush();
-    lcm.publish("CNN_OUTPUT", &cnn_output);
-    // std::cout << "CNN output is: " << output_idx << " (in binary: " << binary << ")" << std::endl;
-}
 
 //!
 //! \brief Initializes members of the params struct using the command line args
@@ -300,7 +287,10 @@ LcmCnnInterface::LcmCnnInterface(const samplesCommon::Args &args)
         std::cerr << "FAILED: Cannot build the engine" << std::endl;
         return;
     }
-
+    if (!lcm.good())
+    return;
+    cnn_output.num_legs = 4;
+    cnn_output.contact = {0, 0, 0, 0};
 }
 
 LcmCnnInterface::~LcmCnnInterface() {
@@ -324,25 +314,44 @@ void LcmCnnInterface::buildMatrix (){
             // get input data:
             mtx.lock();
             for (int i = 0; i < legTypeDataNum; ++i){
-                new_line[idx++] = cnnInputLegQueue.front()[i];
+                new_line[idx] = cnnInputLegQueue.front()[i];
+                cnn_output.q[idx] = new_line[idx];
+                ++idx;
             }
-            for (int i = 0; i < legTypeDataNum; ++i)
-                new_line[idx++] = cnnInputLegQueue.front()[i + legTypeDataNum];
-            
-            for (int i = 0; i < IMUTypeDataNum; ++i)
-                new_line[idx++] = cnnInputIMUQueue.front()[i];
-
-            for (int i = 0; i < IMUTypeDataNum; ++i)
-                new_line[idx++] = cnnInputIMUQueue.front()[i + IMUTypeDataNum];
-
+            // leg_control_data.qd:
             for (int i = 0; i < legTypeDataNum; ++i) {
-                new_line[idx++] = cnnInputLegQueue.front()[i + legTypeDataNum + legTypeDataNum];
-				myfile_leg_p << new_line[idx - 1] << ',';
-			}
-			myfile_leg_p << '\n';
+                new_line[idx] = cnnInputLegQueue.front()[i + legTypeDataNum];
+                cnn_output.qd[idx] = new_line[idx];
+                ++idx;
+            }
+            // microstrain(IMU).acc:
+            for (int i = 0; i < IMUTypeDataNum; ++i) {
+                new_line[idx] = cnnInputIMUQueue.front()[i];
+                cnn_output.acc[idx] = new_line[idx];
+                ++idx;
+            }
+            // microstrain(IMU).omega:
+            for (int i = 0; i < IMUTypeDataNum; ++i) {
+                new_line[idx] = cnnInputIMUQueue.front()[i + IMUTypeDataNum];
+                cnn_output.omega[idx] = new_line[idx];
+                ++idx;
+            }
+            // leg_control_data.p:
+            for (int i = 0; i < legTypeDataNum; ++i) {
+                new_line[idx] = cnnInputLegQueue.front()[i + legTypeDataNum + legTypeDataNum];
+                cnn_output.p[idx] = new_line[idx];
+                myfile_leg_p << new_line[idx] << ',';
+                ++idx;
+            }
+            myfile_leg_p << '\n';
 			myfile_leg_p.flush();
-            for (int i = 0; i < legTypeDataNum; ++i)
-                new_line[idx++] = cnnInputLegQueue.front()[i + legTypeDataNum + legTypeDataNum + legTypeDataNum];
+
+            // leg_control_data.v:
+            for (int i = 0; i < legTypeDataNum; ++i) {
+                new_line[idx] = cnnInputLegQueue.front()[i + legTypeDataNum + legTypeDataNum + legTypeDataNum];
+                cnn_output.v[idx] = new_line[idx];
+                ++idx;
+            }
             
             // release memory:
             delete[] cnnInputLegQueue.front();
@@ -382,7 +391,8 @@ void LcmCnnInterface::normalizeAndInfer() {
     cudaEventCreate(&stop);
     cudaEventRecord(start);
 
-    if (!sample.inferAndPublish(&cnn_input_matrix_normalized[0]))
+    int output_idx = sample.infer(&cnn_input_matrix_normalized[0]);
+    if (output_idx == -1)
     {
         std::cerr << "FAILED: Cannot use the engine to infer a result" << std::endl;
         return;
@@ -395,6 +405,20 @@ void LcmCnnInterface::normalizeAndInfer() {
     // std::cout << "It's frequency is " << 1000 / milliseconds << " Hz" << std::endl;
     
 }
+
+
+void LcmCnnInterface::publishOutput(int output_idx) {
+    std::string binary = std::bitset<4>(output_idx).to_string(); // to binary
+    for (int i = 0; i < cnn_output.num_legs; i++) {
+        cnn_output.contact[i] = binary[i];
+        // myfile << cnn_output.contact[i] << ',';
+    }
+    // myfile << '\n';
+    // myfile << std::flush;
+    lcm.publish("contact_est", &cnn_output);
+    std::cout << "CNN output is: " << output_idx << " (in binary: " << binary << ")" << std::endl;
+}
+
 
 void LcmCnnInterface::runFullCalculation() {
     for (int j = 0; j < input_w; ++j) {

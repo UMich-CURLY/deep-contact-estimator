@@ -14,6 +14,7 @@ lcm_wrap_types(
   contact_t.lcm
   leg_control_data_lcmt.lcm
   microstrain_lcmt.lcm
+  contact_est_lcmt.lcm
 )
 
 lcm_add_library(my_lcmtypes-cpp CPP ${cpp_headers})
