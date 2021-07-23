@@ -80,10 +80,6 @@ TensorRTAccelerator::TensorRTAccelerator(const samplesCommon::OnnxSampleParams& 
     : mParams(params),
       mEngine(nullptr)
 {
-    if (!lcm.good())
-        return;
-    cnn_output.num_legs = 4;
-    cnn_output.contact = {0, 0, 0, 0};
 }
 
 TensorRTAccelerator::~TensorRTAccelerator() {};
@@ -397,7 +393,7 @@ void LcmCnnInterface::normalizeAndInfer() {
         std::cerr << "FAILED: Cannot use the engine to infer a result" << std::endl;
         return;
     }
-
+    publishOutput(output_idx);
     cudaEventRecord(stop);
     cudaEventSynchronize(stop);
     float milliseconds = 0;
@@ -411,12 +407,12 @@ void LcmCnnInterface::publishOutput(int output_idx) {
     std::string binary = std::bitset<4>(output_idx).to_string(); // to binary
     for (int i = 0; i < cnn_output.num_legs; i++) {
         cnn_output.contact[i] = binary[i];
-        // myfile << cnn_output.contact[i] << ',';
+        myfile << cnn_output.contact[i] << ',';
     }
-    // myfile << '\n';
-    // myfile << std::flush;
+    myfile << '\n';
+    myfile << std::flush;
     lcm.publish("contact_est", &cnn_output);
-    std::cout << "CNN output is: " << output_idx << " (in binary: " << binary << ")" << std::endl;
+    // std::cout << "CNN output is: " << output_idx << " (in binary: " << binary << ")" << std::endl;
 }
 
 
