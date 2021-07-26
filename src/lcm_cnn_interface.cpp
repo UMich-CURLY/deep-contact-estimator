@@ -14,41 +14,44 @@ void Handler::receiveLegControlMsg(const lcm::ReceiveBuffer* rbuf,
     arrayCopy(leg_control_data + size + size, msg->p, size);
     arrayCopy(leg_control_data + size + size + size, msg->v, size);
 	
-    cnnInputLegQueue.push(leg_control_data);
+    /// LOW: 500Hz version:
+    // cnnInputLegQueue.push(leg_control_data);
+
+    /// HIGH: 1000Hz version:
     // If the latest_idx reaches the limit of the buffer vector:
-    // if (latest_idx == cnn_input_leg_vector.size() - 1) {
-    //     latest_idx = -1;
-    // }
-    // if (cnn_input_leg_vector[latest_idx + 1] != nullptr) {
-    //     delete[] cnn_input_leg_vector[latest_idx + 1];
-    // }
-    // cnn_input_leg_vector[++latest_idx] = leg_control_data;
+    if (latest_idx == cnn_input_leg_vector.size() - 1) {
+        latest_idx = -1;
+    }
+    if (cnn_input_leg_vector[latest_idx + 1] != nullptr) {
+        delete[] cnn_input_leg_vector[latest_idx + 1];
+    }
+    cnn_input_leg_vector[++latest_idx] = leg_control_data;
 }
 
 void Handler::receiveMicrostrainMsg(const lcm::ReceiveBuffer* rbuf,
                                 const std::string& chan, 
                                 const microstrain_lcmt* msg)
 {
-    // if (latest_idx != -1 && cnn_input_leg_vector[latest_idx] != nullptr) {
-    //     float* microstrain_data = new float[6]();
-    //     int size = 3;
-    //     arrayCopy(microstrain_data, msg->acc, size);
-    //     arrayCopy(microstrain_data + size, msg->omega, size);
-
-    //     cnnInputIMUQueue.push(microstrain_data);
-    //     float* leg_control_data = new float[48]();
-    //     arrayCopy(leg_control_data, cnn_input_leg_vector[latest_idx], 48);
-    //     cnnInputLegQueue.push(leg_control_data);
-    // }
-
-    if (cnnInputLegQueue.size() >= cnnInputIMUQueue.size()) {
+    if (latest_idx != -1 && cnn_input_leg_vector[latest_idx] != nullptr) {
         float* microstrain_data = new float[6]();
         int size = 3;
         arrayCopy(microstrain_data, msg->acc, size);
         arrayCopy(microstrain_data + size, msg->omega, size);
 
         cnnInputIMUQueue.push(microstrain_data);
+        float* leg_control_data = new float[48]();
+        arrayCopy(leg_control_data, cnn_input_leg_vector[latest_idx], 48);
+        cnnInputLegQueue.push(leg_control_data);
     }
+
+    // if (cnnInputLegQueue.size() >= cnnInputIMUQueue.size()) {
+    //     float* microstrain_data = new float[6]();
+    //     int size = 3;
+    //     arrayCopy(microstrain_data, msg->acc, size);
+    //     arrayCopy(microstrain_data + size, msg->omega, size);
+
+    //     cnnInputIMUQueue.push(microstrain_data);
+    // }
 }
 
 void Handler::receiveContactGroundTruthMsg(const lcm::ReceiveBuffer* rbuf,
@@ -268,7 +271,6 @@ LcmCnnInterface::LcmCnnInterface(const samplesCommon::Args &args)
     : input_h(150),
       input_w(54),
       data_require(150),
-      sample(initializeSampleParams(args)),
       new_line(input_w, 0),
       sum_of_rows(input_w, 0),
       sum_of_rows_square(input_w, 0),
@@ -278,11 +280,6 @@ LcmCnnInterface::LcmCnnInterface(const samplesCommon::Args &args)
       std_vector(input_w, 0),
       is_first_full_matrix(true)
 {
-    cnn_input_matrix_normalized = new float[input_h * input_w];
-    if (!sample.buildFromSerializedEngine()) {
-        std::cerr << "FAILED: Cannot build the engine" << std::endl;
-        return;
-    }
     if (!lcm.good())
     return;
     cnn_output.num_legs = 4;
@@ -290,7 +287,15 @@ LcmCnnInterface::LcmCnnInterface(const samplesCommon::Args &args)
 }
 
 LcmCnnInterface::~LcmCnnInterface() {
-    delete[] cnn_input_matrix_normalized;
+    while (!cnnInputLegQueue.empty()) {
+        delete[] cnnInputLegQueue.front();
+        cnnInputLegQueue.pop();
+    }
+
+    while (!cnnInputIMUQueue.empty()) {
+        delete[] cnnInputIMUQueue.front();
+        cnnInputIMUQueue.pop();
+    }
 }
 
 void LcmCnnInterface::buildMatrix (){
@@ -379,27 +384,7 @@ void LcmCnnInterface::normalizeAndInfer() {
     }
     else {
         runSlidingWindow();
-    }
-
-    /// REMARK: Inference (Here we added a timer to calculate the inference frequency)
-    cudaEvent_t start, stop;
-    cudaEventCreate(&start);
-    cudaEventCreate(&stop);
-    cudaEventRecord(start);
-
-    int output_idx = sample.infer(&cnn_input_matrix_normalized[0]);
-    if (output_idx == -1)
-    {
-        std::cerr << "FAILED: Cannot use the engine to infer a result" << std::endl;
-        return;
-    }
-    publishOutput(output_idx);
-    cudaEventRecord(stop);
-    cudaEventSynchronize(stop);
-    float milliseconds = 0;
-    cudaEventElapsedTime(&milliseconds, start, stop);
-    // std::cout << "It's frequency is " << 1000 / milliseconds << " Hz" << std::endl;
-    
+    }    
 }
 
 
@@ -412,11 +397,11 @@ void LcmCnnInterface::publishOutput(int output_idx) {
     myfile << '\n';
     myfile << std::flush;
     lcm.publish("contact_est", &cnn_output);
-    // std::cout << "CNN output is: " << output_idx << " (in binary: " << binary << ")" << std::endl;
 }
 
 
 void LcmCnnInterface::runFullCalculation() {
+    float* cnn_input_matrix_normalized = new float[input_h * input_w]();
     for (int j = 0; j < input_w; ++j) {
         // find mean:
         for (int i = 0; i < input_h; ++i) {
@@ -437,9 +422,12 @@ void LcmCnnInterface::runFullCalculation() {
         }
         previous_first_row[j] = cnn_input_matrix[0][j];
     }
+    cnnInputQueue.push(cnn_input_matrix_normalized);
 }
 
 void LcmCnnInterface::runSlidingWindow() {
+    float* cnn_input_matrix_normalized = new float[input_h * input_w]();
+
     for (int j = 0; j < input_w; ++j) {
         // find mean:
         sum_of_rows[j] = sum_of_rows[j] - previous_first_row[j] + new_line[j];
@@ -454,8 +442,63 @@ void LcmCnnInterface::runSlidingWindow() {
         // Normalize the matrix:
         for (int i = 0; i < input_h; ++i) {
             cnn_input_matrix_normalized[i * input_w + j] = (cnn_input_matrix[i][j] - mean_vector[j]) / std_vector[j];
+            
         }
         previous_first_row[j] = cnn_input_matrix[0][j];
+    }
+
+    cnnInputQueue.push(cnn_input_matrix_normalized);
+}
+
+ContactEstimation::ContactEstimation(const samplesCommon::Args &args)
+    : input_h(150),
+      input_w(54),
+      sample(initializeSampleParams(args))
+{
+    // cnn_input_matrix_normalized = new float[input_h * input_w];
+    if (!sample.buildFromSerializedEngine()) {
+        std::cerr << "FAILED: Cannot build the engine" << std::endl;
+        return;
+    }
+}
+
+ContactEstimation::~ContactEstimation() {
+    while (!cnnInputQueue.empty()) {
+        delete[] cnnInputQueue.front();
+        cnnInputQueue.pop();
+    }
+}
+
+void ContactEstimation::makeInference() {
+    while (true) {
+        if (!cnnInputQueue.empty()) {
+            std::cout << "Ready to make inference" << std::endl;
+            /// REMARK: Inference (Here we added a timer to calculate the inference frequency)
+            cudaEvent_t start, stop;
+            cudaEventCreate(&start);
+            cudaEventCreate(&stop);
+            cudaEventRecord(start);
+
+            mtx.lock();
+            float* cnn_input_matrix_normalized = cnnInputQueue.front();
+            cnnInputQueue.pop();
+            mtx.unlock();
+
+            int output_idx = sample.infer(cnn_input_matrix_normalized);
+            if (output_idx == -1)
+            {
+                std::cerr << "FAILED: Cannot use the engine to infer a result" << std::endl;
+                return;
+            }
+            delete[] cnn_input_matrix_normalized;
+            LcmCnnInterface::publishOutput(output_idx);
+
+            cudaEventRecord(stop);
+            cudaEventSynchronize(stop);
+            float milliseconds = 0;
+            cudaEventElapsedTime(&milliseconds, start, stop);
+            // std::cout << "It's frequency is " << 1000 / milliseconds << " Hz" << std::endl;
+        }
     }
 }
 
@@ -492,9 +535,13 @@ int main(int argc, char** argv)
     myfile.open(PROGRAM_PATH + "contact_est_lcm.csv");
 	myfile_leg_p.open(PROGRAM_PATH + "p_lcm.csv");
     LcmCnnInterface matrix_builder(args);
-    std::thread MatrixThread (&LcmCnnInterface::buildMatrix, &matrix_builder);
+    std::thread BuildMatrixThread (&LcmCnnInterface::buildMatrix, &matrix_builder);
+    std::thread CNNInferenceThread (&ContactEstimation::makeInference, &engine_builder);
+
     while(0 == lcm.handle());
-    MatrixThread.join();
+    BuildMatrixThread.join();
+    CNNInferenceThread.join();
+
     myfile.close();
 	myfile_leg_p.close();
 

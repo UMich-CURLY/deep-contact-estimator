@@ -37,6 +37,8 @@ std::mutex mtx;
 std::queue<float *> cnnInputLegQueue;
 std::queue<float *> cnnInputIMUQueue;
 std::queue<int> cnnInputGtLabelQueue;
+std::queue<float *> cnnInputQueue;
+
 std::ofstream myfile;
 std::ofstream myfile_leg_p;
 std::string PROGRAM_PATH = "/media/jetson256g/code/LCM_CNN_INTERFACE/deep-contact-estimator/";
@@ -208,17 +210,38 @@ private:
     int input_w; //!< The number of columns of the input matrix
     std::vector<float> new_line; //!< The latest data
     std::vector<std::vector<float>> cnn_input_matrix; //!< input_matrix as a 2D matrix before normalization
-    float* cnn_input_matrix_normalized; //!< input_matrix as an 1D array after normalization
+    // float* cnn_input_matrix_normalized; //!< input_matrix as an 1D array after normalization
     std::vector<float> mean_vector; //!< mean value of each column
     std::vector<float> std_vector; //!< standard deviation of each column
     int data_require; //!< The number of data required to start the first inference
-    TensorRTAccelerator sample; //!< sample contains the engine and other related parameters
+    // TensorRTAccelerator sample; //!< sample contains the engine and other related parameters
     std::vector<float> sum_of_rows; //!< the sum of elements in the same column;
     std::vector<float> sum_of_rows_square; //!< the sum of the square of elements in the same column;
     std::vector<float> previous_first_row; //!< save the value in previous row;
     bool is_first_full_matrix; //!< indicates whether the current matrix is the first full matrix
     lcm::LCM lcm;
     contact_est_lcmt cnn_output;
+};
+
+
+class ContactEstimation {
+public:
+    //!
+    //! \brief Initialize necessary variables, such as the TensorRT Engine.
+    //!
+    ContactEstimation(const samplesCommon::Args &args);
+
+    //!
+    //! \brief Destroy the class
+    //!
+    ~ContactEstimation();
+
+    void makeInference();
+
+private:
+    int input_h; //!< The number of rows of the input matrix
+    int input_w; //!< The number of columns of the input matrix
+    TensorRTAccelerator sample; //!< sample contains the engine and other related parameters
 };
 
 #endif
