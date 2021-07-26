@@ -187,11 +187,6 @@ public:
     //! \brief Normalize the matrix and change it into an 1D array, then make inference
     //!
     void normalizeAndInfer();
-
-    //!
-    //! \brief Publish the output to "CNN_OUTPUT" channel
-    //!
-    void publishOutput(int output_idx);
     
     //!
     //! \brief When the current input matrix is the first full dimension matrix we have, we need to
@@ -219,8 +214,7 @@ private:
     std::vector<float> sum_of_rows_square; //!< the sum of the square of elements in the same column;
     std::vector<float> previous_first_row; //!< save the value in previous row;
     bool is_first_full_matrix; //!< indicates whether the current matrix is the first full matrix
-    lcm::LCM lcm;
-    contact_est_lcmt cnn_output;
+
 };
 
 
@@ -238,10 +232,17 @@ public:
 
     void makeInference();
 
+	//!
+    //! \brief Publish the output to "CNN_OUTPUT" channel
+    //!
+    void publishOutput(int output_idx);
+
 private:
     int input_h; //!< The number of rows of the input matrix
     int input_w; //!< The number of columns of the input matrix
     TensorRTAccelerator sample; //!< sample contains the engine and other related parameters
+    lcm::LCM lcm;
+    contact_est_lcmt cnn_output;
 };
 
 #endif

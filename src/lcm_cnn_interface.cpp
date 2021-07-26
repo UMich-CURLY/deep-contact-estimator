@@ -279,12 +279,7 @@ LcmCnnInterface::LcmCnnInterface(const samplesCommon::Args &args)
       mean_vector(input_w, 0),
       std_vector(input_w, 0),
       is_first_full_matrix(true)
-{
-    if (!lcm.good())
-    return;
-    cnn_output.num_legs = 4;
-    cnn_output.contact = {0, 0, 0, 0};
-}
+{}
 
 LcmCnnInterface::~LcmCnnInterface() {
     while (!cnnInputLegQueue.empty()) {
@@ -316,41 +311,32 @@ void LcmCnnInterface::buildMatrix (){
             mtx.lock();
             for (int i = 0; i < legTypeDataNum; ++i){
                 new_line[idx] = cnnInputLegQueue.front()[i];
-                cnn_output.q[idx] = new_line[idx];
                 ++idx;
             }
             // leg_control_data.qd:
             for (int i = 0; i < legTypeDataNum; ++i) {
                 new_line[idx] = cnnInputLegQueue.front()[i + legTypeDataNum];
-                cnn_output.qd[idx] = new_line[idx];
                 ++idx;
             }
             // microstrain(IMU).acc:
             for (int i = 0; i < IMUTypeDataNum; ++i) {
                 new_line[idx] = cnnInputIMUQueue.front()[i];
-                cnn_output.acc[idx] = new_line[idx];
                 ++idx;
             }
             // microstrain(IMU).omega:
             for (int i = 0; i < IMUTypeDataNum; ++i) {
                 new_line[idx] = cnnInputIMUQueue.front()[i + IMUTypeDataNum];
-                cnn_output.omega[idx] = new_line[idx];
                 ++idx;
             }
             // leg_control_data.p:
             for (int i = 0; i < legTypeDataNum; ++i) {
                 new_line[idx] = cnnInputLegQueue.front()[i + legTypeDataNum + legTypeDataNum];
-                cnn_output.p[idx] = new_line[idx];
-                myfile_leg_p << new_line[idx] << ',';
                 ++idx;
             }
-            myfile_leg_p << '\n';
-			myfile_leg_p.flush();
 
             // leg_control_data.v:
             for (int i = 0; i < legTypeDataNum; ++i) {
                 new_line[idx] = cnnInputLegQueue.front()[i + legTypeDataNum + legTypeDataNum + legTypeDataNum];
-                cnn_output.v[idx] = new_line[idx];
                 ++idx;
             }
             
@@ -385,18 +371,6 @@ void LcmCnnInterface::normalizeAndInfer() {
     else {
         runSlidingWindow();
     }    
-}
-
-
-void LcmCnnInterface::publishOutput(int output_idx) {
-    std::string binary = std::bitset<4>(output_idx).to_string(); // to binary
-    for (int i = 0; i < cnn_output.num_legs; i++) {
-        cnn_output.contact[i] = binary[i];
-        myfile << cnn_output.contact[i] << ',';
-    }
-    myfile << '\n';
-    myfile << std::flush;
-    lcm.publish("contact_est", &cnn_output);
 }
 
 
@@ -460,6 +434,10 @@ ContactEstimation::ContactEstimation(const samplesCommon::Args &args)
         std::cerr << "FAILED: Cannot build the engine" << std::endl;
         return;
     }
+    if (!lcm.good())
+	    return;
+    cnn_output.num_legs = 4;
+    cnn_output.contact = {0, 0, 0, 0};
 }
 
 ContactEstimation::~ContactEstimation() {
@@ -472,7 +450,6 @@ ContactEstimation::~ContactEstimation() {
 void ContactEstimation::makeInference() {
     while (true) {
         if (!cnnInputQueue.empty()) {
-            std::cout << "Ready to make inference" << std::endl;
             /// REMARK: Inference (Here we added a timer to calculate the inference frequency)
             cudaEvent_t start, stop;
             cudaEventCreate(&start);
@@ -484,6 +461,43 @@ void ContactEstimation::makeInference() {
             cnnInputQueue.pop();
             mtx.unlock();
 
+			int idx = 0;
+			const int legTypeDataNum = 12;
+			const int IMUTypeDataNum = 3;
+			for (int i = 0; i < legTypeDataNum; ++i){
+                cnn_output.q[i] = cnn_input_matrix_normalized[idx];
+                ++idx;
+            }
+            // leg_control_data.qd:
+            for (int i = 0; i < legTypeDataNum; ++i) {
+                cnn_output.qd[i] = cnn_input_matrix_normalized[idx];
+                ++idx;
+            }
+            // microstrain(IMU).acc:
+            for (int i = 0; i < IMUTypeDataNum; ++i) {
+                cnn_output.acc[i] = cnn_input_matrix_normalized[idx];
+                ++idx;
+            }
+            // microstrain(IMU).omega:
+            for (int i = 0; i < IMUTypeDataNum; ++i) {
+                cnn_output.omega[i] = cnn_input_matrix_normalized[idx];
+                ++idx;
+            }
+            // leg_control_data.p:
+            for (int i = 0; i < legTypeDataNum; ++i) {
+                cnn_output.p[i] = cnn_input_matrix_normalized[idx];
+                myfile_leg_p << cnn_input_matrix_normalized[idx] << ',';
+                ++idx;
+            }
+            myfile_leg_p << '\n';
+			myfile_leg_p.flush();
+
+            // leg_control_data.v:
+            for (int i = 0; i < legTypeDataNum; ++i) {
+                cnn_output.v[idx] = cnn_input_matrix_normalized[idx];
+                ++idx;
+            }
+			
             int output_idx = sample.infer(cnn_input_matrix_normalized);
             if (output_idx == -1)
             {
@@ -491,7 +505,7 @@ void ContactEstimation::makeInference() {
                 return;
             }
             delete[] cnn_input_matrix_normalized;
-            LcmCnnInterface::publishOutput(output_idx);
+            publishOutput(output_idx);
 
             cudaEventRecord(stop);
             cudaEventSynchronize(stop);
@@ -501,6 +515,19 @@ void ContactEstimation::makeInference() {
         }
     }
 }
+
+
+void ContactEstimation::publishOutput(int output_idx) {
+    std::string binary = std::bitset<4>(output_idx).to_string(); // to binary
+    for (int i = 0; i < cnn_output.num_legs; i++) {
+        cnn_output.contact[i] = binary[i];
+        myfile << cnn_output.contact[i] << ',';
+    }
+    myfile << '\n';
+    myfile << std::flush;
+    lcm.publish("contact_est", &cnn_output);
+}
+
 
 
 int main(int argc, char** argv)
@@ -535,6 +562,7 @@ int main(int argc, char** argv)
     myfile.open(PROGRAM_PATH + "contact_est_lcm.csv");
 	myfile_leg_p.open(PROGRAM_PATH + "p_lcm.csv");
     LcmCnnInterface matrix_builder(args);
+	ContactEstimation engine_builder(args);
     std::thread BuildMatrixThread (&LcmCnnInterface::buildMatrix, &matrix_builder);
     std::thread CNNInferenceThread (&ContactEstimation::makeInference, &engine_builder);
 
