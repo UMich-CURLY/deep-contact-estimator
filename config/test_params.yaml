@@ -1,5 +1,5 @@
-data_folder: "/home/justin/data/contact_data/individual_test/sidewalk/numpy/"
-model_load_path: "/home/justin/code/deep-contact-estimator/results/0616_2blocks_best_val_loss.pt"
+data_folder: "/home/justin/data/contact_data/terrain_type_train/numpy/"
+model_load_path: "/home/justin/code/deep-contact-estimator/results/0728_multi_task_best_val_total_loss.pt"
 
 # data params
 window_size: 150

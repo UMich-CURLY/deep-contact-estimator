@@ -157,9 +157,9 @@ for i = 4
 %     hold on
 %     plot(imu_time(range),v(range,3*i-1),'linewidth',2,'Color',[0.4660 0.6740 0.1880]);
 %     hold on
-    plot(imu_time(range),p(range,3*i),'linewidth',2,'Color',[0.4660 0.6740 0.1880]);
+%     plot(imu_time(range),p(range,3*i),'linewidth',2,'Color',[0.4660 0.6740 0.1880]);
 %     hold on
-%     plot(imu_time(range),v(range,3*i),'linewidth',2,'Color',[0.4940 0.1840 0.5560]);
+    plot(imu_time(range),v(range,3*i),'linewidth',2,'Color',[0.4940 0.1840 0.5560]);
     for j = 1:size(gt_idx)
         idx = gt_idx(j)+start_idx;
         if idx >= start_idx && idx<=end_idx
@@ -176,9 +176,9 @@ for i = 4
 %     hold on
 %     plot(imu_time(range),v(range,3*i-1),'linewidth',2,'Color',[0.4660 0.6740 0.1880]);
 %     hold on
-    plot(imu_time(range),p(range,3*i),'linewidth',2,'Color',[0.4660 0.6740 0.1880]);
+%     plot(imu_time(range),p(range,3*i),'linewidth',2,'Color',[0.4660 0.6740 0.1880]);
 %     hold on
-%     plot(imu_time(range),v(range,3*i),'linewidth',2,'Color',[0.4940 0.1840 0.5560]);
+    plot(imu_time(range),v(range,3*i),'linewidth',2,'Color',[0.4940 0.1840 0.5560]);
     for j = 1:size(est_idx)
         idx = est_idx(j)+start_idx;
         if idx >= start_idx && idx<=end_idx

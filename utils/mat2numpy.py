@@ -54,6 +54,7 @@ def mat2numpy_one_seq(data_pth, save_pth):
         raw_data = sio.loadmat(data_name)
 
         contacts = raw_data['contacts']
+        terrain_label = raw_data['terrain_type']
         q = raw_data['q']
         p = raw_data['p']
         qd = raw_data['qd']
@@ -68,12 +69,14 @@ def mat2numpy_one_seq(data_pth, save_pth):
         data = np.concatenate((q,qd,acc,omega,p,v),axis=1)
         
         # convert labels from binary to decimal
-        label = binary2decimal(contacts).reshape((-1,1)) 
+        contact_label = binary2decimal(contacts).reshape((-1,1)) 
 
         print("Saving data to: "+save_pth+os.path.splitext(os.path.basename(data_name))[0]+".npy")
 
-        np.save(save_pth+os.path.splitext(os.path.basename(data_name))[0]+".npy",data)
-        np.save(save_pth+os.path.splitext(os.path.basename(data_name))[0]+"_label.npy",label)
+        data_to_save = {'data':data,'contact_label': contact_label,'terrain_label':terrain_label}
+        np.save(save_pth+os.path.splitext(os.path.basename(data_name))[0]+".npy",data_to_save)
+
+        # np.save(save_pth+os.path.splitext(os.path.basename(data_name))[0]+"_label.npy",contact_label)
 
         print("Done!")
 
@@ -117,9 +120,15 @@ def mat2numpy_split(data_pth, save_pth, train_ratio=0.7, val_ratio=0.15):
     train_data = np.zeros((0,num_features))
     val_data = np.zeros((0,num_features))
     test_data = np.zeros((0,num_features))
-    train_label = np.zeros((0,1))
-    val_label = np.zeros((0,1))
-    test_label = np.zeros((0,1))
+    train_contact_label = np.zeros((0,1))
+    val_contact_label = np.zeros((0,1))
+    test_contact_label = np.zeros((0,1))
+    train_terrain_label = np.zeros((0,1))
+    val_terrain_label = np.zeros((0,1))
+    test_terrain_label = np.zeros((0,1))
+    seq_len_train = []
+    seq_len_val = []
+    seq_len_test = []
 
     # for all dataset in the folder
     for data_name in glob.glob(data_pth+'*'): 
@@ -130,6 +139,8 @@ def mat2numpy_split(data_pth, save_pth, train_ratio=0.7, val_ratio=0.15):
         raw_data = sio.loadmat(data_name)
 
         contacts = raw_data['contacts']
+        overall_terrain_type = raw_data['overall_terrain_type']
+        cur_terrain_label = raw_data['terrain_type']
         q = raw_data['q']
         p = raw_data['p']
         qd = raw_data['qd']
@@ -152,6 +163,10 @@ def mat2numpy_split(data_pth, save_pth, train_ratio=0.7, val_ratio=0.15):
         cur_test = cur_data[num_val:num_val+num_test,:]
         cur_train = cur_data[num_val+num_test:,:]
 
+        seq_len_train.append(num_train)
+        seq_len_val.append(num_val)
+        seq_len_test.append(num_test)
+
         # stack with all other sequences
         train_data = np.vstack((train_data,cur_train))
         val_data = np.vstack((val_data,cur_val))
@@ -159,34 +174,47 @@ def mat2numpy_split(data_pth, save_pth, train_ratio=0.7, val_ratio=0.15):
 
         
         # convert labels from binary to decimal
-        cur_label = binary2decimal(contacts).reshape((-1,1))   
+        cur_contact_label = binary2decimal(contacts).reshape((-1,1))   
 
         # stack labels 
-        val_label = np.vstack((val_label,cur_label[:num_val,:]))
-        test_label = np.vstack((test_label,cur_label[num_val:num_val+num_test,:]))
-        train_label = np.vstack((train_label,cur_label[num_val+num_test:,:]))
+        val_contact_label = np.vstack((val_contact_label,cur_contact_label[:num_val,:]))
+        test_contact_label = np.vstack((test_contact_label,cur_contact_label[num_val:num_val+num_test,:]))
+        train_contact_label = np.vstack((train_contact_label,cur_contact_label[num_val+num_test:,:]))
+
+        val_terrain_label = np.vstack((val_terrain_label,cur_terrain_label[:num_val,:]))
+        test_terrain_label = np.vstack((test_terrain_label,cur_terrain_label[num_val:num_val+num_test,:]))
+        train_terrain_label = np.vstack((train_terrain_label,cur_terrain_label[num_val+num_test:,:]))
+
 
         # break
-    train_label = train_label.reshape(-1,)
-    val_label = val_label.reshape(-1,)
-    test_label = test_label.reshape(-1,)
+    train_contact_label = train_contact_label.reshape(-1,)
+    val_contact_label = val_contact_label.reshape(-1,)
+    test_contact_label = test_contact_label.reshape(-1,)
+
+    train_terrain_label = train_terrain_label.reshape(-1,)
+    val_terrain_label = val_terrain_label.reshape(-1,)
+    test_terrain_label = test_terrain_label.reshape(-1,)
     
+    train = {'data':train_data,'contact_label':train_contact_label,'terrain_label':train_terrain_label, 'seq_len':np.array(seq_len_train)}
+    val = {'data':val_data,'contact_label':val_contact_label,'terrain_label':val_terrain_label, 'seq_len':np.array(seq_len_val)}
+    test = {'data':test_data,'contact_label':test_contact_label,'terrain_label':test_terrain_label, 'seq_len':np.array(seq_len_test)}
+
     print("Saving data...")
     
-    np.save(save_pth+"train.npy",train_data)
-    np.save(save_pth+"val.npy",val_data)
-    np.save(save_pth+"test.npy",test_data)
-    np.save(save_pth+"train_label.npy",train_label)
-    np.save(save_pth+"val_label.npy",val_label)
-    np.save(save_pth+"test_label.npy",test_label)
+    np.save(save_pth+"train.npy",train)
+    np.save(save_pth+"val.npy",val)
+    np.save(save_pth+"test.npy",test)
+    # np.save(save_pth+"train_label.npy",train_contact_label)
+    # np.save(save_pth+"val_label.npy",val_contact_label)
+    # np.save(save_pth+"test_label.npy",test_contact_label)
 
     print("Generated ", train_data.shape[0], " training data.")
     print("Generated ", val_data.shape[0], " validation data.")
     print("Generated ", test_data.shape[0], " test data.")
     
-    print(train_data.shape[0])
-    print(val_data.shape[0])
-    print(test_data.shape[0])
+    # print(train_data.shape[0])
+    # print(val_data.shape[0])
+    # print(test_data.shape[0])
 
     print("Done!")
     # return data

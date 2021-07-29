@@ -52,11 +52,11 @@ class MultiTaskModel(nn.Module):
             nn.ReLU(),
             nn.Dropout(p=0.5),
             nn.MaxPool1d(kernel_size=2,
-                         stride=2)
+                         stride=2) 
         )
 
         """ TODO: change the 640 accordingly, or make it a parameter"""
-        self.heads = nn.ModuleDict({task: FCHead(640, num_classes) for task, num_classes in self.tasks_dict.items()})
+        self.heads = nn.ModuleDict({task: FCHead(4736, num_classes) for task, num_classes in self.tasks_dict.items()})
 
     def forward(self, x):
         x = x.permute(0,2,1)

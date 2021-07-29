@@ -12,19 +12,29 @@ from torch.utils.data import Dataset, DataLoader
 
 class contact_dataset(Dataset):
 
-    def __init__(self, data_path, label_path, window_size, device='cuda'):
+    def __init__(self, data_path, window_size, device='cuda'):
         """
         At initialization we load .npy files for data and label.
         self.data: a 2D array of all data points. rows are time axis, columns are features. (num_data, num_features)
         self.label: a vector of the corresponding contact states (in decimal). (num_data, 1)
         """
-        data = np.load(data_path)
-        label = np.load(label_path)
-        
-        self.num_data = (data.shape[0]-window_size+1)
+        data_and_label = np.load(data_path,allow_pickle=True)
+        data = data_and_label.item().get('data')
+        contact_label = data_and_label.item().get('contact_label')
+        terrain_label = data_and_label.item().get('terrain_label')
+        # get number of data from each sequence
+        seq_len_raw = data_and_label.item().get('seq_len')
+        # nummber of usable data
+        self.seq_len = seq_len_raw - window_size
+        # accumulate number of usable data
+        self.seq_len_accum = np.cumsum(self.seq_len)
+
+        self.num_data = self.seq_len_accum[-1]
         self.window_size = window_size
         self.data = torch.from_numpy(data).type('torch.FloatTensor').to(device)
-        self.label = torch.from_numpy(label).type('torch.LongTensor').to(device)
+        self.contact_label = torch.from_numpy(contact_label).type('torch.LongTensor').to(device)
+        self.terrain_label = torch.from_numpy(terrain_label).type('torch.LongTensor').to(device)
+
 
     def __len__(self):
         return self.num_data
@@ -49,14 +59,29 @@ class contact_dataset(Dataset):
         - data: (batch_size, window_size, num_features)
         - label: (batch_size, 1)
         """
+
+        ### DOUBLE CHECK AGAIN WHEN YOUR BRAIN FUNCTIONS BETTER ###
         if torch.is_tensor(idx):
             idx = idx.tolist()    
-        
-        this_data = (self.data[idx:idx+self.window_size,:]-torch.mean(self.data[idx:idx+self.window_size,:],dim=0))\
-                            /torch.std(self.data[idx:idx+self.window_size,:],dim=0)
-        this_label = self.label[idx+self.window_size-1] 
+
+        # print("\n", np.where(self.seq_len_accum>=idx))
+        seq_num = np.where(self.seq_len_accum>=idx)[0][0]
+
+        idx_in_raw = idx + self.window_size * seq_num.astype(int)
+        # print('\n seq len: ', self.seq_len)
+        # print('\n seq len_accunm: ', self.seq_len_accum)
+        # print('input idx: ',idx)
+        # print('\n seq_num:', seq_num)
+        # print(seq_num.dtype)
+        # print('idx_in_raw: ', idx_in_raw)
+        # print(idx_in_raw.dtype)
+
+        this_data = (self.data[idx_in_raw:idx_in_raw+self.window_size,:]-torch.mean(self.data[idx_in_raw:idx_in_raw+self.window_size,:],dim=0))\
+                            /torch.std(self.data[idx_in_raw:idx_in_raw+self.window_size,:],dim=0)
+        this_contact_label = self.contact_label[idx_in_raw+self.window_size-1] 
+        this_terrain_label = self.terrain_label[idx_in_raw+self.window_size-1]
             
-        sample = {'data': this_data, 'label': this_label}
+        sample = {'data': this_data, 'contact_label': this_contact_label, 'terrain_label': this_terrain_label}
 
         return sample
 
