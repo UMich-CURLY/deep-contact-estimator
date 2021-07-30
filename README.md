@@ -64,6 +64,8 @@ The deep contact estimator takes in proprioceptive measurements from a quadruped
 6. Run `python3 src/inference_one_seq.py`.
 7. The saved LCM log can be used in [cheetah_inekf_ros](https://github.com/UMich-CURLY/cheetah_inekf_ros) for mini cheetah state estimation.
 
+## Running in real-time
+
 ## Citation
 This work was submitted to a conference and is under review. For now, please cite the preprint version of the paper:
 

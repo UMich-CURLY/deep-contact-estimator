@@ -15,42 +15,44 @@ void Handler::receiveLegControlMsg(const lcm::ReceiveBuffer* rbuf,
     arrayCopy(leg_control_data + size + size + size, msg->v, size);
 	
     /// LOW: 500Hz version:
-    // cnnInputLegQueue.push(leg_control_data);
+    cnnInputLegQueue.push(leg_control_data);
 
     /// HIGH: 1000Hz version:
     // If the latest_idx reaches the limit of the buffer vector:
-    if (latest_idx == cnn_input_leg_vector.size() - 1) {
-        latest_idx = -1;
-    }
-    if (cnn_input_leg_vector[latest_idx + 1] != nullptr) {
-        delete[] cnn_input_leg_vector[latest_idx + 1];
-    }
-    cnn_input_leg_vector[++latest_idx] = leg_control_data;
+    // if (latest_idx == cnn_input_leg_vector.size() - 1) {
+    //     latest_idx = -1;
+    // }
+    // if (cnn_input_leg_vector[latest_idx + 1] != nullptr) {
+    //     delete[] cnn_input_leg_vector[latest_idx + 1];
+    // }
+    // cnn_input_leg_vector[++latest_idx] = leg_control_data;
 }
 
 void Handler::receiveMicrostrainMsg(const lcm::ReceiveBuffer* rbuf,
                                 const std::string& chan, 
                                 const microstrain_lcmt* msg)
 {
-    if (latest_idx != -1 && cnn_input_leg_vector[latest_idx] != nullptr) {
+    /// LOW: 500Hz version:
+    if (cnnInputLegQueue.size() >= cnnInputIMUQueue.size()) {
         float* microstrain_data = new float[6]();
         int size = 3;
         arrayCopy(microstrain_data, msg->acc, size);
         arrayCopy(microstrain_data + size, msg->omega, size);
 
         cnnInputIMUQueue.push(microstrain_data);
-        float* leg_control_data = new float[48]();
-        arrayCopy(leg_control_data, cnn_input_leg_vector[latest_idx], 48);
-        cnnInputLegQueue.push(leg_control_data);
     }
 
-    // if (cnnInputLegQueue.size() >= cnnInputIMUQueue.size()) {
+    /// HIGH: 1000Hz version:
+    // if (latest_idx != -1 && cnn_input_leg_vector[latest_idx] != nullptr) {
     //     float* microstrain_data = new float[6]();
     //     int size = 3;
     //     arrayCopy(microstrain_data, msg->acc, size);
     //     arrayCopy(microstrain_data + size, msg->omega, size);
 
     //     cnnInputIMUQueue.push(microstrain_data);
+    //     float* leg_control_data = new float[48]();
+    //     arrayCopy(leg_control_data, cnn_input_leg_vector[latest_idx], 48);
+    //     cnnInputLegQueue.push(leg_control_data);
     // }
 }
 
