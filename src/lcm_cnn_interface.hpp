@@ -37,7 +37,7 @@ std::mutex mtx;
 std::queue<float *> cnnInputLegQueue;
 std::queue<float *> cnnInputIMUQueue;
 std::queue<int> cnnInputGtLabelQueue;
-std::queue<float *> cnnInputQueue;
+// std::queue<float *> cnnInputQueue;
 
 std::ofstream myfile;
 std::ofstream myfile_leg_p;
@@ -181,24 +181,24 @@ public:
     //! \brief Takes in preprocessed data from queues and build a 2D matrix
     //! with size of input_h x input_w
     //!
-    void buildMatrix();
+    void buildMatrix(std::queue<float *>& cnnInputQueue, std::queue<float *>& new_data_queue);
 
     //!
     //! \brief Normalize the matrix and change it into an 1D array, then make inference
     //!
-    void normalizeAndInfer();
+    void normalizeAndInfer(std::queue<float *>& cnnInputQueue);
     
     //!
     //! \brief When the current input matrix is the first full dimension matrix we have, we need to
     //! run a full calculation for mean value and std. After that, we can use sliding
     //! window to update mean value and std.
     //!
-    void runFullCalculation();
+    void runFullCalculation(std::queue<float *>& cnnInputQueue);
 
     //!
     //! \brief Use sliding window to find current mean and std and normalize the matrix.
     //!
-    void runSlidingWindow();
+    void runSlidingWindow(std::queue<float *>& cnnInputQueue);
 
 private:
     int input_h; //!< The number of rows of the input matrix
@@ -230,7 +230,7 @@ public:
     //!
     ~ContactEstimation();
 
-    void makeInference();
+    void makeInference(std::queue<float *>& cnnInputQueue, std::queue<float *>& new_data_queue);
 
 	//!
     //! \brief Publish the output to "CNN_OUTPUT" channel
