@@ -363,7 +363,7 @@ void LcmCnnInterface::buildMatrix (std::queue<float *>& cnn_input_queue, std::qu
             cnn_input_matrix.push_back(new_line);
             data_require = std::max(data_require - 1, 0);
             if (data_require == 0) {            
-                normalizeAndInfer(std::queue<float *>& cnn_input_queue);   
+                normalizeAndInfer(cnn_input_queue);   
                 // std::cout << "The ground truth label is: " << gtLabel << std::endl;
             }
         } 
@@ -376,11 +376,11 @@ void LcmCnnInterface::normalizeAndInfer(std::queue<float *>& cnn_input_queue) {
     // We need to normalize the input matrix, to do so,
     // we need to calculate the mean value and standard deviation.
     if (is_first_full_matrix) {
-        runFullCalculation(std::queue<float *>& cnn_input_queue);
+        runFullCalculation(cnn_input_queue);
         is_first_full_matrix = false;
     }
     else {
-        runSlidingWindow(std::queue<float *>& cnn_input_queue);
+        runSlidingWindow(cnn_input_queue);
     }    
 }
 
@@ -451,13 +451,7 @@ ContactEstimation::ContactEstimation(const samplesCommon::Args &args)
     cnn_output.contact = {0, 0, 0, 0};
 }
 
-ContactEstimation::~ContactEstimation() {
-    while (!cnn_input_queue.empty()) {
-        delete[] cnn_input_queue.front();
-        delete[] new_data_queue.front();
-        cnn_input_queue.pop();
-    }
-}
+ContactEstimation::~ContactEstimation() {}
 
 void ContactEstimation::makeInference(std::queue<float *>& cnn_input_queue, std::queue<float *>& new_data_queue) {
     while (true) {
