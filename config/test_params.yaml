@@ -1,12 +1,13 @@
-data_folder: "/home/justin/data/contact_data/individual_test/sidewalk/numpy/"
-model_load_path: "/home/justin/code/deep-contact-estimator/results/0616_2blocks_best_val_loss.pt"
+data_folder: "/home/neofelis/cheetah/Cheetah Data/contact_data/500Hz/test_sequence/numpy/"
+model_load_path: "/home/neofelis/cheetah/Cheetah_code/deep-contact-estimator/results/0730_2blocks_best_val_loss.pt"
 
 # data params
-window_size: 150
+window_size: 75
 
 # network params
 batch_size: 30
 
 save_to_mat: False
-mat_save_path: "/home/justin/code/deep-contact-estimator/results/0616_2blocks_best_val_loss.mat"
+mat_save_path: "/home/neofelis/cheetah/Cheetah_code/deep-contact-estimator/results
+/0730_2blocks_best_val_loss.mat"
 

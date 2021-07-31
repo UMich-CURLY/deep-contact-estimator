@@ -1,10 +1,10 @@
 
-mat_folder: "/home/justin/data/contact_data/test_sequence/mat/"
-save_path: "/home/justin/data/contact_data/test_sequence/numpy/"
+mat_folder: "/home/neofelis/cheetah/Cheetah Data/contact_data/500Hz/mat/"
+save_path: "/home/neofelis/cheetah/Cheetah Data/contact_data/500Hz/test_sequence/numpy/"
 
 # mode: "train": split data into train/val/test
 #       "inference": create numpy for one sequence without spliting
-mode: "inference"
+mode: "train"
 
 train_ratio: 0.7
 val_ratio: 0.15

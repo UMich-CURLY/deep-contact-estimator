@@ -4,7 +4,7 @@ mat_data_path: "/home/justin/data/contact_data/test_sequence/mat/lcmlog-forest2_
 model_load_path: "/home/justin/code/deep-contact-estimator/results/0616_2blocks_best_val_loss.pt"
 
 # data params
-window_size: 150
+window_size: 75
 
 # network params
 batch_size: 1
