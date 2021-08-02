@@ -45,11 +45,7 @@ class contact_cnn(nn.Module):
 
     
         self.fc = nn.Sequential(
-<<<<<<< HEAD
             nn.Linear(in_features=2304,
-=======
-            nn.Linear(in_features=4736,
->>>>>>> lcm_cnn_interface_Jetson
                       out_features=2048),
             nn.ReLU(),
             nn.Dropout(p=0.5),

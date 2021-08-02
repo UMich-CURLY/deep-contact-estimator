@@ -182,15 +182,11 @@ def train(model, train_dataloader, val_dataloader, config):
             
 
         print("Finished epoch %d / %d, training acc: %.4f, validation acc: %.4f" %\
-<<<<<<< HEAD
             (epoch, config['num_epoch'], train_acc, val_acc)) 
         print("train leg0 acc: %.4f, train leg1 acc: %.4f, train leg2 acc: %.4f, train leg3 acc: %.4f, train leg acc avg: %.4f" %\
             (train_acc_per_leg[0],train_acc_per_leg[1],train_acc_per_leg[2],train_acc_per_leg[3],train_acc_per_leg_avg))    
         print("val leg0 acc: %.4f, val leg1 acc: %.4f, val leg2 acc: %.4f, val leg3 acc: %.4f, val leg acc avg: %.4f" %\
             (val_acc_per_leg[0],val_acc_per_leg[1],val_acc_per_leg[2],val_acc_per_leg[3],val_acc_per_leg_avg))
-=======
-            (epoch, config['num_epoch'], train_acc, val_acc))
->>>>>>> lcm_cnn_interface_Jetson
     
     # save model     
     state = {'epoch': epoch,
