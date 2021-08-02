@@ -50,7 +50,14 @@ class contact_dataset(Dataset):
         - label: (batch_size, 1)
         """
         if torch.is_tensor(idx):
+<<<<<<< HEAD
             idx = idx.tolist()    
+=======
+            idx = idx.tolist()
+
+        # this_data = torch.zeros((self.window_size, list(self.data.size())[1]))
+        # this_label = torch.zeros((list(self.label.size())[1]))
+>>>>>>> lcm_cnn_interface_Jetson
         
         this_data = (self.data[idx:idx+self.window_size,:]-torch.mean(self.data[idx:idx+self.window_size,:],dim=0))\
                             /torch.std(self.data[idx:idx+self.window_size,:],dim=0)

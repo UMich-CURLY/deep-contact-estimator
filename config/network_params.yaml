@@ -1,11 +1,22 @@
 # Path to the data folder. Data should be separated into train.npy, train_label.npy, val.npy, val_label.npy.
+<<<<<<< HEAD
 data_folder: "/home/neofelis/cheetah/Cheetah Data/contact_data/500Hz/test_sequence/numpy/"
+=======
+data_folder: "/home/tingjun/Desktop/Cheetah Data/contact_data/numpy_without_tau_GRF/"
+>>>>>>> lcm_cnn_interface_Jetson
 
 # Path to save the trained model. 
 # Please leave the filename extension out.
 # It will automatically generate ${name}_best_loss.pt, ${name}_best_acc.pt, ${name}_final_epo.pt.
+<<<<<<< HEAD
 model_save_path: "/home/neofelis/cheetah/Cheetah_code/deep-contact-estimator/results/0730_2blocks"
 log_writer_path: "/home/neofelis/cheetah/Cheetah_code/deep-contact-estimator/logs/0730_2blocks"
+=======
+model_save_path: "/home/tingjun/Desktop/Cheetah_code/deep-contact-estimator/results/0616_2blocks_best_val_loss"
+log_writer_path: "/home/tingjun/Desktop/Cheetah_code/deep-contact-estimator/logs/0616_2blocks_best_val_loss"
+# onnx_file_path: "/home/tingjun/Desktop/Cheetah_code/deep-contact-estimator/results/0412_1dcnn_64_128_no_tao_GRF.onnx"
+# loss_history_path: "/home/justin/code/deep-contact-estimator/results/0318_ws150_lr1e-4_2block_drop_out_history.npy"
+>>>>>>> lcm_cnn_interface_Jetson
 
 
 model_description: "1D CNN 2block, 54-64-64-drop-pool-128-128-drop-pool-fc, shuffle train, batch: 30, ws:150, lr:1e-4, all data"

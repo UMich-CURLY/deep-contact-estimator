@@ -1,6 +1,12 @@
 
+<<<<<<< HEAD
 mat_folder: "/home/neofelis/cheetah/Cheetah Data/contact_data/500Hz/mat/"
 save_path: "/home/neofelis/cheetah/Cheetah Data/contact_data/500Hz/test_sequence/numpy/"
+=======
+mat_folder: "/home/tingjun/Desktop/Cheetah Data/contact_data/test_sequence/mat/"
+save_path: "/home/tingjun/Desktop/Cheetah Data/contact_data/test_sequence/numpy/"
+save_path_test_lcm: "/home/tingjun/Desktop/Cheetah Data/contact_data/numpy_without_tau_GRF/"
+>>>>>>> lcm_cnn_interface_Jetson
 
 # mode: "train": split data into train/val/test
 #       "inference": create numpy for one sequence without spliting

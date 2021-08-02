@@ -2,7 +2,7 @@ import os
 import argparse
 import glob
 import sys
-sys.path.append('.')
+sys.path.append('..')
 import yaml
 from tqdm import tqdm
 
@@ -48,13 +48,15 @@ def compute_accuracy(dataloader, model):
     pred_arr = np.zeros((0))
     gt_arr = np.zeros((0))
     with torch.no_grad():
-        for sample in tqdm(dataloader):
+        for sample in tqdm(dataloader): # tqdm shows a smart progress meter
             input_data = sample['data']
             gt_label = sample['label']
 
             output = model(input_data)
 
             _, prediction = torch.max(output,1)
+            # print("gt_label: ", gt_label)
+            # print("prediction: " , prediction)
 
             
 
@@ -88,10 +90,12 @@ def main():
 
     config = yaml.load(open(args.config_name))
 
-    test_data = contact_dataset(data_path=config['data_folder']+"test.npy",\
-                                label_path=config['data_folder']+"test_label.npy",\
-                                window_size=config['window_size'],device=device)
+    test_data = contact_dataset(data_path=config['data_folder']+"test_lcm.npy",\
+                                label_path=config['data_folder']+"test_label_lcm.npy",\
+                                window_size=config['window_size'], device=device)
     test_dataloader = DataLoader(dataset=test_data, batch_size=config['batch_size'])
+    # test_dataloader = DataLoader(dataset=test_data, batch_size=1)
+
 
 
     # init network

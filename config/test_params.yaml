@@ -1,5 +1,7 @@
-data_folder: "/home/neofelis/cheetah/Cheetah Data/contact_data/500Hz/test_sequence/numpy/"
-model_load_path: "/home/neofelis/cheetah/Cheetah_code/deep-contact-estimator/results/0730_2blocks_best_val_loss.pt"
+# data_folder: "/home/neofelis/cheetah/Cheetah Data/contact_data/500Hz/test_sequence/numpy/"
+# model_load_path: "/home/neofelis/cheetah/Cheetah_code/deep-contact-estimator/results/0730_2blocks_best_val_loss.pt"
+data_folder: "/home/tingjun/Desktop/Cheetah Data/contact_data/numpy_without_tau_GRF/"
+model_load_path: "/home/tingjun/Desktop/Cheetah_code/deep-contact-estimator/results/0616_2blocks_best_val_loss.pt"
 
 # data params
 window_size: 75
@@ -8,6 +10,6 @@ window_size: 75
 batch_size: 30
 
 save_to_mat: False
-mat_save_path: "/home/neofelis/cheetah/Cheetah_code/deep-contact-estimator/results
-/0730_2blocks_best_val_loss.mat"
+# mat_save_path: "/home/neofelis/cheetah/Cheetah_code/deep-contact-estimator/results/0730_2blocks_best_val_loss.mat"
+mat_save_path: "/home/tingjun/Desktop/Cheetah_code/deep-contact-estimator/results/0616_2blocks_best_val_loss.mat"
 
