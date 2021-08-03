@@ -10,3 +10,4 @@ build/
 *.trt
 *.csv
 *.npy
+*.mat
