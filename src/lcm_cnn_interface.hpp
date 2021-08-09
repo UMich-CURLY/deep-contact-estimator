@@ -29,7 +29,7 @@
 #include "../lcm_types/cpp/microstrain_lcmt.hpp"
 #include "../lcm_types/cpp/contact_t.hpp"
 #include "../lcm_types/cpp/contact_ground_truth_t.hpp"
-#include "../lcm_types/cpp/contact_est_lcmt.hpp"
+#include "../lcm_types/cpp/synced_proprioceptive_lcmt.hpp"
 
 // mutex for critical section
 std::mutex mtx;
@@ -242,7 +242,7 @@ private:
     int input_w; //!< The number of columns of the input matrix
     TensorRTAccelerator sample; //!< sample contains the engine and other related parameters
     lcm::LCM lcm;
-    contact_est_lcmt cnn_output;
+    synced_proprioceptive_lcmt cnn_output;
 };
 
 #endif

@@ -118,7 +118,7 @@ bool OnnxToTensorRT::build()
     /// REMARK: we can deserialize a serialized engine if we have one:
     // -----------------------------------------------------------------------------------------------------------------------
     // nvinfer1::IRuntime* runtime = nvinfer1::createInferRuntime(sample::gLogger);
-    // std::string cached_path = "/media/jetson256g/code/LCM_CNN_INTERFACE/deep-contact-estimator/engines/0616_2blocks_best_val_loss.trt";
+    // std::string cached_path = "/media/jetson256g/code/LCM_CNN_INTERFACE/deep-contact-estimator/engines/0730";
     // std::ifstream fin(cached_path);
     // std::string cached_engine = "";
     // while (fin.peek() != EOF) {
@@ -245,7 +245,7 @@ bool OnnxToTensorRT::serialize() {
     std::ofstream serialize_output_stream;
     serialize_str.resize(serializedModel->size());
     memcpy((void*)serialize_str.data(), serializedModel->data(), serializedModel->size());
-    serialize_output_stream.open("/media/jetson256g/code/LCM_CNN_INTERFACE/deep-contact-estimator/engines/0616_2blocks_best_val_loss.trt");
+    serialize_output_stream.open("/media/jetson256g/code/LCM_CNN_INTERFACE/deep-contact-estimator/engines/0730_2blocks_best_val_loss.trt");
     
     serialize_output_stream << serialize_str;
     serialize_output_stream.close();
@@ -275,7 +275,7 @@ bool OnnxToTensorRT::processInput(const samplesCommon::BufferManager& buffers)
     /// REMARK: use a *.bin file to parse the model
     std::vector<uint8_t> fileData(inputH * inputW);
     std::ifstream data_file;
-    data_file.open((locateFile("input_matrix.bin", mParams.dataDirs)), std::ios::in | std::ios::binary);
+    data_file.open((locateFile("input_matrix_500Hz.bin", mParams.dataDirs)), std::ios::in | std::ios::binary);
     float* hostDataBuffer = static_cast<float*>(buffers.getHostBuffer(mParams.inputTensorNames[0]));
     int number_of_items = 150 * 54;
     // hostDataBuffer.resize(number_of_items);
@@ -335,7 +335,7 @@ samplesCommon::OnnxSampleParams initializeSampleParams(const samplesCommon::Args
         std::cout << "Using directory provided by the user" << endl;
         params.dataDirs = args.dataDirs;
     }
-    params.onnxFileName = "0616_2blocks_best_val_loss.onnx";
+    params.onnxFileName = "0730_2blocks_best_val_loss.onnx";
     params.inputTensorNames.push_back("input");
     params.batchSize = 1;
     params.outputTensorNames.push_back("output");

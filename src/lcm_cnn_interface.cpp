@@ -95,7 +95,7 @@ bool TensorRTAccelerator::buildFromSerializedEngine()
     /// REMARK: we can deserialize a serialized engine if we have one:
     // -----------------------------------------------------------------------------------------------------------------------
     nvinfer1::IRuntime* runtime = nvinfer1::createInferRuntime(sample::gLogger);
-    std::string cached_path = PROGRAM_PATH + "engines/0616_2blocks_best_val_loss.trt";
+    std::string cached_path = PROGRAM_PATH + "engines/0730_2blocks_best_val_loss.trt";
     std::ifstream fin(cached_path);
     std::string cached_engine = "";
     while (fin.peek() != EOF) {
@@ -169,7 +169,7 @@ bool TensorRTAccelerator::serialize() {
     std::ofstream serialize_output_stream;
     serialize_str.resize(serializedModel->size());
     memcpy((void*)serialize_str.data(), serializedModel->data(), serializedModel->size());
-    serialize_output_stream.open(PROGRAM_PATH + "engines/0616_2blocks_best_val_loss.trt");
+    serialize_output_stream.open(PROGRAM_PATH + "engines/0730_2blocks_best_val_loss.trt");
     
     serialize_output_stream << serialize_str;
     serialize_output_stream.close();
@@ -184,11 +184,11 @@ bool TensorRTAccelerator::serialize() {
 //!
 bool TensorRTAccelerator::processInput(const samplesCommon::BufferManager& buffers, const float* cnn_input_matrix_normalized)
 {   
-    const int inputH = 150;
+    const int inputH = 75;
     const int inputW = 54;
     
     float* hostDataBuffer = static_cast<float*>(buffers.getHostBuffer(mParams.inputTensorNames[0]));
-    int number_of_items = 150 * 54;
+    int number_of_items = 75 * 54;
     // hostDataBuffer.resize(number_of_items);
     for (int i = 0; i < inputH * inputW; i++) {
         // std::cout <<  cnn_input_matrix_normalized[i] << std::endl;
@@ -237,7 +237,7 @@ samplesCommon::OnnxSampleParams initializeSampleParams(const samplesCommon::Args
         std::cout << "Using directory provided by the user" << endl;
         params.dataDirs = args.dataDirs;
     }
-    params.onnxFileName = "0616_2blocks_best_val_loss.onnx";
+    params.onnxFileName = "0730_2blocks_best_val_loss.onnx";
     params.inputTensorNames.push_back("input");
     params.batchSize = 1; //!< Takes in 1 batch every time
     params.outputTensorNames.push_back("output");
@@ -270,9 +270,9 @@ void printHelpInfo()
 
 
 LcmCnnInterface::LcmCnnInterface(const samplesCommon::Args &args)
-    : input_h(150),
+    : input_h(75),
       input_w(54),
-      data_require(150),
+      data_require(75),
       new_line(input_w, 0),
       sum_of_rows(input_w, 0),
       sum_of_rows_square(input_w, 0),
@@ -436,7 +436,7 @@ void LcmCnnInterface::runSlidingWindow(std::queue<float *>& cnn_input_queue) {
 }
 
 ContactEstimation::ContactEstimation(const samplesCommon::Args &args)
-    : input_h(150),
+    : input_h(75),
       input_w(54),
       sample(initializeSampleParams(args))
 {
@@ -469,10 +469,10 @@ void ContactEstimation::makeInference(std::queue<float *>& cnn_input_queue, std:
             new_data_queue.pop();
             mtx.unlock();
 
-			int idx = 0;
-			const int legTypeDataNum = 12;
-			const int IMUTypeDataNum = 3;
-			for (int i = 0; i < legTypeDataNum; ++i){
+	    int idx = 0;
+	    const int legTypeDataNum = 12;
+	    const int IMUTypeDataNum = 3;
+	    for (int i = 0; i < legTypeDataNum; ++i){
                 cnn_output.q[i] = new_data[idx];
                 ++idx;
             }
@@ -498,7 +498,7 @@ void ContactEstimation::makeInference(std::queue<float *>& cnn_input_queue, std:
                 ++idx;
             }
             myfile_leg_p << '\n';
-			myfile_leg_p.flush();
+    	    myfile_leg_p.flush();
 
             // leg_control_data.v:
             for (int i = 0; i < legTypeDataNum; ++i) {
@@ -534,7 +534,7 @@ void ContactEstimation::publishOutput(int output_idx) {
     }
     myfile << '\n';
     myfile << std::flush;
-    lcm.publish("contact_est", &cnn_output);
+    lcm.publish("synced_proprioceptive_data", &cnn_output);
 }
 
 
@@ -582,7 +582,7 @@ int main(int argc, char** argv)
     CNNInferenceThread.join();
 
     myfile.close();
-	myfile_leg_p.close();
+    myfile_leg_p.close();
 
 
     return 0;

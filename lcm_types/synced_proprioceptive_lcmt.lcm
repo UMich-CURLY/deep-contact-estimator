@@ -1,4 +1,4 @@
-struct contact_est_lcmt
+struct synced_proprioceptive_lcmt
 {
     int8_t  num_legs;
     double  timestamp;
