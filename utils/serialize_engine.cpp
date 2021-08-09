@@ -277,7 +277,7 @@ bool OnnxToTensorRT::processInput(const samplesCommon::BufferManager& buffers)
     std::ifstream data_file;
     data_file.open((locateFile("input_matrix_500Hz.bin", mParams.dataDirs)), std::ios::in | std::ios::binary);
     float* hostDataBuffer = static_cast<float*>(buffers.getHostBuffer(mParams.inputTensorNames[0]));
-    int number_of_items = 150 * 54;
+    int number_of_items = 75 * 54;
     // hostDataBuffer.resize(number_of_items);
     data_file.read(reinterpret_cast<char*>(&hostDataBuffer[0]), number_of_items * sizeof(float));
     data_file.close(); 

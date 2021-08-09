@@ -173,7 +173,7 @@ subscription3 = lc.subscribe("contact_ground_truth", receive_contact_ground_trut
 
 
 # Initialize cnn input class and model:
-input_rows = 150
+input_rows = 75
 input_cols = 54
 cnn_input = CNNInput(input_rows, input_cols)
 count = 0
