@@ -269,7 +269,7 @@ bool OnnxToTensorRT::processInput(const samplesCommon::BufferManager& buffers)
     std::cout << "inputW is: " << inputW << std::endl;
 
     /// REMARK: after you get the input dimension, you can define them here:
-    // const int inputH = 150;
+    // const int inputH = 75;
     // const int inputW = 54;
     
     /// REMARK: use a *.bin file to parse the model

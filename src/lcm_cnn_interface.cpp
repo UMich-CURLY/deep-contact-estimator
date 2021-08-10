@@ -363,11 +363,14 @@ void LcmCnnInterface::buildMatrix (std::queue<float *>& cnn_input_queue, std::qu
             cnn_input_matrix.push_back(new_line);
             data_require = std::max(data_require - 1, 0);
             
-            
+            if (data_require != 0) {
+		new_data_queue.pop();
+	    }
             if (data_require == 0) {            
-                normalizeAndInfer(cnn_input_queue);   
+                normalizeAndInfer(cnn_input_queue);
+	        // new_data_queue.push(new_data);	
                 // std::cout << "The ground truth label is: " << gtLabel << std::endl;
-                break;
+                // break;
             }
         } 
     }
@@ -395,7 +398,7 @@ void LcmCnnInterface::runFullCalculation(std::queue<float *>& cnn_input_queue) {
     data_file.open("input_matrix_500Hz.bin", ios::out | ios::binary);
     if (!data_file) {
         std::cerr << " Cannot open the file!" << std::endl;
-        return -1;
+        return;
     }
     
     for (int j = 0; j < input_w; ++j) {
@@ -415,13 +418,13 @@ void LcmCnnInterface::runFullCalculation(std::queue<float *>& cnn_input_queue) {
         // Normalize the matrix:
         for (int i = 0; i < input_h; ++i) {
             cnn_input_matrix_normalized[i * input_w + j] = (cnn_input_matrix[i][j] - mean_vector[j]) / std_vector[j];
-            /// REMARK: delete the following lines in actual use:
-            data_file.write((char *) &cnn_input_matrix_normalized[i * input_w + j], sizeof(float));
-            data_file.close();
         }
         previous_first_row[j] = cnn_input_matrix[0][j];
     }
-    
+
+    /// REMARK: delete the following lines in actual use:
+    /* data_file.write(reinterpret_cast<char *>(&cnn_input_matrix_normalized[0]), 75 * 54 * sizeof(float));
+    data_file.close();*/
     cnn_input_queue.push(cnn_input_matrix_normalized);
 }
 
@@ -543,6 +546,7 @@ void ContactEstimation::makeInference(std::queue<float *>& cnn_input_queue, std:
 
 void ContactEstimation::publishOutput(int output_idx) {
     std::string binary = std::bitset<4>(output_idx).to_string(); // to binary
+    // std::cout << "Contact_state: " << output_idx << std::endl;
     for (int i = 0; i < cnn_output.num_legs; i++) {
         cnn_output.contact[i] = binary[i];
         myfile << cnn_output.contact[i] << ',';
