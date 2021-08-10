@@ -362,9 +362,12 @@ void LcmCnnInterface::buildMatrix (std::queue<float *>& cnn_input_queue, std::qu
             cnn_input_matrix.erase(cnn_input_matrix.begin());
             cnn_input_matrix.push_back(new_line);
             data_require = std::max(data_require - 1, 0);
+            
+            
             if (data_require == 0) {            
                 normalizeAndInfer(cnn_input_queue);   
                 // std::cout << "The ground truth label is: " << gtLabel << std::endl;
+                break;
             }
         } 
     }
@@ -387,6 +390,14 @@ void LcmCnnInterface::normalizeAndInfer(std::queue<float *>& cnn_input_queue) {
 
 void LcmCnnInterface::runFullCalculation(std::queue<float *>& cnn_input_queue) {
     float* cnn_input_matrix_normalized = new float[input_h * input_w]();
+    
+    std::ofstream data_file;
+    data_file.open("input_matrix_500Hz.bin", ios::out | ios::binary);
+    if (!data_file) {
+        std::cerr << " Cannot open the file!" << std::endl;
+        return -1;
+    }
+    
     for (int j = 0; j < input_w; ++j) {
         // find mean:
         for (int i = 0; i < input_h; ++i) {
@@ -404,9 +415,13 @@ void LcmCnnInterface::runFullCalculation(std::queue<float *>& cnn_input_queue) {
         // Normalize the matrix:
         for (int i = 0; i < input_h; ++i) {
             cnn_input_matrix_normalized[i * input_w + j] = (cnn_input_matrix[i][j] - mean_vector[j]) / std_vector[j];
+            /// REMARK: delete the following lines in actual use:
+            data_file.write((char *) &cnn_input_matrix_normalized[i * input_w + j], sizeof(float));
+            data_file.close();
         }
         previous_first_row[j] = cnn_input_matrix[0][j];
     }
+    
     cnn_input_queue.push(cnn_input_matrix_normalized);
 }
 
