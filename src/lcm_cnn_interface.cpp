@@ -38,7 +38,8 @@ void Handler::receiveMicrostrainMsg(const lcm::ReceiveBuffer* rbuf,
         int size = 3;
         arrayCopy(microstrain_data, msg->acc, size);
         arrayCopy(microstrain_data + size, msg->omega, size);
-
+	int64_t timestamp = rbuf->recv_utime;
+	std::cout << timestamp << std::endl;
         cnnInputIMUQueue.push(microstrain_data);
     }
 
