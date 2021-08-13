@@ -11,6 +11,7 @@ import torch.optim as optim
 from sklearn.metrics import precision_score
 from sklearn.metrics import recall_score
 from sklearn.metrics import jaccard_score
+from sklearn.metrics import confusion_matrix
 
 from mtl_models import MultiTaskModel
 from loss import MultiTaskLoss
@@ -50,6 +51,8 @@ def compute_accuracy(dataloader, model):
     bin_contact_gt_arr = np.zeros((0,4))
     contact_pred_arr = np.zeros((0))
     contact_gt_arr = np.zeros((0))
+    terrain_pred_arr = np.zeros((0))
+    terrain_gt_arr = np.zeros((0))
     prediction = {}
     for sample in tqdm(dataloader):
         input_data = sample['data']
@@ -71,13 +74,29 @@ def compute_accuracy(dataloader, model):
         contact_pred_arr = np.hstack((contact_pred_arr, prediction['contact'].cpu().numpy()))
         contact_gt_arr = np.hstack((contact_gt_arr, labels['contact'].cpu().numpy()))
 
+        terrain_pred_arr = np.hstack((terrain_pred_arr, prediction['terrain'].cpu().numpy()))
+        terrain_gt_arr = np.hstack((terrain_gt_arr, labels['terrain'].cpu().numpy()))
+
         correct_per_leg += (bin_contact_pred==bin_contact_gt).sum(axis=0).cpu().numpy()
         num_data += input_data.size(0)
         num_correct_terrain += (prediction['terrain']==labels['terrain']).sum().item()
         num_correct_contact += (prediction['contact']==labels['contact']).sum().item()
 
-    return num_correct_contact/num_data, correct_per_leg/num_data, num_correct_terrain/num_data, bin_contact_pred_arr, bin_contact_gt_arr, contact_pred_arr, contact_gt_arr
+    return num_correct_contact/num_data, correct_per_leg/num_data, num_correct_terrain/num_data, bin_contact_pred_arr, bin_contact_gt_arr, contact_pred_arr, contact_gt_arr, terrain_pred_arr, terrain_gt_arr
 
+def compute_confusion_mat(tasks_dict, bin_contact_pred_arr, bin_contact_gt_arr, contact_pred_arr, contact_gt_arr, terrain_pred_arr, terrain_gt_arr):
+    
+    confusion_mat = {}
+    
+    confusion_mat['leg_rf'] = confusion_matrix(bin_contact_gt_arr[:,0],bin_contact_pred_arr[:,0], labels=[0,1])
+    confusion_mat['leg_lf'] = confusion_matrix(bin_contact_gt_arr[:,1],bin_contact_pred_arr[:,1], labels=[0,1])
+    confusion_mat['leg_rh'] = confusion_matrix(bin_contact_gt_arr[:,2],bin_contact_pred_arr[:,2], labels=[0,1])
+    confusion_mat['leg_lh'] = confusion_matrix(bin_contact_gt_arr[:,3],bin_contact_pred_arr[:,3], labels=[0,1])
+
+    confusion_mat['terrain'] = confusion_matrix(terrain_gt_arr,terrain_pred_arr, labels=[0,1,2,3,4,5,6,7,8])
+
+    
+    return confusion_mat
 
 def decimal2binary(x):
     mask = 2**torch.arange(4-1,-1,-1).to(x.device, x.dtype)
@@ -103,15 +122,17 @@ def main():
       "contact" : 16,
       "terrain" : 9
     }
-    model = MultiTaskModel(tasks_dict)
+    model = MultiTaskModel(tasks_dict,config)
     checkpoint = torch.load(config['model_load_path'])
     model.load_state_dict(checkpoint['model_state_dict'])
     model = model.eval().to(device)
 
     test_acc = {}
-    test_acc['contact'], acc_per_leg, test_acc['terrain'], bin_contact_pred_arr, bin_contact_gt_arr, contact_pred_arr, contact_gt_arr = compute_accuracy(test_dataloader, model)
+    test_acc['contact'], acc_per_leg, test_acc['terrain'], bin_contact_pred_arr, bin_contact_gt_arr, \
+    contact_pred_arr, contact_gt_arr, terrain_pred_arr, terrain_gt_arr = compute_accuracy(test_dataloader, model)
     precision_of_class, precision_of_legs, precision_of_all_legs = compute_precision(bin_contact_pred_arr, bin_contact_gt_arr, contact_pred_arr, contact_gt_arr)
     jaccard_of_class, jaccard_of_legs, jaccard_of_all_legs = compute_jaccard(bin_contact_pred_arr, bin_contact_gt_arr, contact_pred_arr, contact_gt_arr)
+    conf_mat = compute_confusion_mat(tasks_dict,bin_contact_pred_arr,bin_contact_gt_arr,contact_pred_arr,contact_gt_arr,terrain_pred_arr,terrain_gt_arr)
 
     print("Test accuracy (contact) is: %.4f" % test_acc['contact'])
     print("Test accuracy (terrain) is: %.4f" % test_acc['terrain'])
@@ -134,6 +155,9 @@ def main():
     print("jaccard of leg 2 is: %.4f" % jaccard_of_legs[2])
     print("jaccard of leg 3 is: %.4f" % jaccard_of_legs[3])
     print("jaccard of all legs is: %.4f" % jaccard_of_all_legs)
+    print("Terrain confusion matrix: ")
+    # print(conf_mat['terrain'])
+    np.savetxt(sys.stdout.buffer, conf_mat['terrain'])
 
     # print(test_acc)
     # print(acc_per_leg[0])

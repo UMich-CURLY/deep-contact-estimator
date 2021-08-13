@@ -15,7 +15,7 @@ class FCHead(nn.Sequential):
 
 class MultiTaskModel(nn.Module):
     """ Multi-task baseline model with shared conv layers + task-specific fc layers """
-    def __init__(self, tasks_dict: dict):
+    def __init__(self, tasks_dict: dict, config):
         super(MultiTaskModel, self).__init__()
         self.tasks_dict = tasks_dict
 
@@ -32,7 +32,7 @@ class MultiTaskModel(nn.Module):
                       stride=1,
                       padding=1),
             nn.ReLU(),
-            nn.Dropout(p=0.5),
+            nn.Dropout(p=config['dropout_rate']),
             nn.MaxPool1d(kernel_size=2,
                          stride=2)
         )
@@ -50,7 +50,7 @@ class MultiTaskModel(nn.Module):
                       stride=1,
                       padding=1),
             nn.ReLU(),
-            nn.Dropout(p=0.5),
+            nn.Dropout(p=config['dropout_rate']),
             nn.MaxPool1d(kernel_size=2,
                          stride=2) 
         )

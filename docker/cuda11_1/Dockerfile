@@ -8,6 +8,7 @@ USER root
 RUN pip install scipy
 RUN pip install tensorboard
 RUN pip install -U scikit-learn
+RUN pip install wandb
 
 # build essential, cmake, vim, git
 ENV DEBIAN_FRONTEND=noninteractive

@@ -4,8 +4,10 @@ data_folder: "/home/justin/data/contact_data/terrain_type_train/numpy/"
 # Path to save the trained model. 
 # Please leave the filename extension out.
 # It will automatically generate ${name}_best_loss.pt, ${name}_best_acc.pt, ${name}_final_epo.pt.
-model_save_path: "/home/justin/code/deep-contact-estimator/results/0729_multi_task"
-log_writer_path: "/home/justin/code/deep-contact-estimator/logs/0729_multi_task"
+model_save_path: "/home/justin/code/deep-contact-estimator/results/0811_multi_task"
+log_writer_path: "/home/justin/code/deep-contact-estimator/logs/0811_multi_task"
+wandb_project_name: "contact_multi-task"
+wandb_run_name: "0811_simple_test"
 # loss_history_path: "/home/justin/code/deep-contact-estimator/results/0318_ws150_lr1e-4_2block_drop_out_history.npy"
 
 model_description: "1D CNN 2block, 54-64-64-drop-128-128-drop-pool-fc, shuffle train, batch: 30, ws:150, lr:1e-4, same CNN head different FC multi-task"
@@ -21,5 +23,6 @@ batch_size: 30
 init_lr: 0.0001
 lr_decay_rate: 0.97
 num_epoch: 30
+dropout_rate: 0.5
 
 

@@ -1,4 +1,5 @@
-data_folder: "/home/justin/data/contact_data/terrain_type_train/numpy/"
+# data_folder: "/home/justin/data/contact_data/terrain_type_train/numpy/"
+data_folder: "/home/justin/data/contact_data/temp/"
 model_load_path: "/home/justin/code/deep-contact-estimator/results/0728_multi_task_best_val_total_loss.pt"
 
 # data params
@@ -6,6 +7,7 @@ window_size: 150
 
 # network params
 batch_size: 30
+dropout_rate: 0.5
 
 save_to_mat: False
 mat_save_path: "/home/justin/code/deep-contact-estimator/results/0616_2blocks_best_val_loss.mat"
