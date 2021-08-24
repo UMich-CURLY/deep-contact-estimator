@@ -17,15 +17,17 @@
 #include <iostream>
 #include <sstream>
 
+#include "lcm_data_types.hpp"  
+
 //! \brief contains several queues that will be used to transfer messages in the interface
-struct lcmMsgQueues_t {
+struct LcmMsgQueues_t {
     std::mutex mtx;
-    std::queue<float *> cnn_input_leg_queue;
-    std::queue<float *> cnn_input_imu_queue;
+    std::queue<std::shared_ptr<LcmLegStruct>> cnn_input_leg_queue;
+    std::queue<std::shared_ptr<LcmIMUStruct>> cnn_input_imu_queue;
     std::queue<int> cnn_input_gtlabel_queue;
-    std::queue<int64_t> timestampe_queue;
+    std::queue<double> timestamp_queue;
     // std::queue<float *> cnnInputQueue;    
-}
+};
 
 
 #endif

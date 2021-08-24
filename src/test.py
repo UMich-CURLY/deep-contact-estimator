@@ -94,9 +94,14 @@ def main():
                                 label_path=config['data_folder']+"test_label_lcm.npy",\
                                 window_size=config['window_size'], device=device)
     test_dataloader = DataLoader(dataset=test_data, batch_size=config['batch_size'])
+    print(test_data.label.shape)
+
     # test_dataloader = DataLoader(dataset=test_data, batch_size=1)
 
-
+    test_data = contact_dataset(data_path="../data/"+"test_lcm.npy",\
+                                label_path="../data/"+"test_label_lcm.npy",\
+                                window_size=config['window_size'], device=device)
+    test_dataloader = DataLoader(dataset=test_data, batch_size=1)
 
     # init network
     model = contact_cnn()

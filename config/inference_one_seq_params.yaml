@@ -5,7 +5,7 @@
 data_path: "/home/tingjun/Desktop/Cheetah Data/contact_data/test_sequence/numpy/lcmlog-2021-02-21-5-short_network_data_no_torque_GRF.npy"
 label_path: "/home/tingjun/Desktop/Cheetah Data/contact_data/test_sequence/numpy/lcmlog-2021-02-21-5-short_network_data_no_torque_GRF_label.npy"
 mat_data_path: "/home/tingjun/Desktop/Cheetah Data/contact_data/test_sequence/mat/lcmlog-2021-02-21-5-short_network_data.mat"
-model_load_path: "/home/tingjun/Desktop/Cheetah_code/deep-contact-estimator/results/0616_2blocks_best_val_loss.pt"
+model_load_path: "/home/tingjun/Desktop/Cheetah_code/deep-contact-estimator/results/0730_2blocks_best_val_loss.pt"
 
 # data params
 window_size: 75
@@ -20,7 +20,7 @@ save_mat: True
 
 # save_lcm: True
 # lcm_save_path: "/home/justin/code/deep-contact-estimator/inference_results/lcmlog-forest2_network_data.lcm"
-mat_save_path: "/home/tingjun/Desktop/Cheetah_code/deep-contact-estimator/inference_results/0616_2blocks_best_val_loss.mat"
+mat_save_path: "/home/tingjun/Desktop/Cheetah_code/deep-contact-estimator/inference_results/0730_2blocks_best_val_loss.mat"
 
 save_lcm: True
-lcm_save_path: "/home/tingjun/Desktop/Cheetah_code/deep-contact-estimator/inference_results/0616_2blocks_best_val_loss.lcm"
+lcm_save_path: "/home/tingjun/Desktop/Cheetah_code/deep-contact-estimator/inference_results/0730_2blocks_best_val_loss.lcm"

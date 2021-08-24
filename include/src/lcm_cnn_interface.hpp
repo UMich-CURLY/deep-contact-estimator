@@ -17,7 +17,7 @@
 #include <iostream>
 #include <sstream>
 
-#include "src/lcm_handler.hpp"
+#include "communication/lcm_handler.hpp"
 #include "utils/tensorrt_acc.hpp"
 #include "lcm_msg_queue.hpp"
 
@@ -29,18 +29,6 @@
 #include "../lcm_types/cpp/contact_t.hpp"
 #include "../lcm_types/cpp/contact_ground_truth_t.hpp"
 #include "../lcm_types/cpp/synced_proprioceptive_lcmt.hpp"
-
-// mutex for critical section
-std::mutex mtx;
-// queues that need to be shared between Handler and LcmCnnInterface:
-
-struct lcmMsgQueues_t {
-    std::queue<float *> cnn_input_leg_queue;
-    std::queue<float *> cnn_input_imu_queue;
-    std::queue<int> cnn_input_gtlabel_queue;
-    std::queue<int64_t> timestampe_queue;
-    // std::queue<float *> cnnInputQueue;    
-}
 
 //!
 //! \brief The LcmCnnInterface class takes in pre-processed data from queues and
@@ -96,6 +84,8 @@ private:
     std::vector<float> sum_of_rows_square; //!< the sum of the square of elements in the same column;
     std::vector<float> previous_first_row; //!< save the value in previous row;
     bool is_first_full_matrix; //!< indicates whether the current matrix is the first full matrix
+    LcmMsgQueues_t* lcm_msg_in_;
+    std::mutex* mtx_;
 
 };
 

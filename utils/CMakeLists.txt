@@ -10,6 +10,9 @@ INCLUDE_DIRECTORIES(${cuda_dir})
 
 SET(LOG_CPP /usr/src/tensorrt/samples/common/logger.cpp)
 
+SET(include_dir /home/tingjun/Desktop/Cheetah_Proj/deep-contact-estimator/include)
+INCLUDE_DIRECTORIES(${include_dir})
+
 ADD_EXECUTABLE(serialize_engine serialize_engine.cpp ${LOG_CPP})
 
 find_library(LIBNVINFER nvinfer /usr/lib/aarch64-linux-gnu/)

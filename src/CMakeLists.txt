@@ -8,7 +8,7 @@ INCLUDE_DIRECTORIES(${common_dir})
 SET(cuda_dir /usr/local/cuda-10.2/targets/aarch64-linux/include)
 INCLUDE_DIRECTORIES(${cuda_dir})
 
-SET(include_dir /home/tingjun/Desktop/Cheetah_Proj/deep-contact-estimator/src)
+SET(include_dir /home/tingjun/Desktop/Cheetah_Proj/deep-contact-estimator/include)
 INCLUDE_DIRECTORIES(${include_dir})
 
 SET(LOG_CPP /usr/src/tensorrt/samples/common/logger.cpp)

@@ -1,0 +1,4 @@
+settings:
+  model_load_path: "/home/tingjun/Desktop/Cheetah_Proj/deep-contact-estimator/weights/"
+  engine_load_path: "/home/tingjun/Desktop/Cheetah_Proj/deep-contact-estimator/engines/"
+  

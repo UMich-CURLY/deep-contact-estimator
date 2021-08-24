@@ -18,12 +18,12 @@
 //!
 //! \brief The Handler class takes in LCM messages from subscribed channels and process them
 //! 
-class Handler
+class LcmHandler
 {
 public:
-    ~Handler();
+    ~LcmHandler();
 
-    Handler(lcm::LCM* lcm_, lcmMsgQueues_t* lcm_msg_in_, std::mutex* cdata_mtx_);
+    LcmHandler(lcm::LCM* lcm, LcmMsgQueues_t* lcm_msg_in, std::mutex* cdata_mtx);
 
     //!
     //! \brief Receives messages from the "leg_control_data" channel and  
@@ -55,10 +55,11 @@ private:
     //! \details Pass the begin pointer of array1 and array2 to copy values in array2 
     //! to array1 starting from the pointer
     //! 
-    void arrayCopy(float array1 [], const float array2 [], int size);
-    lcmMsgQueues_t* lcm_msg_in;
-    std::mutex* cdata_mtx;
+    void arrayCopy(float array1 [], const float array2 []);
+    LcmMsgQueues_t* lcm_msg_in_;
+    std::mutex* cdata_mtx_;
     lcm::LCM* lcm_;
+    int64_t start_time;
 };
 
 #endif
