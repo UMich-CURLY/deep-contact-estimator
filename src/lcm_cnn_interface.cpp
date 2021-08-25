@@ -2,11 +2,6 @@
 #include "src/contact_estimation.hpp"
 // #include "src/config.hpp"
 
-int debug_flag = 1;
-std::ofstream myfile;
-std::ofstream myfile_leg_p;
-string PROGRAM_PATH = "/media/jetson256g/code/LCM_CNN_INTERFACE/deep-contact-estimator/";
-
 int main(int argc, char **argv)
 {
     /// LCM: subscribe to channels:
@@ -42,7 +37,7 @@ int main(int argc, char **argv)
     std::queue<float *> cnn_input_queue;
     std::queue<float *> new_data_queue;
 
-    int debug_flag = 1;
+    int debug_flag = 0;
     std::ofstream myfile;
     std::ofstream myfile_leg_p;
     string PROGRAM_PATH = "/media/jetson256g/code/LCM_CNN_INTERFACE/deep-contact-estimator/";
