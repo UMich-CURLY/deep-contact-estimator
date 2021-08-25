@@ -19,7 +19,7 @@
 
 #include "communication/lcm_handler.hpp"
 #include "utils/tensorrt_acc.hpp"
-#include "lcm_msg_queue.hpp"
+#include "communication/lcm_msg_queue.hpp"
 
 
 // #include <Eigen/Dense>
@@ -40,7 +40,7 @@ public:
     //!
     //! \brief Initialize necessary variables, such as the TensorRT Engine.
     //!
-    LcmCnnInterface(const samplesCommon::Args &args);
+    LcmCnnInterface(const samplesCommon::Args &args, LcmMsgQueues_t* lcm_msg_in, std::mutex* mtx);
     
     //!
     //! \brief Destroy the class

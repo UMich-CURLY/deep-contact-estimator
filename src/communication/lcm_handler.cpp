@@ -1,12 +1,12 @@
-#include "include/src/lcm_handler.hpp"
+#include "communication/lcm_handler.hpp"
 
 LcmHandler::LcmHandler(lcm::LCM* lcm, LcmMsgQueues_t* lcm_msg_in, std::mutex* cdata_mtx):
 lcm_(lcm), lcm_msg_in_(lcm_msg_in), cdata_mtx_(cdata_mtx)
 {
     
-    lcm->subscribe("leg_control_data", &receiveLegControlMsg, this);
-    lcm->subscribe("microstrain", &receiveMicrostrainMsg, this);
-    // lcm.subscribe("contact_ground_truth", &receiveContactGroundTruthMsg, this);
+    lcm->subscribe("leg_control_data", &LcmHandler::receiveLegControlMsg, this);
+    lcm->subscribe("microstrain", &LcmHandler::receiveMicrostrainMsg, this);
+    // lcm.subscribe("contact_ground_truth", &&LcmHandler::receiveContactGroundTruthMsg, this);
     start_time = 0;
     std::cout << "Subscribed to channels" << std::endl;
     
@@ -55,7 +55,7 @@ void LcmHandler::receiveMicrostrainMsg(const lcm::ReceiveBuffer *rbuf,
         arrayCopy(microstrain_data.get()->acc, msg->acc);
         arrayCopy(microstrain_data.get()->omega, msg->omega);
         double timestamp = (1.0 * (rbuf->recv_utime - start_time)) / pow(10, 6);
-        lcm_msg_in_->timestampe_queue.push(timestamp);
+        lcm_msg_in_->timestamp_queue.push(timestamp);
         lcm_msg_in_->cnn_input_imu_queue.push(microstrain_data);
     }
 

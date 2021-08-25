@@ -1,5 +1,5 @@
-#include "include/src/lcm_cnn_interface.hpp"
-
+#include "src/lcm_cnn_interface.hpp"
+#include "src/contact_estimation.hpp"
 int main(int argc, char **argv)
 {
     /// LCM: subscribe to channels:
@@ -22,12 +22,12 @@ int main(int argc, char **argv)
     if (!argsOK)
     {
         sample::gLogError << "Invalid arguments" << std::endl;
-        printHelpInfo();
+        // samplesCommon::printHelpInfo();
         return -1;
     }
     if (args.help)
     {
-        printHelpInfo();
+        // samplesCommon::printHelpInfo();
         return -1;
     }
 
@@ -35,18 +35,18 @@ int main(int argc, char **argv)
     std::queue<float *> cnn_input_queue;
     std::queue<float *> new_data_queue;
 
-    if (debug_flag == 1)
-    {
-        myfile.open(PROGRAM_PATH + "contact_est_lcm.csv");
-        myfile_leg_p.open(PROGRAM_PATH + "p_lcm.csv");
-    }
+    // if (debug_flag == 1)
+    // {
+    //    myfile.open(PROGRAM_PATH + "contact_est_lcm.csv");
+    //    myfile_leg_p.open(PROGRAM_PATH + "p_lcm.csv");
+    // }
 
     LcmCnnInterface matrix_builder(args, &lcm_msg_in, &mtx);
-    ContactEstimation engine_builder(args, &lcm);
+    ContactEstimation engine_builder(args, &lcm, &mtx);
     std::thread BuildMatrixThread(&LcmCnnInterface::buildMatrix, &matrix_builder, std::ref(cnn_input_queue), std::ref(new_data_queue));
     std::thread CNNInferenceThread(&ContactEstimation::makeInference, &engine_builder, std::ref(cnn_input_queue), std::ref(new_data_queue));
 
-    while (0 == lcm.handle());:LCM lcm;
+    while (0 == lcm.handle());
     
     BuildMatrixThread.join();
     CNNInferenceThread.join();
@@ -70,12 +70,13 @@ LcmCnnInterface::LcmCnnInterface(const samplesCommon::Args &args, LcmMsgQueues_t
       std_vector(input_w, 0),
       is_first_full_matrix(true),
       lcm_msg_in_(lcm_msg_in),
-      mtx_(cdata_mtx)
+      mtx_(mtx)
 {
 }
 
 LcmCnnInterface::~LcmCnnInterface()
 {
+    /* 
     while (!cnn_input_leg_queue.empty())
     {
         delete[] cnn_input_leg_queue.front();
@@ -87,6 +88,7 @@ LcmCnnInterface::~LcmCnnInterface()
         delete[] cnn_input_imu_queue.front();
         cnn_input_imu_queue.pop();
     }
+    */
 }
 
 void LcmCnnInterface::buildMatrix(std::queue<float *> &cnn_input_queue, std::queue<float *> &new_data_queue)
@@ -109,12 +111,12 @@ void LcmCnnInterface::buildMatrix(std::queue<float *> &cnn_input_queue, std::que
             float *new_data = new float[input_w]();
 
             // get input data:
-            mtx.lock();
-            std::shared_ptr<LcmLegStruct> leg_control_data = lcm_msg_in_->cnn_inpu_leg_queue.front();
+            mtx_->lock();
+            std::shared_ptr<LcmLegStruct> leg_control_data = lcm_msg_in_->cnn_input_leg_queue.front();
             std::shared_ptr<LcmIMUStruct> microstrain_data = lcm_msg_in_->cnn_input_imu_queue.front();
-            lcm_msg_in->cnn_input_leg_queue.pop();
-            lcm_msg_in->cnn_input_imu_queue.pop();
-            mtx.unlock();
+            lcm_msg_in_->cnn_input_leg_queue.pop();
+            lcm_msg_in_->cnn_input_imu_queue.pop();
+            mtx_->unlock();
 
             // leg_control_data.q
             for (int i = 0; i < legTypeDataNum; ++i)

@@ -1,21 +1,22 @@
-#include "include/utils/tensorrt_acc.hpp"
+#include "utils/tensorrt_acc.hpp"
 
 int main(int argc, char** argv) 
 // argc is 1 + the number of arguments
 // *argv is the execution line without arguments
 {
+    const std::string gSampleName = "TensorRT.contact_estimator_model";
     samplesCommon::Args args;
     bool argsOK = samplesCommon::parseArgs(args, argc, argv);
 
     if (!argsOK)
     {
         sample::gLogError << "Invalid arguments" << std::endl;
-        printHelpInfo();
+//        printHelpInfo();
         return EXIT_FAILURE;
     }
     if (args.help)
     {
-        printHelpInfo();
+//        printHelpInfo();
         return EXIT_SUCCESS;
     }
 
@@ -23,11 +24,11 @@ int main(int argc, char** argv)
 
     sample::gLogger.reportTestStart(sampleTest);
 
-    OnnxToTensorRT sample(initializeSampleParams(args));
+    TensorRTAccelerator sample(initializeSampleParams(args));
 
     sample::gLogInfo << "Building and running a GPU inference engine for contact estimator ONNX model" << std::endl;
 
-    if (!sample.build())
+    if (!sample.buildFromONNXModel())
     {
         return sample::gLogger.reportFail(sampleTest);
     }

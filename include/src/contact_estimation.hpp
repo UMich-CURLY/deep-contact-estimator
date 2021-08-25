@@ -13,13 +13,21 @@
 #include <thread>
 #include <bitset>
 
+#include "argsParser.h"
+#include "buffers.h"
+#include "common.h"
+#include "logger.h"
+#include "parserOnnxConfig.h"
+#include "NvInfer.h"
+#include <cuda_runtime_api.h>
+
 #include <cstdlib>
 #include <fstream>
 #include <iostream>
 #include <sstream>
 
 #include "src/lcm_cnn_interface.hpp"
-#include "src/lcm_handler.hpp"
+#include "communication/lcm_handler.hpp"
 #include "utils/tensorrt_acc.hpp"
 
 #include <lcm/lcm-cpp.hpp>
@@ -34,7 +42,7 @@ public:
     //!
     //! \brief Initialize necessary variables, such as the TensorRT Engine.
     //!
-    ContactEstimation(const samplesCommon::Args &args);
+    ContactEstimation(const samplesCommon::Args &args, lcm::LCM* lcm, std::mutex* mtx);
 
     //!
     //! \brief Destroy the class
@@ -54,6 +62,7 @@ private:
     TensorRTAccelerator sample; //!< sample contains the engine and other related parameters
     lcm::LCM lcm;
     synced_proprioceptive_lcmt cnn_output;
+    std::mutex* mtx;
 };
 
 #endif

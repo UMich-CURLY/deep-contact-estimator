@@ -59,11 +59,22 @@ public:
     //!
     int infer(float* cnnInputMatrix_normalized);
 
+
+    bool infer();
+    
+
+    //!
+    //! \brief Reads the input and stores the result in a managed buffer
+    //!
+    bool processInput(const samplesCommon::BufferManager& buffers);
+   
+    bool verifyOutput(const samplesCommon::BufferManager& buffers);
     //!
     //! \brief Serialize the TensorRT engine and save it to disk for later use. The engine can be
     //!  deserialized in buildFromSerialiezedEngine().
     //!
     bool serialize();
+
 
 private:
     samplesCommon::OnnxSampleParams mParams; //!< The parameters for the sample.
@@ -95,6 +106,9 @@ private:
     //! \return The status of leg in, ranges from [0, 15]
     //!
     int getOutput(const samplesCommon::BufferManager& buffers);
+
+    string PROGRAM_PATH = "/media/jetson256g/code/LCM_CNN_INTERFACE/deep-contact-estimator/";
 };
 
+samplesCommon::OnnxSampleParams initializeSampleParams(const samplesCommon::Args &args);
 #endif

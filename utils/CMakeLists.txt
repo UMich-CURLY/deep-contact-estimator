@@ -10,8 +10,9 @@ INCLUDE_DIRECTORIES(${cuda_dir})
 
 SET(LOG_CPP /usr/src/tensorrt/samples/common/logger.cpp)
 
-SET(include_dir /home/tingjun/Desktop/Cheetah_Proj/deep-contact-estimator/include)
+SET(include_dir /media/jetson256g/code/LCM_CNN_INTERFACE/deep-contact-estimator/include)
 INCLUDE_DIRECTORIES(${include_dir})
+
 
 ADD_EXECUTABLE(serialize_engine serialize_engine.cpp ${LOG_CPP})
 
@@ -23,3 +24,5 @@ TARGET_LINK_LIBRARIES(serialize_engine ${LIBNVONNXPARSER})
 
 find_library(LIBCUDART cudart /usr/local/cuda-10.2/lib64/)
 TARGET_LINK_LIBRARIES(serialize_engine ${LIBCUDART})
+
+TARGET_LINK_LIBRARIES(serialize_engine tensorrt_acc)

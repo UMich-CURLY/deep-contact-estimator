@@ -8,10 +8,16 @@ INCLUDE_DIRECTORIES(${common_dir})
 SET(cuda_dir /usr/local/cuda-10.2/targets/aarch64-linux/include)
 INCLUDE_DIRECTORIES(${cuda_dir})
 
-SET(include_dir /home/tingjun/Desktop/Cheetah_Proj/deep-contact-estimator/include)
+SET(include_dir /media/jetson256g/code/LCM_CNN_INTERFACE/deep-contact-estimator/include)
 INCLUDE_DIRECTORIES(${include_dir})
 
 SET(LOG_CPP /usr/src/tensorrt/samples/common/logger.cpp)
+
+ADD_LIBRARY(contact_estimation contact_estimation.cpp)
+
+ADD_LIBRARY(lcm_handler communication/lcm_handler.cpp)
+
+ADD_LIBRARY(tensorrt_acc ../utils/tensorrt_acc.cpp)
 
 ADD_EXECUTABLE(lcm_cnn_interface lcm_cnn_interface.cpp ${LOG_CPP})
 SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pthread")
@@ -29,3 +35,12 @@ find_library(LIBLCM lcm /usr/local/include/lcm/)
 TARGET_LINK_LIBRARIES(lcm_cnn_interface ${LIBLCM})
 
 
+TARGET_LINK_LIBRARIES(lcm_handler ${LIBLCM})
+
+TARGET_LINK_LIBRARIES(tensorrt_acc ${LIBNVINFER}
+				   ${LIBNVONNXPARSER}
+				   ${LIBCUDART})
+
+TARGET_LINK_LIBRARIES(lcm_cnn_interface contact_estimation
+					lcm_handler
+					tensorrt_acc)

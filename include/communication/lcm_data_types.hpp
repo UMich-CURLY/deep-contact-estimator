@@ -22,7 +22,7 @@ struct LcmContactStruct {
     int8_t  num_legs;
     double  timestamp;
     int8_t  contact[4];
-}
+};
 
 // struct LcmSyncedOutputStruct {
 //     int8_t  num_legs;

@@ -1,4 +1,4 @@
-#include "include/utils/tensorrt_acc.hpp"
+#include "utils/tensorrt_acc.hpp"
 
 const std::string gSampleName = "TensorRT.sample_onnx";
 
@@ -181,6 +181,51 @@ int TensorRTAccelerator::infer(float *cnn_input_matrix_normalized)
     return getOutput(buffers);
 }
 
+bool TensorRTAccelerator::infer()
+{
+    // Create RAII buffer manager object
+    if (!mEngine) {
+        std::cerr << "Failed to load mEngine" << std::endl;
+    }
+    samplesCommon::BufferManager buffers(mEngine);
+    std::cout << "Successfuly built the buffer" << std::endl;
+    auto context = SampleUniquePtr<nvinfer1::IExecutionContext>(mEngine->createExecutionContext());
+    std::cout << "Successfully build an execution context" << std::endl;
+    if (!context)
+    {
+        return false;
+    }
+
+    // Read the input data into the managed buffers
+    assert(mParams.inputTensorNames.size() == 1);
+    if (!processInput(buffers))
+    {
+        std::cerr << "Failed in reading input" << std::endl;
+        return false;
+    }
+
+    // Memcpy from host input buffers to device input buffers
+    buffers.copyInputToDevice();
+
+    bool status = context->executeV2(buffers.getDeviceBindings().data());
+    if (!status)
+    {
+        std::cerr << "Failed in making execution" << std::endl;
+        return false;
+    }
+
+    // Memcpy from device output buffers to host output buffers
+    buffers.copyOutputToHost();
+
+    // Verify results
+    if (!verifyOutput(buffers))
+    {
+        return false;
+    }
+
+    return true;
+}
+
 
 bool TensorRTAccelerator::serialize()
 {
@@ -241,6 +286,69 @@ int TensorRTAccelerator::getOutput(const samplesCommon::BufferManager &buffers)
     }
     return output_idx;
 }
+
+//!
+//! \brief Reads the input and stores the result in a managed buffer
+//!
+bool TensorRTAccelerator::processInput(const samplesCommon::BufferManager& buffers)
+{   
+    /// REMARK: if you don't know the input dimension, you can find it by parsing the ONNX model directly;
+    /// You cannot find the dimension if you use a serialized engine.
+    const int inputH = mInputDims.d[1];
+    std::cout << "inputH is: " << inputH << std::endl;
+
+    const int inputW = mInputDims.d[2];
+    std::cout << "inputW is: " << inputW << std::endl;
+
+    /// REMARK: after you get the input dimension, you can define them here:
+    // const int inputH = 75;
+    // const int inputW = 54;
+    
+    /// REMARK: use a *.bin file to parse the model
+    std::vector<uint8_t> fileData(inputH * inputW);
+    std::ifstream data_file;
+    data_file.open((locateFile("input_matrix_500Hz.bin", mParams.dataDirs)), std::ios::in | std::ios::binary);
+    float* hostDataBuffer = static_cast<float*>(buffers.getHostBuffer(mParams.inputTensorNames[0]));
+    int number_of_items = 75 * 54;
+    // hostDataBuffer.resize(number_of_items);
+    data_file.read(reinterpret_cast<char*>(&hostDataBuffer[0]), number_of_items * sizeof(float));
+    data_file.close(); 
+
+
+    return true;
+}
+//!
+//! \brief Classifies digits and verify result
+//!
+//! \return whether the classification output matches expectations
+//!
+bool TensorRTAccelerator::verifyOutput(const samplesCommon::BufferManager& buffers)
+{
+    /// REMARK: if you don't know the output dimension, you can find it by parsing the ONNX model directly;
+    /// You cannot find the dimension if you use a serialized engine.
+    const int outputSize = mOutputDims.d[1];
+    std::cout << "outputSize is " << outputSize << std::endl;
+
+    // const int outputSize = 16;
+    
+    float* output = static_cast<float*>(buffers.getHostBuffer(mParams.outputTensorNames[0]));
+    float val{0.0f};
+    int idx{0};
+
+    sample::gLogInfo << "Output: " << std::endl;
+    float current_max = output[0];
+    int output_idx = 0;
+    for (int i = 0; i < outputSize; i++) {
+        sample::gLogInfo << "Probability of leg status " << i << " before normalization is: " << output[i] << std::endl;
+        if (output[i] > current_max) {
+            current_max = output[i];
+            output_idx = i;
+        }
+    }
+    std::cout << "OUTPUT: " << output_idx << std::endl;
+    return true;
+}
+
 
 //!
 //! \brief Initializes members of the params struct using the command line args
