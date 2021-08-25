@@ -42,7 +42,7 @@ public:
     //!
     //! \brief Initialize necessary variables, such as the TensorRT Engine.
     //!
-    ContactEstimation(const samplesCommon::Args &args, lcm::LCM* lcm, std::mutex* mtx);
+    ContactEstimation(const samplesCommon::Args &args, lcm::LCM* lcm_, std::mutex* mtx_, int debug_flag_, std::ofstream& myfile_, std::ofstream& myfile_leg_p_, LcmMsgQueues_t* lcm_msg_in_);
 
     //!
     //! \brief Destroy the class
@@ -60,9 +60,13 @@ private:
     int input_h; //!< The number of rows of the input matrix
     int input_w; //!< The number of columns of the input matrix
     TensorRTAccelerator sample; //!< sample contains the engine and other related parameters
-    lcm::LCM lcm;
+    lcm::LCM* lcm;
     synced_proprioceptive_lcmt cnn_output;
     std::mutex* mtx;
+    int debug_flag;
+    std::ofstream& myfile;
+    std::ofstream& myfile_leg_p;
+    LcmMsgQueues_t* lcm_msg_in;
 };
 
 #endif

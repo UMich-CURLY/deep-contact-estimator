@@ -1,5 +1,12 @@
 #include "src/lcm_cnn_interface.hpp"
 #include "src/contact_estimation.hpp"
+// #include "src/config.hpp"
+
+int debug_flag = 1;
+std::ofstream myfile;
+std::ofstream myfile_leg_p;
+string PROGRAM_PATH = "/media/jetson256g/code/LCM_CNN_INTERFACE/deep-contact-estimator/";
+
 int main(int argc, char **argv)
 {
     /// LCM: subscribe to channels:
@@ -35,24 +42,33 @@ int main(int argc, char **argv)
     std::queue<float *> cnn_input_queue;
     std::queue<float *> new_data_queue;
 
-    // if (debug_flag == 1)
-    // {
-    //    myfile.open(PROGRAM_PATH + "contact_est_lcm.csv");
-    //    myfile_leg_p.open(PROGRAM_PATH + "p_lcm.csv");
-    // }
+    int debug_flag = 1;
+    std::ofstream myfile;
+    std::ofstream myfile_leg_p;
+    string PROGRAM_PATH = "/media/jetson256g/code/LCM_CNN_INTERFACE/deep-contact-estimator/";
+
+    if (debug_flag == 1)
+    {
+       myfile.open(PROGRAM_PATH + "contact_est_lcm.csv");
+       myfile_leg_p.open(PROGRAM_PATH + "p_lcm.csv");
+    }
 
     LcmCnnInterface matrix_builder(args, &lcm_msg_in, &mtx);
-    ContactEstimation engine_builder(args, &lcm, &mtx);
+    ContactEstimation engine_builder(args, &lcm, &mtx, debug_flag, myfile, myfile_leg_p, &lcm_msg_in);
     std::thread BuildMatrixThread(&LcmCnnInterface::buildMatrix, &matrix_builder, std::ref(cnn_input_queue), std::ref(new_data_queue));
     std::thread CNNInferenceThread(&ContactEstimation::makeInference, &engine_builder, std::ref(cnn_input_queue), std::ref(new_data_queue));
+
+    std::cout << "started thread" << std::endl;
 
     while (0 == lcm.handle());
     
     BuildMatrixThread.join();
     CNNInferenceThread.join();
 
-    // myfile.close();
-    // myfile_leg_p.close();
+    if (debug_flag == 1) {
+        myfile.close();
+        myfile_leg_p.close();
+    }
 
     return 0;
 }
@@ -121,35 +137,35 @@ void LcmCnnInterface::buildMatrix(std::queue<float *> &cnn_input_queue, std::que
             // leg_control_data.q
             for (int i = 0; i < legTypeDataNum; ++i)
             {
-                new_line[idx] = leg_control_data->q[i];
+                new_line[idx] = leg_control_data.get()->q[i];
                 new_data[idx] = new_line[idx];
                 ++idx;
             }
             // leg_control_data.qd:
             for (int i = 0; i < legTypeDataNum; ++i)
             {
-                new_line[idx] = leg_control_data->qd[i];
+                new_line[idx] = leg_control_data.get()->qd[i];
                 new_data[idx] = new_line[idx];
                 ++idx;
             }
             // microstrain(IMU).acc:
             for (int i = 0; i < IMUTypeDataNum; ++i)
             {
-                new_line[idx] = microstrain_data->acc[i];
+                new_line[idx] = microstrain_data.get()->acc[i];
                 new_data[idx] = new_line[idx];
                 ++idx;
             }
             // microstrain(IMU).omega:
             for (int i = 0; i < IMUTypeDataNum; ++i)
             {
-                new_line[idx] = microstrain_data->omega[i];
+                new_line[idx] = microstrain_data.get()->omega[i];
                 new_data[idx] = new_line[idx];
                 ++idx;
             }
             // leg_control_data.p:
             for (int i = 0; i < legTypeDataNum; ++i)
             {
-                new_line[idx] = leg_control_data->p[i];
+                new_line[idx] = leg_control_data.get()->p[i];
                 new_data[idx] = new_line[idx];
                 ++idx;
             }
@@ -157,7 +173,7 @@ void LcmCnnInterface::buildMatrix(std::queue<float *> &cnn_input_queue, std::que
             // leg_control_data.v:
             for (int i = 0; i < legTypeDataNum; ++i)
             {
-                new_line[idx] = leg_control_data->v[i];
+                new_line[idx] = leg_control_data.get()->v[i];
                 new_data[idx] = new_line[idx];
                 ++idx;
             }
@@ -172,9 +188,10 @@ void LcmCnnInterface::buildMatrix(std::queue<float *> &cnn_input_queue, std::que
 
             if (data_require != 0)
             {
+                delete[] new_data_queue.front();
                 new_data_queue.pop();
             }
-            if (data_require == 0)
+            else if (data_require == 0)
             {
                 normalizeAndInfer(cnn_input_queue);
                 // new_data_queue.push(new_data);

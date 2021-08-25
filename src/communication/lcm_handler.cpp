@@ -21,11 +21,13 @@ void LcmHandler::receiveLegControlMsg(const lcm::ReceiveBuffer *rbuf,
     if (start_time == 0) {
         start_time = rbuf->recv_utime;
     }
+
+    int dim = 12;
     std::shared_ptr<LcmLegStruct> leg_control_data = std::make_shared<LcmLegStruct>();
-    arrayCopy(leg_control_data.get()->q, msg->q);
-    arrayCopy(leg_control_data.get()->qd, msg->qd);
-    arrayCopy(leg_control_data.get()->p, msg->p);
-    arrayCopy(leg_control_data.get()->v, msg->v);
+    arrayCopy(leg_control_data.get()->q, msg->q, dim);
+    arrayCopy(leg_control_data.get()->qd, msg->qd, dim);
+    arrayCopy(leg_control_data.get()->p, msg->p, dim);
+    arrayCopy(leg_control_data.get()->v, msg->v, dim);
 
     /// LOW: 500Hz version:
     lcm_msg_in_->cnn_input_leg_queue.push(leg_control_data);
@@ -52,8 +54,9 @@ void LcmHandler::receiveMicrostrainMsg(const lcm::ReceiveBuffer *rbuf,
     if (lcm_msg_in_->cnn_input_leg_queue.size() >= lcm_msg_in_->cnn_input_imu_queue.size())
     {
         std::shared_ptr<LcmIMUStruct> microstrain_data = std::make_shared<LcmIMUStruct>();
-        arrayCopy(microstrain_data.get()->acc, msg->acc);
-        arrayCopy(microstrain_data.get()->omega, msg->omega);
+        int dim = 3;
+        arrayCopy(microstrain_data.get()->acc, msg->acc, dim);
+        arrayCopy(microstrain_data.get()->omega, msg->omega, dim);
         double timestamp = (1.0 * (rbuf->recv_utime - start_time)) / pow(10, 6);
         lcm_msg_in_->timestamp_queue.push(timestamp);
         lcm_msg_in_->cnn_input_imu_queue.push(microstrain_data);
@@ -86,10 +89,9 @@ void LcmHandler::receiveContactGroundTruthMsg(const lcm::ReceiveBuffer *rbuf,
     lcm_msg_in_->cnn_input_gtlabel_queue.push(gt_label);
 }
 
-void LcmHandler::arrayCopy(float array1[], const float array2[])
+void LcmHandler::arrayCopy(float array1[], const float array2[], const int dim)
 {
-    int size = sizeof(array1);
-    for (int i = 0; i < size; ++i)
+    for (int i = 0; i < dim; ++i)
     {
         array1[i] = array2[i];
     }

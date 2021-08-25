@@ -55,7 +55,7 @@ private:
     //! \details Pass the begin pointer of array1 and array2 to copy values in array2 
     //! to array1 starting from the pointer
     //! 
-    void arrayCopy(float array1 [], const float array2 []);
+    void arrayCopy(float array1 [], const float array2 [], const int dim);
     LcmMsgQueues_t* lcm_msg_in_;
     std::mutex* cdata_mtx_;
     lcm::LCM* lcm_;

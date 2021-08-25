@@ -1,4 +1,6 @@
 #include "utils/tensorrt_acc.hpp"
+// #include "src/config.hpp"
+
 
 int main(int argc, char** argv) 
 // argc is 1 + the number of arguments

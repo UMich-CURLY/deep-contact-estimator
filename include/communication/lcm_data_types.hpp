@@ -8,12 +8,12 @@ struct LcmLegStruct {
     float qd[12];
     float p[12];
     float v[12];
-    float tau_est[12];
+    // float tau_est[12];
 };
 
 struct LcmIMUStruct {
-    float quat[4];
-    float rpy[3];
+    // float quat[4];
+    // float rpy[3];
     float omega[3];
     float acc[3];
 };
