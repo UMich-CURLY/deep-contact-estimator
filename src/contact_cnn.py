@@ -8,7 +8,7 @@ class contact_cnn(nn.Module):
     def __init__(self):
         super(contact_cnn, self).__init__()
         self.block1 = nn.Sequential(
-            nn.Conv1d(in_channels=54,
+            nn.Conv1d(in_channels=46,
                       out_channels=64,
                       kernel_size=3,
                       stride=1,
@@ -45,7 +45,7 @@ class contact_cnn(nn.Module):
 
     
         self.fc = nn.Sequential(
-            nn.Linear(in_features=4736,
+            nn.Linear(in_features=19200,
                       out_features=2048),
             nn.ReLU(),
             nn.Dropout(p=0.5),
@@ -54,7 +54,7 @@ class contact_cnn(nn.Module):
             nn.ReLU(),
             nn.Dropout(p=0.5),
             nn.Linear(in_features=512,
-                      out_features=16),
+                      out_features=4),
         )
 
     def forward(self, x):
@@ -62,6 +62,8 @@ class contact_cnn(nn.Module):
         block1_out = self.block1(x)
         block2_out = self.block2(block1_out)
         block2_out_reshape = block2_out.view(block2_out.shape[0], -1)
+
+        # print(np.shape(block2_out_reshape))
         fc_out = self.fc(block2_out_reshape)
         return fc_out
 

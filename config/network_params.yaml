@@ -1,24 +1,24 @@
 # Path to the data folder. Data should be separated into train.npy, train_label.npy, val.npy, val_label.npy.
-data_folder: "/home/justin/data/contact_data/train/numpy/"
+data_folder: "/home/justin/data/cassie_contact_data/2021-08-20_contact_data_in_FRB/train_spring_numpy/"
 
 # Path to save the trained model. 
 # Please leave the filename extension out.
 # It will automatically generate ${name}_best_loss.pt, ${name}_best_acc.pt, ${name}_final_epo.pt.
-model_save_path: "/home/justin/code/deep-contact-estimator/results/0616_2blocks"
-log_writer_path: "/home/justin/code/deep-contact-estimator/logs/0616_2blocks"
+model_save_path: "/home/justin/code/deep-contact-estimator/results/0825_cassie_spring_contact_win_600"
+log_writer_path: "/home/justin/code/deep-contact-estimator/logs/0825_cassie_spring_contact_win_600"
 
 
-model_description: "1D CNN 2block, 54-64-64-drop-pool-128-128-drop-pool-fc, shuffle train, batch: 30, ws:150, lr:1e-4, all data"
+model_description: "1D CNN 2block, window size 600, fc 19200, 54-64-64-drop-pool-128-128-drop-pool-fc, shuffle train, batch: 30, ws:150, lr:1e-4, all data"
 
 print_every: 1000
 
 # Data params
-window_size: 150
+window_size: 600
 shuffle: True
 
 # Network params
 batch_size: 30
 init_lr: 0.0001
-num_epoch: 30
+num_epoch: 5
 
 

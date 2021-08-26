@@ -17,7 +17,7 @@ def compute_accuracy(dataloader, model):
 
     num_correct = 0
     num_data = 0
-    correct_per_leg = np.zeros(4)
+    correct_per_leg = np.zeros(2)
     for sample in tqdm(dataloader):
         input_data = sample['data']
         gt_label = sample['label']
@@ -40,7 +40,7 @@ def compute_accuracy_and_loss(dataloader, model, criterion):
     num_correct = 0
     num_data = 0
     loss_sum = 0
-    correct_per_leg = np.zeros(4)
+    correct_per_leg = np.zeros(2)
     with torch.no_grad():
         for sample in tqdm(dataloader):
             input_data = sample['data']
@@ -63,7 +63,7 @@ def compute_accuracy_and_loss(dataloader, model, criterion):
     return num_correct/num_data, correct_per_leg/num_data, loss_sum/len(dataloader)
 
 def decimal2binary(x):
-    mask = 2**torch.arange(4-1,-1,-1).to(x.device, x.dtype)
+    mask = 2**torch.arange(2-1,-1,-1).to(x.device, x.dtype)
 
     return x.unsqueeze(-1).bitwise_and(mask).ne(0).byte()
 
@@ -119,23 +119,19 @@ def train(model, train_dataloader, val_dataloader, config):
 
         val_acc, val_acc_per_leg, val_loss_avg = compute_accuracy_and_loss(val_dataloader, model, criterion)
 
-        train_acc_per_leg_avg = (np.sum(train_acc_per_leg)/4.0)
-        val_acc_per_leg_avg = (np.sum(val_acc_per_leg)/4.0)
+        train_acc_per_leg_avg = (np.sum(train_acc_per_leg)/2.0)
+        val_acc_per_leg_avg = (np.sum(val_acc_per_leg)/2.0)
 
         # log down info in tensorboard
         writer.add_scalar('training loss', train_loss_avg, epoch)
         writer.add_scalar('training accuracy', train_acc, epoch)
         writer.add_scalar('training acc leg0', train_acc_per_leg[0], epoch)
         writer.add_scalar('training acc leg1', train_acc_per_leg[1], epoch)
-        writer.add_scalar('training acc leg2', train_acc_per_leg[2], epoch)
-        writer.add_scalar('training acc leg3', train_acc_per_leg[3], epoch)
         writer.add_scalar('training acc leg avg', train_acc_per_leg_avg, epoch)
         writer.add_scalar('validation loss', val_loss_avg, epoch)
         writer.add_scalar('validation accuracy', val_acc, epoch)
         writer.add_scalar('validation acc leg0', val_acc_per_leg[0], epoch)
         writer.add_scalar('validation acc leg1', val_acc_per_leg[1], epoch)
-        writer.add_scalar('validation acc leg2', val_acc_per_leg[2], epoch)
-        writer.add_scalar('validation acc leg3', val_acc_per_leg[3], epoch)
         writer.add_scalar('validation acc leg avg', val_acc_per_leg_avg, epoch)
 
         # if we achieve best val acc, save the model.
@@ -183,10 +179,10 @@ def train(model, train_dataloader, val_dataloader, config):
 
         print("Finished epoch %d / %d, training acc: %.4f, validation acc: %.4f" %\
             (epoch, config['num_epoch'], train_acc, val_acc)) 
-        print("train leg0 acc: %.4f, train leg1 acc: %.4f, train leg2 acc: %.4f, train leg3 acc: %.4f, train leg acc avg: %.4f" %\
-            (train_acc_per_leg[0],train_acc_per_leg[1],train_acc_per_leg[2],train_acc_per_leg[3],train_acc_per_leg_avg))    
-        print("val leg0 acc: %.4f, val leg1 acc: %.4f, val leg2 acc: %.4f, val leg3 acc: %.4f, val leg acc avg: %.4f" %\
-            (val_acc_per_leg[0],val_acc_per_leg[1],val_acc_per_leg[2],val_acc_per_leg[3],val_acc_per_leg_avg))
+        print("train leg0 acc: %.4f, train leg1 acc: %.4f, train leg acc avg: %.4f" %\
+            (train_acc_per_leg[0],train_acc_per_leg[1],train_acc_per_leg_avg))    
+        print("val leg0 acc: %.4f, val leg1 acc: %.4f, val leg acc avg: %.4f" %\
+            (val_acc_per_leg[0],val_acc_per_leg[1],val_acc_per_leg_avg))
     
     # save model     
     state = {'epoch': epoch,

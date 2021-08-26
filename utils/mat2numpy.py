@@ -8,6 +8,169 @@ import scipy.io as sio
 import math
 import yaml
 
+def mat2numpy_cassie_one_seq(data_pth, save_pth, contact_type):
+    for data_name in glob.glob(data_pth+'*'): 
+        
+        print("loading... ", data_name)
+
+        # load data
+        raw_data = sio.loadmat(data_name)
+
+        contacts = raw_data[contact_type]
+        q = raw_data['q']
+        p = raw_data['p']
+        qd = raw_data['qd']
+        v = raw_data['v']
+        acc = raw_data['imu_acc']
+        omega = raw_data['imu_omega']
+
+        # tau_est = raw_data['tau_est']
+        # F = raw_data['F']
+
+        # concatenate current data. 
+        data = np.concatenate((q,qd,acc,omega,p,v),axis=1)
+        
+        # convert labels from binary to decimal
+        label = binary2decimal(contacts).reshape((-1,1)) 
+
+        print("Saving data to: "+save_pth+os.path.splitext(os.path.basename(data_name))[0]+".npy")
+
+        np.save(save_pth+os.path.splitext(os.path.basename(data_name))[0]+".npy",data)
+        np.save(save_pth+os.path.splitext(os.path.basename(data_name))[0]+"_label.npy",label)
+
+        print("Done!")
+
+def mat2numpy_cassie_test_data(data_pth, save_pth, contact_type='spring_contacts'):
+    """
+    For this data sets we only seperate into train and validation.
+    """
+    num_features = 46    
+    test_data = np.zeros((0,num_features))
+    test_label = np.zeros((0,1))
+    
+    # for all dataset in the folder
+    for data_name in glob.glob(data_pth+'*'): 
+        
+        print("loading... ", data_name)
+
+        # load data
+        raw_data = sio.loadmat(data_name)
+
+        contacts = raw_data[contact_type]
+        q = raw_data['q']
+        p = raw_data['p']
+        qd = raw_data['qd']
+        v = raw_data['v']
+        acc = raw_data['imu_acc']
+        omega = raw_data['imu_omega']
+
+        # tau_est = raw_data['tau_est']
+        # F = raw_data['F']
+        
+        # concatenate current data. First we try without GRF
+        cur_data = np.concatenate((q,qd,acc,omega,p,v),axis=1)
+        
+        # separate data into train/val/test
+        # num_train = int(train_ratio*num_data)
+        cur_test = cur_data
+
+        # stack with all other sequences
+        test_data = np.vstack((test_data,cur_test))
+
+        
+        # convert labels from binary to decimal
+        cur_label = binary2decimal(contacts).reshape((-1,1))   
+
+        # stack labels 
+        test_label = np.vstack((test_label,cur_label))
+
+        # break
+    test_label = test_label.reshape(-1,)
+    
+    print("Saving data...")
+    
+    np.save(save_pth+"test.npy",test_data)
+    np.save(save_pth+"test_label.npy",test_label)
+
+    print("Generated ", test_data.shape[0], " test data.")
+    
+    print(test_data.shape[0])
+
+    print("Done!")
+    # return data
+
+
+def mat2numpy_cassie_training_data(data_pth, save_pth, val_ratio=0.15, contact_type='spring_contacts'):
+    """
+    For this data sets we only seperate into train and validation.
+    """
+    num_features = 46    
+    train_data = np.zeros((0,num_features))
+    val_data = np.zeros((0,num_features))
+    train_label = np.zeros((0,1))
+    val_label = np.zeros((0,1))
+    
+    # for all dataset in the folder
+    for data_name in glob.glob(data_pth+'*'): 
+        
+        print("loading... ", data_name)
+
+        # load data
+        raw_data = sio.loadmat(data_name)
+
+        contacts = raw_data[contact_type]
+        q = raw_data['q']
+        p = raw_data['p']
+        qd = raw_data['qd']
+        v = raw_data['v']
+        acc = raw_data['imu_acc']
+        omega = raw_data['imu_omega']
+
+        # tau_est = raw_data['tau_est']
+        # F = raw_data['F']
+        
+        # concatenate current data. First we try without GRF
+        cur_data = np.concatenate((q,qd,acc,omega,p,v),axis=1)
+        
+        # separate data into train/val/test
+        num_data = np.shape(q)[0]
+        # num_train = int(train_ratio*num_data)
+        num_val = int(val_ratio*num_data)
+        cur_val = cur_data[:num_val,:]
+        cur_train = cur_data[num_val:,:]
+
+        # stack with all other sequences
+        train_data = np.vstack((train_data,cur_train))
+        val_data = np.vstack((val_data,cur_val))
+
+        
+        # convert labels from binary to decimal
+        cur_label = binary2decimal(contacts).reshape((-1,1))   
+
+        # stack labels 
+        val_label = np.vstack((val_label,cur_label[:num_val,:]))
+        train_label = np.vstack((train_label,cur_label[num_val:,:]))
+
+        # break
+    train_label = train_label.reshape(-1,)
+    val_label = val_label.reshape(-1,)
+    
+    print("Saving data...")
+    
+    np.save(save_pth+"train.npy",train_data)
+    np.save(save_pth+"val.npy",val_data)
+    np.save(save_pth+"train_label.npy",train_label)
+    np.save(save_pth+"val_label.npy",val_label)
+
+    print("Generated ", train_data.shape[0], " training data.")
+    print("Generated ", val_data.shape[0], " validation data.")
+    
+    print(train_data.shape[0])
+    print(val_data.shape[0])
+
+    print("Done!")
+    # return data
+
 def mat2numpy_one_seq(data_pth, save_pth):
     """
     Load data from .mat file and genearate numpy files without splitting into train/val/test.
@@ -53,7 +216,7 @@ def mat2numpy_one_seq(data_pth, save_pth):
         # load data
         raw_data = sio.loadmat(data_name)
 
-        contacts = raw_data['contacts']
+        contacts = raw_data['spring_contacts']
         q = raw_data['q']
         p = raw_data['p']
         qd = raw_data['qd']
@@ -207,6 +370,10 @@ def main():
         mat2numpy_split(config['mat_folder'],config['save_path'],config['train_ratio'],config['val_ratio'])
     elif config['mode']=='inference':
         mat2numpy_one_seq(config['mat_folder'],config['save_path'])
+    elif config['mode']=='cassie_train':
+        mat2numpy_cassie_training_data(config['mat_folder'],config['save_path'],config['val_ratio'],config['contact_type'])
+    elif config['mode']=='cassie_test':
+        mat2numpy_cassie_test_data(config['mat_folder'],config['save_path'],config['contact_type'])
 
 if __name__ == '__main__':
     main()
