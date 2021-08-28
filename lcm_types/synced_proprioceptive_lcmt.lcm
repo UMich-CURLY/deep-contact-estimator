@@ -4,10 +4,10 @@ struct synced_proprioceptive_lcmt
     double  timestamp;
     int8_t  contact[num_legs];
     
-    float q[12];
-    float qd[12];
-    float p[12];
-    float v[12];
+    float q[14];
+    float qd[14];
+    float p[6];
+    float v[6];
 
     float omega[3];
     float acc[3];

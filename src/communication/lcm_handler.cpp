@@ -24,10 +24,10 @@ void LcmHandler::receiveLegControlMsg(const lcm::ReceiveBuffer *rbuf,
 
     int dim = 12;
     std::shared_ptr<LcmLegStruct> leg_control_data = std::make_shared<LcmLegStruct>();
-    arrayCopy(leg_control_data.get()->q, msg->q, dim);
-    arrayCopy(leg_control_data.get()->qd, msg->qd, dim);
-    arrayCopy(leg_control_data.get()->p, msg->p, dim);
-    arrayCopy(leg_control_data.get()->v, msg->v, dim);
+    arrayCopy(leg_control_data.get()->q, msg->q, 14);
+    arrayCopy(leg_control_data.get()->qd, msg->qd, 14);
+    arrayCopy(leg_control_data.get()->p, msg->p, 6);
+    arrayCopy(leg_control_data.get()->v, msg->v, 6);
 
     /// LOW: 500Hz version:
     lcm_msg_in_->cnn_input_leg_queue.push(leg_control_data);

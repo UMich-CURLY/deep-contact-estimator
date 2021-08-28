@@ -75,7 +75,7 @@ bool TensorRTAccelerator::buildFromSerializedEngine()
     /// REMARK: we can deserialize a serialized engine if we have one:
     // -----------------------------------------------------------------------------------------------------------------------
     nvinfer1::IRuntime *runtime = nvinfer1::createInferRuntime(sample::gLogger);
-    std::string cached_path = PROGRAM_PATH + "engines/0730_2blocks_best_val_loss.trt";
+    std::string cached_path = PROGRAM_PATH + "engines/0825_cassie_spring_contact_win_600_best_val_loss.trt";
     std::ifstream fin(cached_path);
     std::string cached_engine = "";
     while (fin.peek() != EOF)
@@ -234,7 +234,7 @@ bool TensorRTAccelerator::serialize()
     std::ofstream serialize_output_stream;
     serialize_str.resize(serializedModel->size());
     memcpy((void *)serialize_str.data(), serializedModel->data(), serializedModel->size());
-    serialize_output_stream.open(PROGRAM_PATH + "engines/0730_2blocks_best_val_loss.trt");
+    serialize_output_stream.open(PROGRAM_PATH + "engines/0825_cassie_spring_contact_win_600_best_val_loss.trt");
 
     serialize_output_stream << serialize_str;
     serialize_output_stream.close();
@@ -250,11 +250,11 @@ bool TensorRTAccelerator::serialize()
 //!
 bool TensorRTAccelerator::processInput(const samplesCommon::BufferManager &buffers, const float *cnn_input_matrix_normalized)
 {
-    const int inputH = 75;
-    const int inputW = 54;
+    const int inputH = 600;
+    const int inputW = 46;
 
     float *hostDataBuffer = static_cast<float *>(buffers.getHostBuffer(mParams.inputTensorNames[0]));
-    int number_of_items = 75 * 54;
+    int number_of_items = inputH * inputW;
     // hostDataBuffer.resize(number_of_items);
     for (int i = 0; i < inputH * inputW; i++)
     {
@@ -267,7 +267,7 @@ bool TensorRTAccelerator::processInput(const samplesCommon::BufferManager &buffe
 
 int TensorRTAccelerator::getOutput(const samplesCommon::BufferManager &buffers)
 {
-    const int outputSize = 16; // 4 legs, 16 status
+    const int outputSize = 4; // 4 legs, 16 status
 
     float *output = static_cast<float *>(buffers.getHostBuffer(mParams.outputTensorNames[0]));
     float val{0.0f};
@@ -307,11 +307,15 @@ bool TensorRTAccelerator::processInput(const samplesCommon::BufferManager& buffe
     /// REMARK: use a *.bin file to parse the model
     std::vector<uint8_t> fileData(inputH * inputW);
     std::ifstream data_file;
-    data_file.open((locateFile("input_matrix_500Hz.bin", mParams.dataDirs)), std::ios::in | std::ios::binary);
+    // data_file.open((locateFile("input_matrix_500Hz.bin", mParams.dataDirs)), std::ios::in | std::ios::binary);
+    data_file.open((locateFile("input_matrix_cassie.bin", mParams.dataDirs)), std::ios::in | std::ios::binary);
+
     float* hostDataBuffer = static_cast<float*>(buffers.getHostBuffer(mParams.inputTensorNames[0]));
-    int number_of_items = 75 * 54;
+    // int number_of_items = 75 * 54;
+    int number_of_items = inputH * inputW ;
     // hostDataBuffer.resize(number_of_items);
-    data_file.read(reinterpret_cast<char*>(&hostDataBuffer[0]), number_of_items * sizeof(float));
+    data_file.read(reinterpret_cast<char*>(&hostDataBuffer[0]), 600 * 46 * sizeof(float));
+    std::cout << "The value is " << hostDataBuffer[0] << std::endl;
     data_file.close(); 
 
 
@@ -367,7 +371,7 @@ samplesCommon::OnnxSampleParams initializeSampleParams(const samplesCommon::Args
         std::cout << "Using directory provided by the user" << endl;
         params.dataDirs = args.dataDirs;
     }
-    params.onnxFileName = "0730_2blocks_best_val_loss.onnx";
+    params.onnxFileName = "0825_cassie_spring_contact_win_600_best_val_loss.onnx";
     params.inputTensorNames.push_back("input");
     params.batchSize = 1; //!< Takes in 1 batch every time
     params.outputTensorNames.push_back("output");

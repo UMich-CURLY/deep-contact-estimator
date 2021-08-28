@@ -21,13 +21,13 @@ class synced_proprioceptive_lcmt
 
         std::vector< int8_t > contact;
 
-        float      q[12];
+        float      q[14];
 
-        float      qd[12];
+        float      qd[14];
 
-        float      p[12];
+        float      p[6];
 
-        float      v[12];
+        float      v[6];
 
         float      omega[3];
 
@@ -140,16 +140,16 @@ int synced_proprioceptive_lcmt::_encodeNoHash(void *buf, int offset, int maxlen)
         if(tlen < 0) return tlen; else pos += tlen;
     }
 
-    tlen = __float_encode_array(buf, offset + pos, maxlen - pos, &this->q[0], 12);
+    tlen = __float_encode_array(buf, offset + pos, maxlen - pos, &this->q[0], 14);
     if(tlen < 0) return tlen; else pos += tlen;
 
-    tlen = __float_encode_array(buf, offset + pos, maxlen - pos, &this->qd[0], 12);
+    tlen = __float_encode_array(buf, offset + pos, maxlen - pos, &this->qd[0], 14);
     if(tlen < 0) return tlen; else pos += tlen;
 
-    tlen = __float_encode_array(buf, offset + pos, maxlen - pos, &this->p[0], 12);
+    tlen = __float_encode_array(buf, offset + pos, maxlen - pos, &this->p[0], 6);
     if(tlen < 0) return tlen; else pos += tlen;
 
-    tlen = __float_encode_array(buf, offset + pos, maxlen - pos, &this->v[0], 12);
+    tlen = __float_encode_array(buf, offset + pos, maxlen - pos, &this->v[0], 6);
     if(tlen < 0) return tlen; else pos += tlen;
 
     tlen = __float_encode_array(buf, offset + pos, maxlen - pos, &this->omega[0], 3);
@@ -177,16 +177,16 @@ int synced_proprioceptive_lcmt::_decodeNoHash(const void *buf, int offset, int m
         if(tlen < 0) return tlen; else pos += tlen;
     }
 
-    tlen = __float_decode_array(buf, offset + pos, maxlen - pos, &this->q[0], 12);
+    tlen = __float_decode_array(buf, offset + pos, maxlen - pos, &this->q[0], 14);
     if(tlen < 0) return tlen; else pos += tlen;
 
-    tlen = __float_decode_array(buf, offset + pos, maxlen - pos, &this->qd[0], 12);
+    tlen = __float_decode_array(buf, offset + pos, maxlen - pos, &this->qd[0], 14);
     if(tlen < 0) return tlen; else pos += tlen;
 
-    tlen = __float_decode_array(buf, offset + pos, maxlen - pos, &this->p[0], 12);
+    tlen = __float_decode_array(buf, offset + pos, maxlen - pos, &this->p[0], 6);
     if(tlen < 0) return tlen; else pos += tlen;
 
-    tlen = __float_decode_array(buf, offset + pos, maxlen - pos, &this->v[0], 12);
+    tlen = __float_decode_array(buf, offset + pos, maxlen - pos, &this->v[0], 6);
     if(tlen < 0) return tlen; else pos += tlen;
 
     tlen = __float_decode_array(buf, offset + pos, maxlen - pos, &this->omega[0], 3);
@@ -204,10 +204,10 @@ int synced_proprioceptive_lcmt::_getEncodedSizeNoHash() const
     enc_size += __int8_t_encoded_array_size(NULL, 1);
     enc_size += __double_encoded_array_size(NULL, 1);
     enc_size += __int8_t_encoded_array_size(NULL, this->num_legs);
-    enc_size += __float_encoded_array_size(NULL, 12);
-    enc_size += __float_encoded_array_size(NULL, 12);
-    enc_size += __float_encoded_array_size(NULL, 12);
-    enc_size += __float_encoded_array_size(NULL, 12);
+    enc_size += __float_encoded_array_size(NULL, 14);
+    enc_size += __float_encoded_array_size(NULL, 14);
+    enc_size += __float_encoded_array_size(NULL, 6);
+    enc_size += __float_encoded_array_size(NULL, 6);
     enc_size += __float_encoded_array_size(NULL, 3);
     enc_size += __float_encoded_array_size(NULL, 3);
     return enc_size;
@@ -215,7 +215,7 @@ int synced_proprioceptive_lcmt::_getEncodedSizeNoHash() const
 
 uint64_t synced_proprioceptive_lcmt::_computeHash(const __lcm_hash_ptr *)
 {
-    uint64_t hash = 0x9174013e2aca2d35LL;
+    uint64_t hash = 0x5631dfa61c2233aaLL;
     return (hash<<1) + ((hash>>63)&1);
 }
 

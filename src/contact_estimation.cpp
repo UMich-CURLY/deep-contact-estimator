@@ -6,8 +6,8 @@
 ContactEstimation::ContactEstimation(const samplesCommon::Args &args, lcm::LCM* lcm_, std::mutex* mtx_, 
                                     int debug_flag_, std::ofstream& myfile_, std::ofstream& myfile_leg_p_, 
                                     LcmMsgQueues_t* lcm_msg_in_)
-    : input_h(75),
-      input_w(54),
+    : input_h(600),
+      input_w(46),
       sample(initializeSampleParams(args)),
       lcm(lcm_),
       mtx(mtx_),
@@ -24,8 +24,10 @@ ContactEstimation::ContactEstimation(const samplesCommon::Args &args, lcm::LCM* 
     }
     if (!lcm->good())
         return;
-    cnn_output.num_legs = 4;
-    cnn_output.contact = {0, 0, 0, 0};
+    // cnn_output.num_legs = 4;
+    // cnn_output.contact = {0, 0, 0, 0};
+    cnn_output.num_legs = 2;
+    cnn_output.contact = {0, 0};
 }
 
 ContactEstimation::~ContactEstimation() {}
@@ -52,7 +54,7 @@ void ContactEstimation::makeInference(std::queue<float *> &cnn_input_queue, std:
             mtx->unlock();
 
             int idx = 0;
-            const int legTypeDataNum = 12;
+            const int legTypeDataNum = 14;
             const int IMUTypeDataNum = 3;
             for (int i = 0; i < legTypeDataNum; ++i)
             {
@@ -79,7 +81,7 @@ void ContactEstimation::makeInference(std::queue<float *> &cnn_input_queue, std:
             }
             // leg_control_data.p:
 
-            for (int i = 0; i < legTypeDataNum; ++i)
+            for (int i = 0; i < 6; ++i)
             {
                 cnn_output.p[i] = new_data[idx];
             
@@ -97,7 +99,7 @@ void ContactEstimation::makeInference(std::queue<float *> &cnn_input_queue, std:
             }
 
             // leg_control_data.v:
-            for (int i = 0; i < legTypeDataNum; ++i)
+            for (int i = 0; i < 6; ++i)
             {
                 cnn_output.v[idx] = new_data[idx];
                 ++idx;
@@ -130,7 +132,7 @@ void ContactEstimation::makeInference(std::queue<float *> &cnn_input_queue, std:
 
 void ContactEstimation::publishOutput(int output_idx)
 {
-    std::string binary = std::bitset<4>(output_idx).to_string(); // to binary
+    std::string binary = std::bitset<2>(output_idx).to_string(); // to binary
     // std::cout << "Contact_state: " << output_idx << std::endl;
     for (int i = 0; i < cnn_output.num_legs; i++)
     {

@@ -69,9 +69,9 @@ int main(int argc, char **argv)
 }
 
 LcmCnnInterface::LcmCnnInterface(const samplesCommon::Args &args, LcmMsgQueues_t* lcm_msg_in, std::mutex* mtx)
-    : input_h(75),
-      input_w(54),
-      data_require(75),
+    : input_h(600),
+      input_w(46),
+      data_require(600),
       new_line(input_w, 0),
       sum_of_rows(input_w, 0),
       sum_of_rows_square(input_w, 0),
@@ -116,7 +116,7 @@ void LcmCnnInterface::buildMatrix(std::queue<float *> &cnn_input_queue, std::que
             // mtx.unlock();
             // Start to build a new line and generate a new input
             int idx = 0; //!< keep track of the current new_line idx;
-            int legTypeDataNum = 12;
+            int legTypeDataNum = 14;
             int IMUTypeDataNum = 3;
             // new_data stores the pointer to the new line
             float *new_data = new float[input_w]();
@@ -158,7 +158,7 @@ void LcmCnnInterface::buildMatrix(std::queue<float *> &cnn_input_queue, std::que
                 ++idx;
             }
             // leg_control_data.p:
-            for (int i = 0; i < legTypeDataNum; ++i)
+            for (int i = 0; i < 6; ++i)
             {
                 new_line[idx] = leg_control_data.get()->p[i];
                 new_data[idx] = new_line[idx];
@@ -166,7 +166,7 @@ void LcmCnnInterface::buildMatrix(std::queue<float *> &cnn_input_queue, std::que
             }
 
             // leg_control_data.v:
-            for (int i = 0; i < legTypeDataNum; ++i)
+            for (int i = 0; i < 6; ++i)
             {
                 new_line[idx] = leg_control_data.get()->v[i];
                 new_data[idx] = new_line[idx];
@@ -189,7 +189,8 @@ void LcmCnnInterface::buildMatrix(std::queue<float *> &cnn_input_queue, std::que
             else if (data_require == 0)
             {
                 normalizeAndInfer(cnn_input_queue);
-                // new_data_queue.push(new_data);
+                // std::cout << "Saved" << std::endl;
+                // break;
                 // std::cout << "The ground truth label is: " << gtLabel << std::endl;
                 // break;
             }
@@ -217,13 +218,15 @@ void LcmCnnInterface::runFullCalculation(std::queue<float *> &cnn_input_queue)
 {
     float *cnn_input_matrix_normalized = new float[input_h * input_w]();
 
-    // std::ofstream data_file;
+    std::ofstream data_file;
     // data_file.open("input_matrix_500Hz.bin", ios::out | ios::binary);
-    // if (!data_file)
-    // {
-    //     std::cerr << " Cannot open the file!" << std::endl;
-    //     return;
-    // }
+    // data_file.open("input_matrix_cassie.bin", ios::out | ios::binary);
+    
+    if (!data_file)
+    {
+        std::cerr << " Cannot open the file!" << std::endl;
+        return;
+    }
 
     for (int j = 0; j < input_w; ++j)
     {
@@ -252,6 +255,8 @@ void LcmCnnInterface::runFullCalculation(std::queue<float *> &cnn_input_queue)
 
     /// REMARK: delete the following lines in actual use:
     // data_file.write(reinterpret_cast<char *>(&cnn_input_matrix_normalized[0]), 75 * 54 * sizeof(float));
+    // data_file.write(reinterpret_cast<char *>(&cnn_input_matrix_normalized[0]), 600 * 46 * sizeof(float));
+    // std::cout << cnn_input_matrix_normalized[0] << std::endl;
     // data_file.close();
     cnn_input_queue.push(cnn_input_matrix_normalized);
 }
