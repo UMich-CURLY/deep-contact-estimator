@@ -4,3 +4,8 @@ logs/
 inference_results/
 .vscode
 *.txt
+build/
+weights/
+data/
+*.trt
+*.onnx

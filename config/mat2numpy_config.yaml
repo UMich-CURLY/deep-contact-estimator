@@ -1,10 +1,11 @@
 
-mat_folder: "/home/justin/data/contact_data/test_sequence/mat/"
-save_path: "/home/justin/data/contact_data/test_sequence/numpy/"
+mat_folder: "/home/justin/data/cassie_contact_data/2021-08-20_contact_data_in_FRB/test/"
+save_path: "/home/justin/data/cassie_contact_data/2021-08-20_contact_data_in_FRB/test_spring_one_seq_numpy/"
 
 # mode: "train": split data into train/val/test
 #       "inference": create numpy for one sequence without spliting
 mode: "inference"
 
+contact_type: "spring_contacts"
 train_ratio: 0.7
 val_ratio: 0.15

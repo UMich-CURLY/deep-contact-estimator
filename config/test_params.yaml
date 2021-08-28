@@ -1,12 +1,12 @@
-data_folder: "/home/justin/data/contact_data/individual_test/sidewalk/numpy/"
-model_load_path: "/home/justin/code/deep-contact-estimator/results/0616_2blocks_best_val_loss.pt"
+data_folder: "/media/tingjun/Samsung USB/2021-08-20_contact_data_in_FRB/test_spring_numpy/"
+model_load_path: "/media/tingjun/Samsung USB/cassie_contact_model/0825_cassie_spring_contact_win_600_best_val_loss.pt"
 
 # data params
-window_size: 150
+window_size: 600
 
 # network params
 batch_size: 30
 
 save_to_mat: False
-mat_save_path: "/home/justin/code/deep-contact-estimator/results/0616_2blocks_best_val_loss.mat"
+mat_save_path: "/home/justin/code/deep-contact-estimator/results/0825_cassie_spring_contact_win_600_best_val_loss.mat"
 
