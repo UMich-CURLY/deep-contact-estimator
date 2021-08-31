@@ -14,13 +14,13 @@ class leg_control_data_lcmt(object):
 
     __typenames__ = ["float", "float", "float", "float", "float"]
 
-    __dimensions__ = [[12], [12], [12], [12], [12]]
+    __dimensions__ = [[14], [14], [6], [6], [12]]
 
     def __init__(self):
-        self.q = [ 0.0 for dim0 in range(12) ]
-        self.qd = [ 0.0 for dim0 in range(12) ]
-        self.p = [ 0.0 for dim0 in range(12) ]
-        self.v = [ 0.0 for dim0 in range(12) ]
+        self.q = [ 0.0 for dim0 in range(14) ]
+        self.qd = [ 0.0 for dim0 in range(14) ]
+        self.p = [ 0.0 for dim0 in range(6) ]
+        self.v = [ 0.0 for dim0 in range(6) ]
         self.tau_est = [ 0.0 for dim0 in range(12) ]
 
     def encode(self):
@@ -30,10 +30,10 @@ class leg_control_data_lcmt(object):
         return buf.getvalue()
 
     def _encode_one(self, buf):
-        buf.write(struct.pack('>12f', *self.q[:12]))
-        buf.write(struct.pack('>12f', *self.qd[:12]))
-        buf.write(struct.pack('>12f', *self.p[:12]))
-        buf.write(struct.pack('>12f', *self.v[:12]))
+        buf.write(struct.pack('>14f', *self.q[:14]))
+        buf.write(struct.pack('>14f', *self.qd[:14]))
+        buf.write(struct.pack('>6f', *self.p[:6]))
+        buf.write(struct.pack('>6f', *self.v[:6]))
         buf.write(struct.pack('>12f', *self.tau_est[:12]))
 
     def decode(data):
@@ -48,10 +48,10 @@ class leg_control_data_lcmt(object):
 
     def _decode_one(buf):
         self = leg_control_data_lcmt()
-        self.q = struct.unpack('>12f', buf.read(48))
-        self.qd = struct.unpack('>12f', buf.read(48))
-        self.p = struct.unpack('>12f', buf.read(48))
-        self.v = struct.unpack('>12f', buf.read(48))
+        self.q = struct.unpack('>14f', buf.read(56))
+        self.qd = struct.unpack('>14f', buf.read(56))
+        self.p = struct.unpack('>6f', buf.read(24))
+        self.v = struct.unpack('>6f', buf.read(24))
         self.tau_est = struct.unpack('>12f', buf.read(48))
         return self
     _decode_one = staticmethod(_decode_one)
@@ -59,7 +59,7 @@ class leg_control_data_lcmt(object):
     _hash = None
     def _get_hash_recursive(parents):
         if leg_control_data_lcmt in parents: return 0
-        tmphash = (0xa7d2775a407deca7) & 0xffffffffffffffff
+        tmphash = (0xe1630cd6417db1d9) & 0xffffffffffffffff
         tmphash  = (((tmphash<<1)&0xffffffffffffffff) + (tmphash>>63)) & 0xffffffffffffffff
         return tmphash
     _get_hash_recursive = staticmethod(_get_hash_recursive)

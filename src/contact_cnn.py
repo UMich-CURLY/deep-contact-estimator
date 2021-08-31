@@ -45,8 +45,13 @@ class contact_cnn(nn.Module):
 
     
         self.fc = nn.Sequential(
+            # 600:
             nn.Linear(in_features=19200,
                       out_features=2048),
+            
+            # 800:
+            # nn.Linear(in_features=25600,
+            #           out_features=2048),
             nn.ReLU(),
             nn.Dropout(p=0.5),
             nn.Linear(in_features=2048,

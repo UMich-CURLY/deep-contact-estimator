@@ -8,5 +8,5 @@ window_size: 600
 batch_size: 30
 
 save_to_mat: False
-mat_save_path: "/home/justin/code/deep-contact-estimator/results/0822_cassie_spring_contact_best_val_loss.mat"
+mat_save_path: "/home/justin/code/deep-contact-estimator/results/0825_cassie_spring_contact_win_600_best_val_loss.mat"
 

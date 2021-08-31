@@ -109,12 +109,12 @@ def save2lcm(pred, config):
         leg_control_data_msg.p = mat_data['p'][data_idx]
         leg_control_data_msg.qd = mat_data['qd'][data_idx]
         leg_control_data_msg.v = mat_data['v'][data_idx]
-        leg_control_data_msg.tau_est = mat_data['tau_est'][data_idx]
+        # leg_control_data_msg.tau_est = mat_data['tau_est'][data_idx]
         log.write_event(utime + int(10**6 * imu_time[data_idx]),\
                     'leg_control_data', leg_control_data_msg.encode())
         
         contact_msg = contact_t()
-        contact_msg.num_legs = 4
+        contact_msg.num_legs = 2
         contact_msg.timestamp = imu_time[data_idx]
         contact_msg.contact = pred[idx]
 
@@ -127,8 +127,8 @@ def save2lcm(pred, config):
         imu_msg = microstrain_lcmt()
         imu_msg.acc = mat_data['imu_acc'][data_idx]
         imu_msg.omega = mat_data['imu_omega'][data_idx]
-        imu_msg.rpy = mat_data['imu_rpy'][data_idx]
-        imu_msg.quat = mat_data['imu_quat'][data_idx]
+        # imu_msg.rpy = mat_data['imu_rpy'][data_idx]
+        # imu_msg.quat = mat_data['imu_quat'][data_idx]
         log.write_event(utime + int(10**6 * imu_time[data_idx]),\
                         'microstrain', imu_msg.encode())
         

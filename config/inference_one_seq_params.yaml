@@ -1,18 +1,32 @@
-data_path: "/home/justin/data/cassie_contact_data/2021-08-20_contact_data_in_FRB/test_spring_one_seq_numpy/Log_1st_rightTurnWalk_network_data.npy"
-label_path: "/home/justin/data/cassie_contact_data/2021-08-20_contact_data_in_FRB/test_spring_one_seq_numpy/Log_1st_rightTurnWalk_network_data_label.npy"
-mat_data_path: "/home/justin/data/cassie_contact_data/2021-08-20_contact_data_in_FRB/test/Log_1st_rightTurnWalk_network_data.mat"
-model_load_path: "/home/justin/code/deep-contact-estimator/results/0822_cassie_spring_contact_best_val_loss.pt"
+data_path: "/media/tingjun/Samsung USB/2021-08-20_contact_data_in_FRB/test_spring_one_seq_numpy/Log_1st_rightTurnWalk_network_data.npy"
+label_path: "/media/tingjun/Samsung USB/2021-08-20_contact_data_in_FRB/test_spring_one_seq_numpy/Log_1st_rightTurnWalk_network_data_label.npy"
+mat_data_path: "/media/tingjun/Samsung USB/2021-08-20_contact_data_in_FRB/test/Log_1st_rightTurnWalk_network_data_with_imu_time.mat"
+model_load_path: "/media/tingjun/Samsung USB/cassie_contact_model/0825_cassie_spring_contact_win_600_best_val_loss.pt"
 
 # data params
-window_size: 800
+window_size: 600
+
+# data_path: "/home/justin/data/cassie_contact_data/2021-08-20_contact_data_in_FRB/test_spring_one_seq_numpy/Log_1st_rightTurnWalk_network_data.npy"
+# label_path: "/home/justin/data/cassie_contact_data/2021-08-20_contact_data_in_FRB/test_spring_one_seq_numpy/Log_1st_rightTurnWalk_network_data_label.npy"
+# mat_data_path: "/home/justin/data/cassie_contact_data/2021-08-20_contact_data_in_FRB/test/Log_1st_rightTurnWalk_network_data.mat"
+# model_load_path: "/home/justin/code/deep-contact-estimator/results/0822_cassie_spring_contact_best_val_loss.pt"
+
+# # data params
+# window_size: 800
 
 # network params
 batch_size: 1
 
 calculate_accuracy: True
 
-save_mat: True
-mat_save_path: "/home/justin/code/deep-contact-estimator/inference_results/Log_1st_rightTurnWalk_network_data.mat"
+save_mat: False
+mat_save_path: "/media/tingjun/Samsung USB/2021-08-20_contact_data_in_FRB/Log_1st_rightTurnWalk_network_data.mat"
 
-save_lcm: False
-lcm_save_path: "/home/justin/code/deep-contact-estimator/inference_results/Log_1st_rightTurnWalk_network_data.lcm"
+save_lcm: True
+lcm_save_path: "/media/tingjun/Samsung USB/2021-08-20_contact_data_in_FRB/Log_1st_rightTurnWalk_network_data.lcm"
+
+# save_mat: True
+# mat_save_path: "/home/justin/code/deep-contact-estimator/inference_results/Log_1st_rightTurnWalk_network_data.mat"
+
+# save_lcm: False
+# lcm_save_path: "/home/justin/code/deep-contact-estimator/inference_results/Log_1st_rightTurnWalk_network_data.lcm"
