@@ -4,8 +4,8 @@ data_folder: "/home/justin/data/cassie_contact_data/2021-08-20_contact_data_in_F
 # Path to save the trained model. 
 # Please leave the filename extension out.
 # It will automatically generate ${name}_best_loss.pt, ${name}_best_acc.pt, ${name}_final_epo.pt.
-model_save_path: "/home/justin/code/deep-contact-estimator/results/0825_cassie_spring_contact_win_600"
-log_writer_path: "/home/justin/code/deep-contact-estimator/logs/0825_cassie_spring_contact_win_600"
+model_save_path: "/home/justin/code/deep-contact-estimator/results/0827_cassie_spring_contact_win_600"
+log_writer_path: "/home/justin/code/deep-contact-estimator/logs/0827_cassie_spring_contact_win_600"
 
 
 model_description: "1D CNN 2block, window size 600, fc 19200, 54-64-64-drop-pool-128-128-drop-pool-fc, shuffle train, batch: 30, ws:150, lr:1e-4, all data"
