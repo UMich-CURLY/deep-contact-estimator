@@ -48,7 +48,7 @@ int main(int argc, char **argv)
        myfile_leg_p.open(PROGRAM_PATH + "p_lcm.csv");
     }
 
-    LcmCnnInterface matrix_builder(args, &lcm_msg_in, &mtx);
+    LcmCnnInterface matrix_builder(args, &lcm_msg_in, &mtx, debug_flag, myfile_leg_p);
     ContactEstimation engine_builder(args, &lcm, &mtx, debug_flag, myfile, myfile_leg_p, &lcm_msg_in);
     std::thread BuildMatrixThread(&LcmCnnInterface::buildMatrix, &matrix_builder, std::ref(cnn_input_queue), std::ref(new_data_queue));
     std::thread CNNInferenceThread(&ContactEstimation::makeInference, &engine_builder, std::ref(cnn_input_queue), std::ref(new_data_queue));
@@ -68,7 +68,7 @@ int main(int argc, char **argv)
     return 0;
 }
 
-LcmCnnInterface::LcmCnnInterface(const samplesCommon::Args &args, LcmMsgQueues_t* lcm_msg_in, std::mutex* mtx)
+LcmCnnInterface::LcmCnnInterface(const samplesCommon::Args &args, LcmMsgQueues_t* lcm_msg_in, std::mutex* mtx, int debug_flag, std::ofstream& myfile_leg_p)
     : input_h(75),
       input_w(54),
       data_require(75),
@@ -81,7 +81,9 @@ LcmCnnInterface::LcmCnnInterface(const samplesCommon::Args &args, LcmMsgQueues_t
       std_vector(input_w, 0),
       is_first_full_matrix(true),
       lcm_msg_in_(lcm_msg_in),
-      mtx_(mtx)
+      mtx_(mtx),
+      debug_flag_(debug_flag),
+      myfile_leg_p_(myfile_leg_p)
 {
 }
 
@@ -164,7 +166,7 @@ void LcmCnnInterface::buildMatrix(std::queue<float *> &cnn_input_queue, std::que
             for (int i = 0; i < IMUTypeDataNum; ++i)
             {
                 new_line[idx] = microstrain_data.get()->omega[i];
-                // new_data[idx] = new_line[idx];
+                // new_data[idx] = new_line[idx]; 
                 synced_msgs.get()->omega[i] = microstrain_data.get()->omega[i];
                 ++idx;
             }
@@ -174,7 +176,16 @@ void LcmCnnInterface::buildMatrix(std::queue<float *> &cnn_input_queue, std::que
                 new_line[idx] = leg_control_data.get()->p[i];
                 // new_data[idx] = new_line[idx];
                 synced_msgs.get()->p[i] = leg_control_data.get()->p[i];
+                if (debug_flag_ == 1) {
+                    myfile_leg_p_ << synced_msgs.get()->p[i] << ',';
+                }
                 ++idx;
+            }
+
+            if (debug_flag_ == 1)
+            {
+                myfile_leg_p_ << '\n';
+                myfile_leg_p_ << std::flush;
             }
 
             // leg_control_data.v:

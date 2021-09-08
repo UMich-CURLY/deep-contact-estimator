@@ -40,7 +40,7 @@ public:
     //!
     //! \brief Initialize necessary variables, such as the TensorRT Engine.
     //!
-    LcmCnnInterface(const samplesCommon::Args &args, LcmMsgQueues_t* lcm_msg_in, std::mutex* mtx);
+    LcmCnnInterface(const samplesCommon::Args &args, LcmMsgQueues_t* lcm_msg_in, std::mutex* mtx, int debug_flag, std::ofstream& myfile_leg_p);
     
     //!
     //! \brief Destroy the class
@@ -86,6 +86,8 @@ private:
     bool is_first_full_matrix; //!< indicates whether the current matrix is the first full matrix
     LcmMsgQueues_t* lcm_msg_in_;
     std::mutex* mtx_;
+    int debug_flag_;
+    std::ofstream& myfile_leg_p_;
 
 };
 
