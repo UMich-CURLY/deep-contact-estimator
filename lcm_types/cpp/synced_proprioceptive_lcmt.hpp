@@ -29,9 +29,19 @@ class synced_proprioceptive_lcmt
 
         float      v[12];
 
+        float      tau_est[12];
+
+        float      quat[4];
+
+        float      rpy[3];
+
         float      omega[3];
 
         float      acc[3];
+
+        int64_t    good_packets;
+
+        int64_t    bad_packets;
 
     public:
         /**
@@ -152,10 +162,25 @@ int synced_proprioceptive_lcmt::_encodeNoHash(void *buf, int offset, int maxlen)
     tlen = __float_encode_array(buf, offset + pos, maxlen - pos, &this->v[0], 12);
     if(tlen < 0) return tlen; else pos += tlen;
 
+    tlen = __float_encode_array(buf, offset + pos, maxlen - pos, &this->tau_est[0], 12);
+    if(tlen < 0) return tlen; else pos += tlen;
+
+    tlen = __float_encode_array(buf, offset + pos, maxlen - pos, &this->quat[0], 4);
+    if(tlen < 0) return tlen; else pos += tlen;
+
+    tlen = __float_encode_array(buf, offset + pos, maxlen - pos, &this->rpy[0], 3);
+    if(tlen < 0) return tlen; else pos += tlen;
+
     tlen = __float_encode_array(buf, offset + pos, maxlen - pos, &this->omega[0], 3);
     if(tlen < 0) return tlen; else pos += tlen;
 
     tlen = __float_encode_array(buf, offset + pos, maxlen - pos, &this->acc[0], 3);
+    if(tlen < 0) return tlen; else pos += tlen;
+
+    tlen = __int64_t_encode_array(buf, offset + pos, maxlen - pos, &this->good_packets, 1);
+    if(tlen < 0) return tlen; else pos += tlen;
+
+    tlen = __int64_t_encode_array(buf, offset + pos, maxlen - pos, &this->bad_packets, 1);
     if(tlen < 0) return tlen; else pos += tlen;
 
     return pos;
@@ -189,10 +214,25 @@ int synced_proprioceptive_lcmt::_decodeNoHash(const void *buf, int offset, int m
     tlen = __float_decode_array(buf, offset + pos, maxlen - pos, &this->v[0], 12);
     if(tlen < 0) return tlen; else pos += tlen;
 
+    tlen = __float_decode_array(buf, offset + pos, maxlen - pos, &this->tau_est[0], 12);
+    if(tlen < 0) return tlen; else pos += tlen;
+
+    tlen = __float_decode_array(buf, offset + pos, maxlen - pos, &this->quat[0], 4);
+    if(tlen < 0) return tlen; else pos += tlen;
+
+    tlen = __float_decode_array(buf, offset + pos, maxlen - pos, &this->rpy[0], 3);
+    if(tlen < 0) return tlen; else pos += tlen;
+
     tlen = __float_decode_array(buf, offset + pos, maxlen - pos, &this->omega[0], 3);
     if(tlen < 0) return tlen; else pos += tlen;
 
     tlen = __float_decode_array(buf, offset + pos, maxlen - pos, &this->acc[0], 3);
+    if(tlen < 0) return tlen; else pos += tlen;
+
+    tlen = __int64_t_decode_array(buf, offset + pos, maxlen - pos, &this->good_packets, 1);
+    if(tlen < 0) return tlen; else pos += tlen;
+
+    tlen = __int64_t_decode_array(buf, offset + pos, maxlen - pos, &this->bad_packets, 1);
     if(tlen < 0) return tlen; else pos += tlen;
 
     return pos;
@@ -208,14 +248,19 @@ int synced_proprioceptive_lcmt::_getEncodedSizeNoHash() const
     enc_size += __float_encoded_array_size(NULL, 12);
     enc_size += __float_encoded_array_size(NULL, 12);
     enc_size += __float_encoded_array_size(NULL, 12);
+    enc_size += __float_encoded_array_size(NULL, 12);
+    enc_size += __float_encoded_array_size(NULL, 4);
     enc_size += __float_encoded_array_size(NULL, 3);
     enc_size += __float_encoded_array_size(NULL, 3);
+    enc_size += __float_encoded_array_size(NULL, 3);
+    enc_size += __int64_t_encoded_array_size(NULL, 1);
+    enc_size += __int64_t_encoded_array_size(NULL, 1);
     return enc_size;
 }
 
 uint64_t synced_proprioceptive_lcmt::_computeHash(const __lcm_hash_ptr *)
 {
-    uint64_t hash = 0x9174013e2aca2d35LL;
+    uint64_t hash = 0x7e3a3ebcafbbe39cLL;
     return (hash<<1) + ((hash>>63)&1);
 }
 

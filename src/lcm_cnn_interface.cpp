@@ -114,54 +114,66 @@ void LcmCnnInterface::buildMatrix(std::queue<float *> &cnn_input_queue, std::que
             // int gtLabel = cnn_input_gtlabel_queue.front();
             // cnn_input_gtlabel_queue.pop();
             // mtx.unlock();
+
             // Start to build a new line and generate a new input
             int idx = 0; //!< keep track of the current new_line idx;
             int legTypeDataNum = 12;
             int IMUTypeDataNum = 3;
+            int quatNum = 4;
             // new_data stores the pointer to the new line
             float *new_data = new float[input_w]();
 
             // get input data:
+            std::shared_ptr<synced_proprioceptive_lcmt> synced_msgs = std::make_shared<synced_proprioceptive_lcmt>();
+
             mtx_->lock();
             std::shared_ptr<LcmLegStruct> leg_control_data = lcm_msg_in_->cnn_input_leg_queue.front();
             std::shared_ptr<LcmIMUStruct> microstrain_data = lcm_msg_in_->cnn_input_imu_queue.front();
+            synced_msgs.get()->timestamp = lcm_msg_in_->timestamp_queue.front();
+            lcm_msg_in_->timestamp_queue.pop();
             lcm_msg_in_->cnn_input_leg_queue.pop();
             lcm_msg_in_->cnn_input_imu_queue.pop();
             mtx_->unlock();
+
 
             // leg_control_data.q
             for (int i = 0; i < legTypeDataNum; ++i)
             {
                 new_line[idx] = leg_control_data.get()->q[i];
-                new_data[idx] = new_line[idx];
+                // new_data[idx] = new_line[idx];
+                synced_msgs.get()->q[i] = leg_control_data.get()->q[i];
                 ++idx;
             }
             // leg_control_data.qd:
             for (int i = 0; i < legTypeDataNum; ++i)
             {
                 new_line[idx] = leg_control_data.get()->qd[i];
-                new_data[idx] = new_line[idx];
+                // new_data[idx] = new_line[idx];
+                synced_msgs.get()->qd[i] = leg_control_data.get()->qd[i];
                 ++idx;
             }
             // microstrain(IMU).acc:
             for (int i = 0; i < IMUTypeDataNum; ++i)
             {
                 new_line[idx] = microstrain_data.get()->acc[i];
-                new_data[idx] = new_line[idx];
+                // new_data[idx] = new_line[idx];
+                synced_msgs.get()->acc[i] = microstrain_data.get()->acc[i];
                 ++idx;
             }
             // microstrain(IMU).omega:
             for (int i = 0; i < IMUTypeDataNum; ++i)
             {
                 new_line[idx] = microstrain_data.get()->omega[i];
-                new_data[idx] = new_line[idx];
+                // new_data[idx] = new_line[idx];
+                synced_msgs.get()->omega[i] = microstrain_data.get()->omega[i];
                 ++idx;
             }
             // leg_control_data.p:
             for (int i = 0; i < legTypeDataNum; ++i)
             {
                 new_line[idx] = leg_control_data.get()->p[i];
-                new_data[idx] = new_line[idx];
+                // new_data[idx] = new_line[idx];
+                synced_msgs.get()->p[i] = leg_control_data.get()->p[i];
                 ++idx;
             }
 
@@ -169,12 +181,34 @@ void LcmCnnInterface::buildMatrix(std::queue<float *> &cnn_input_queue, std::que
             for (int i = 0; i < legTypeDataNum; ++i)
             {
                 new_line[idx] = leg_control_data.get()->v[i];
-                new_data[idx] = new_line[idx];
+                // new_data[idx] = new_line[idx];
+                synced_msgs.get()->v[i] = leg_control_data.get()->v[i];
                 ++idx;
             }
 
-            // release memory:
-            new_data_queue.push(new_data);
+            // leg_control_data.tau_est:
+            for (int i = 0; i < legTypeDataNum; ++i)
+            {
+                synced_msgs.get()->tau_est[i] = leg_control_data.get()->tau_est[i];
+            }
+
+            // microstrain.quat:
+            for (int i = 0; i < quatNum; ++i) 
+            {
+                synced_msgs.get()->quat[i] = microstrain_data.get()->quat[i];
+            }
+
+            // microstrain.rpy:
+            for (int i = 0; i < IMUTypeDataNum; ++i) 
+            {
+                synced_msgs.get()->rpy[i] = microstrain_data.get()->rpy[i];
+            }
+
+            synced_msgs.get()->good_packets = microstrain_data.get()->good_packets;
+            synced_msgs.get()->bad_packets = microstrain_data.get()->bad_packets;
+            
+            lcm_msg_in_->synced_msgs_queue.push(synced_msgs);
+            // new_data_queue.push(new_data);
 
             // Put the new_line to the InputMatrix and destroy the first line:
             cnn_input_matrix.erase(cnn_input_matrix.begin());
@@ -183,8 +217,9 @@ void LcmCnnInterface::buildMatrix(std::queue<float *> &cnn_input_queue, std::que
 
             if (data_require != 0)
             {
-                delete[] new_data_queue.front();
-                new_data_queue.pop();
+                // delete[] new_data_queue.front();
+                // new_data_queue.pop();
+                lcm_msg_in_->synced_msgs_queue.pop();
             }
             else if (data_require == 0)
             {

@@ -28,6 +28,7 @@ void LcmHandler::receiveLegControlMsg(const lcm::ReceiveBuffer *rbuf,
     arrayCopy(leg_control_data.get()->qd, msg->qd, dim);
     arrayCopy(leg_control_data.get()->p, msg->p, dim);
     arrayCopy(leg_control_data.get()->v, msg->v, dim);
+    arrayCopy(leg_control_data.get()->tau_est, msg->tau_est, dim);
 
     /// LOW: 500Hz version:
     lcm_msg_in_->cnn_input_leg_queue.push(leg_control_data);
@@ -51,12 +52,18 @@ void LcmHandler::receiveMicrostrainMsg(const lcm::ReceiveBuffer *rbuf,
     if (start_time == 0) {
         start_time = rbuf->recv_utime;
     }
-    if (lcm_msg_in_->cnn_input_leg_queue.size() >= lcm_msg_in_->cnn_input_imu_queue.size())
+    if (lcm_msg_in_->cnn_input_leg_queue.size() > lcm_msg_in_->cnn_input_imu_queue.size())
     {
         std::shared_ptr<LcmIMUStruct> microstrain_data = std::make_shared<LcmIMUStruct>();
         int dim = 3;
+        int dim_quat = 4;
         arrayCopy(microstrain_data.get()->acc, msg->acc, dim);
         arrayCopy(microstrain_data.get()->omega, msg->omega, dim);
+        arrayCopy(microstrain_data.get()->quat, msg->quat, dim_quat);
+        arrayCopy(microstrain_data.get()->rpy, msg->rpy, dim);
+        microstrain_data.get()->good_packets = msg->good_packets;
+        microstrain_data.get()->bad_packets = msg->bad_packets;
+
         double timestamp = (1.0 * (rbuf->recv_utime - start_time)) / pow(10, 6);
         lcm_msg_in_->timestamp_queue.push(timestamp);
         lcm_msg_in_->cnn_input_imu_queue.push(microstrain_data);

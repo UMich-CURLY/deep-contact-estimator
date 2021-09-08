@@ -54,19 +54,18 @@ public:
 	//!
     //! \brief Publish the output to "CNN_OUTPUT" channel
     //!
-    void publishOutput(int output_idx);
+    void publishOutput(int output_idx, std::shared_ptr<synced_proprioceptive_lcmt> synced_msgs);
 
 private:
     int input_h; //!< The number of rows of the input matrix
     int input_w; //!< The number of columns of the input matrix
     TensorRTAccelerator sample; //!< sample contains the engine and other related parameters
     lcm::LCM* lcm;
-    synced_proprioceptive_lcmt cnn_output;
     std::mutex* mtx;
     int debug_flag;
     std::ofstream& myfile;
     std::ofstream& myfile_leg_p;
-    LcmMsgQueues_t* lcm_msg_in;
+    LcmMsgQueues_t* lcm_msg_in_;
 };
 
 #endif

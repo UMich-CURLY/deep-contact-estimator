@@ -22,8 +22,11 @@
 //! \brief contains several queues that will be used to transfer messages in the interface
 struct LcmMsgQueues_t {
     std::mutex mtx;
+    // Input queue:
     std::queue<std::shared_ptr<LcmLegStruct>> cnn_input_leg_queue;
     std::queue<std::shared_ptr<LcmIMUStruct>> cnn_input_imu_queue;
+    // Synced queue:
+    std::queue<std::shared_ptr<synced_proprioceptive_lcmt>> synced_msgs_queue;
     std::queue<int> cnn_input_gtlabel_queue;
     std::queue<double> timestamp_queue;
     // std::queue<float *> cnnInputQueue;    
