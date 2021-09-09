@@ -146,7 +146,7 @@ int synced_proprioceptive_lcmt::_encodeNoHash(void *buf, int offset, int maxlen)
     if(tlen < 0) return tlen; else pos += tlen;
 
     if(this->num_legs > 0) {
-        tlen = __int8_t_encode_array(buf, offset + pos, maxlen - pos, &this->contact[0], this->num_legs);
+        tlen = __boolean_encode_array(buf, offset + pos, maxlen - pos, &this->contact[0], this->num_legs);
         if(tlen < 0) return tlen; else pos += tlen;
     }
 
@@ -198,7 +198,7 @@ int synced_proprioceptive_lcmt::_decodeNoHash(const void *buf, int offset, int m
 
     if(this->num_legs) {
         this->contact.resize(this->num_legs);
-        tlen = __int8_t_decode_array(buf, offset + pos, maxlen - pos, &this->contact[0], this->num_legs);
+        tlen = __boolean_decode_array(buf, offset + pos, maxlen - pos, &this->contact[0], this->num_legs);
         if(tlen < 0) return tlen; else pos += tlen;
     }
 
@@ -243,7 +243,7 @@ int synced_proprioceptive_lcmt::_getEncodedSizeNoHash() const
     int enc_size = 0;
     enc_size += __int8_t_encoded_array_size(NULL, 1);
     enc_size += __double_encoded_array_size(NULL, 1);
-    enc_size += __int8_t_encoded_array_size(NULL, this->num_legs);
+    enc_size += __boolean_encoded_array_size(NULL, this->num_legs);
     enc_size += __float_encoded_array_size(NULL, 12);
     enc_size += __float_encoded_array_size(NULL, 12);
     enc_size += __float_encoded_array_size(NULL, 12);
@@ -260,7 +260,7 @@ int synced_proprioceptive_lcmt::_getEncodedSizeNoHash() const
 
 uint64_t synced_proprioceptive_lcmt::_computeHash(const __lcm_hash_ptr *)
 {
-    uint64_t hash = 0x7e3a3ebcafbbe39cLL;
+    uint64_t hash = 0xe5b50cf5e957c239LL;
     return (hash<<1) + ((hash>>63)&1);
 }
 

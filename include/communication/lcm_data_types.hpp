@@ -29,7 +29,7 @@ struct LcmContactStruct {
 struct LcmSyncedOutputStruct {
     int8_t  num_legs;
     double  timestamp;
-    int8_t  contact[4];
+    bool  contact[4];
     
     float q[12];
     float qd[12];

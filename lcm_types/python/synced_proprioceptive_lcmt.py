@@ -12,7 +12,7 @@ import struct
 class synced_proprioceptive_lcmt(object):
     __slots__ = ["num_legs", "timestamp", "contact", "q", "qd", "p", "v", "tau_est", "quat", "rpy", "omega", "acc", "good_packets", "bad_packets"]
 
-    __typenames__ = ["int8_t", "double", "int8_t", "float", "float", "float", "float", "float", "float", "float", "float", "float", "int64_t", "int64_t"]
+    __typenames__ = ["int8_t", "double", "boolean", "float", "float", "float", "float", "float", "float", "float", "float", "float", "int64_t", "int64_t"]
 
     __dimensions__ = [None, None, ["num_legs"], [12], [12], [12], [12], [12], [4], [3], [3], [3], None, None]
 
@@ -65,7 +65,7 @@ class synced_proprioceptive_lcmt(object):
     def _decode_one(buf):
         self = synced_proprioceptive_lcmt()
         self.num_legs, self.timestamp = struct.unpack(">bd", buf.read(9))
-        self.contact = struct.unpack('>%db' % self.num_legs, buf.read(self.num_legs))
+        self.contact = map(bool, struct.unpack('>%db' % self.num_legs, buf.read(self.num_legs)))
         self.q = struct.unpack('>12f', buf.read(48))
         self.qd = struct.unpack('>12f', buf.read(48))
         self.p = struct.unpack('>12f', buf.read(48))
@@ -82,7 +82,7 @@ class synced_proprioceptive_lcmt(object):
     _hash = None
     def _get_hash_recursive(parents):
         if synced_proprioceptive_lcmt in parents: return 0
-        tmphash = (0x7e3a3ebcafbbe39c) & 0xffffffffffffffff
+        tmphash = (0xe5b50cf5e957c239) & 0xffffffffffffffff
         tmphash  = (((tmphash<<1)&0xffffffffffffffff) + (tmphash>>63)) & 0xffffffffffffffff
         return tmphash
     _get_hash_recursive = staticmethod(_get_hash_recursive)

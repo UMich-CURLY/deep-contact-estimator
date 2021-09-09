@@ -2,7 +2,7 @@ struct synced_proprioceptive_lcmt
 {
     int8_t  num_legs;
     double  timestamp;
-    int8_t  contact[num_legs];
+    boolean  contact[num_legs];
     
     float q[12];
     float qd[12];
