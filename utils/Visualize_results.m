@@ -51,18 +51,20 @@ for i = 1:3
 end
 
 %% plot with foot position
-for i = 1:4
+for i = 1
     figure(i)
     
-    plot(1:size(p),p(:,3*i));
+    plot(imu_time,p(:,3*i));
     hold on
-    plot(find(contacts_est(:,i)),p(contacts_est(:,i),3*i), "g*");
+    plot(imu_time(find(contacts(:,i))),p(contacts(:,i),3*i), "g*");
     hold on
 %     plot(find(contacts_gt(:,i)),p(contacts_gt(:,i),3*i), "r*");
     
 %     legend("foot_pos","contacts");
-    legend("foot_pos","contacts","gt");
-    title("foot\_position"+i)
+    legend("foot\_position (z)","contacts","gt");
+    xlabel("time (s)");
+    ylabel("height (m)");
+    title("Foot\_Position (RF)")
 end
 
 %% plot with foot velocity
@@ -77,6 +79,43 @@ for i = 1:4
     
 %     legend("foot_pos","contacts");
     legend("foot_pos","contacts","gt");
+    title("foot\_position"+i)
+end
+
+%% plot with foot velocity times force
+f_dot_v = zeros([size(v),4]);
+for i = 1:4
+    figure(i)
+    
+    f_dot_v(:,i) = sum(F(:,3*i-2:3*i).*v(:,3*i-2:3*i),2);
+    
+    plot(1:size(f_dot_v),f_dot_v(:,i));
+    hold on
+    plot(find(contacts(:,i)),f_dot_v(contacts(:,i),i), "g*");
+    
+%     legend("foot_pos","contacts");
+    legend("foot_pos","contacts","gt");
+    title("foot\_position"+i)
+end
+
+%%
+
+for i = 1
+    figure(i)
+    
+    plot(1:size(v),v(:,3*i));
+    hold on
+    plot(find(contacts(:,i)),v(contacts(:,i),3*i), "r*");
+    
+    
+    
+    hold on
+    plot(1:size(p),50*p(:,3*i)+16);
+    hold on
+    plot(find(contacts(:,i)),50*p(contacts(:,i),3*i)+16, "g*");
+    
+%     legend("foot_pos","contacts");
+    legend("foot\_vel","contacts","foot\_pos","contact");
     title("foot\_position"+i)
 end
 
@@ -101,9 +140,9 @@ for i = 1:4
     
     plot(1:size(F),F(:,3*i),'Color',[0.4940 0.1840 0.5560]);
     hold on
-    plot(find(contacts_est(:,i)),F(contacts_est(:,i),3*i),'o','MarkerEdgeColor',[0.9290 0.6940 0.1250]);
-    hold on
-    plot(find(contacts_gt(:,i)),F(contacts_gt(:,i),3*i),'.','MarkerEdgeColor',[0 0.4470 0.7410]);
+    plot(find(contacts(:,i)),F(contacts(:,i),3*i),'o','MarkerEdgeColor',[0.9290 0.6940 0.1250]);
+%     hold on
+%     plot(find(contacts_gt(:,i)),F(contacts_gt(:,i),3*i),'.','MarkerEdgeColor',[0 0.4470 0.7410]);
     
 %     legend("foot_pos","contacts");
     legend("GRF","contacts","gt");
