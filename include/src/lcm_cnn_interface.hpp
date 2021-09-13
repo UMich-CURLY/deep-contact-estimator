@@ -20,7 +20,7 @@
 #include "communication/lcm_handler.hpp"
 #include "utils/tensorrt_acc.hpp"
 #include "communication/lcm_msg_queue.hpp"
-
+#include "include/yaml-cpp/yaml.h"
 
 // #include <Eigen/Dense>
 #include <lcm/lcm-cpp.hpp>
@@ -88,7 +88,7 @@ private:
     std::mutex* mtx_;
     int debug_flag_;
     std::ofstream& myfile_leg_p_;
-
+    YAML::Node config_;
 };
 
 #endif

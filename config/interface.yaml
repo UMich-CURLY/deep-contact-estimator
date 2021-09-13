@@ -1,0 +1,28 @@
+model_load_path: "/home/tingjun/Desktop/Cheetah_Proj/deep-contact-estimator/weights/"
+engin_save_path: "/home/tingjun/Desktop/Cheetah_Proj/deep-contact-estimator/engines/"
+engine_load_path: "/home/tingjun/Desktop/Cheetah_Proj/deep-contact-estimator/engines/"
+program_path: "/media/jetson256g/code/LCM_CNN_INTERFACE/deep-contact-estimator/"
+
+input_hight: 75
+input_width: 54
+
+lcm_leg_channel: "leg_control_data"
+lcm_imu_channel: "microstrain"
+lcm_contact_gt_channel: "contact_ground_truth"
+lcm_output_channel: "synced_proprioceptive_data"
+
+leg_q_dimension: 12
+leg_qd_dimension: 12
+leg_p_dimension: 12
+leg_v_dimension: 12
+leg_tau_dimension: 12
+
+imu_acc_dimension: 3
+imu_omega_dimension: 3
+imu_rpy_dimension: 3
+imu_quat_dimension: 4
+
+num_legs: 4
+
+
+debug_flag: 0 # 1 for enable debugging mode, 0 for disable

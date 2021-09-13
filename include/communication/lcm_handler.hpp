@@ -14,6 +14,7 @@
 #include "../lcm_types/cpp/synced_proprioceptive_lcmt.hpp"
 
 #include "lcm_msg_queue.hpp"
+#include "include/yaml-cpp/yaml.h"
 
 //!
 //! \brief The Handler class takes in LCM messages from subscribed channels and process them
@@ -56,10 +57,12 @@ private:
     //! to array1 starting from the pointer
     //! 
     void arrayCopy(float array1 [], const float array2 [], const int dim);
-    LcmMsgQueues_t* lcm_msg_in_;
-    std::mutex* cdata_mtx_;
-    lcm::LCM* lcm_;
-    int64_t start_time;
+    
+    LcmMsgQueues_t* lcm_msg_in_; //<! Stores necessary lcm messages
+    std::mutex* cdata_mtx_; //<! use in mutex lock
+    lcm::LCM* lcm_; //<! lcm object
+    int64_t start_time_; //<! the starting time of the interface
+    YAML::Node config_; //<! load interface config file
 };
 
 #endif

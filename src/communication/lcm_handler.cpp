@@ -3,11 +3,11 @@
 LcmHandler::LcmHandler(lcm::LCM* lcm, LcmMsgQueues_t* lcm_msg_in, std::mutex* cdata_mtx):
 lcm_(lcm), lcm_msg_in_(lcm_msg_in), cdata_mtx_(cdata_mtx)
 {
-    
-    lcm->subscribe("leg_control_data", &LcmHandler::receiveLegControlMsg, this);
-    lcm->subscribe("microstrain", &LcmHandler::receiveMicrostrainMsg, this);
-    // lcm.subscribe("contact_ground_truth", &&LcmHandler::receiveContactGroundTruthMsg, this);
-    start_time = 0;
+    config_ = YAML::LoadFile("config/interface.yaml");
+    lcm->subscribe(config_["lcm_leg_channel"].as<std::string>(), &LcmHandler::receiveLegControlMsg, this);
+    lcm->subscribe(config_["lcm_imu_channel"].as<std::string>(), &LcmHandler::receiveMicrostrainMsg, this);
+    // lcm.subscribe(config_["contact_ground_truth"].as<std::string>(), &&LcmHandler::receiveContactGroundTruthMsg, this);
+    start_time_ = 0;
     std::cout << "Subscribed to channels" << std::endl;
     
 }
@@ -18,17 +18,16 @@ void LcmHandler::receiveLegControlMsg(const lcm::ReceiveBuffer *rbuf,
                                    const std::string &chan,
                                    const leg_control_data_lcmt *msg)
 {
-    if (start_time == 0) {
-        start_time = rbuf->recv_utime;
+    if (start_time_ == 0) {
+        start_time_ = rbuf->recv_utime;
     }
 
-    int dim = 12;
     std::shared_ptr<LcmLegStruct> leg_control_data = std::make_shared<LcmLegStruct>();
-    arrayCopy(leg_control_data.get()->q, msg->q, dim);
-    arrayCopy(leg_control_data.get()->qd, msg->qd, dim);
-    arrayCopy(leg_control_data.get()->p, msg->p, dim);
-    arrayCopy(leg_control_data.get()->v, msg->v, dim);
-    arrayCopy(leg_control_data.get()->tau_est, msg->tau_est, dim);
+    arrayCopy(leg_control_data.get()->q, msg->q, config_["leg_q_dimension"].as<int>());
+    arrayCopy(leg_control_data.get()->qd, msg->qd, config_["leg_qd_dimension"].as<int>());
+    arrayCopy(leg_control_data.get()->p, msg->p, config_["leg_p_dimension"].as<int>());
+    arrayCopy(leg_control_data.get()->v, msg->v, config_["leg_v_dimension"].as<int>());
+    arrayCopy(leg_control_data.get()->tau_est, msg->tau_est, config_["leg_tau_est_dimension"].as<int>());
 
     /// LOW: 500Hz version:
     lcm_msg_in_->cnn_input_leg_queue.push(leg_control_data);
@@ -49,22 +48,20 @@ void LcmHandler::receiveMicrostrainMsg(const lcm::ReceiveBuffer *rbuf,
                                     const microstrain_lcmt *msg)
 {
     /// LOW: 500Hz version:
-    if (start_time == 0) {
-        start_time = rbuf->recv_utime;
+    if (start_time_ == 0) {
+        start_time_ = rbuf->recv_utime;
     }
     if (lcm_msg_in_->cnn_input_leg_queue.size() > lcm_msg_in_->cnn_input_imu_queue.size())
     {
         std::shared_ptr<LcmIMUStruct> microstrain_data = std::make_shared<LcmIMUStruct>();
-        int dim = 3;
-        int dim_quat = 4;
-        arrayCopy(microstrain_data.get()->acc, msg->acc, dim);
-        arrayCopy(microstrain_data.get()->omega, msg->omega, dim);
-        arrayCopy(microstrain_data.get()->quat, msg->quat, dim_quat);
-        arrayCopy(microstrain_data.get()->rpy, msg->rpy, dim);
+        arrayCopy(microstrain_data.get()->acc, msg->acc, config_["imu_acc_dimension"].as<int>());
+        arrayCopy(microstrain_data.get()->omega, msg->omega, config_["imu_omega_dimension"].as<int>());
+        arrayCopy(microstrain_data.get()->quat, msg->quat, config_["imu_quat_dimension"].as<int>());
+        arrayCopy(microstrain_data.get()->rpy, msg->rpy, config_["imu_rpy_dimension"].as<int>());
         microstrain_data.get()->good_packets = msg->good_packets;
         microstrain_data.get()->bad_packets = msg->bad_packets;
 
-        double timestamp = (1.0 * (rbuf->recv_utime - start_time)) / pow(10, 6);
+        double timestamp = (1.0 * (rbuf->recv_utime - start_time_)) / pow(10, 6);
         lcm_msg_in_->timestamp_queue.push(timestamp);
         lcm_msg_in_->cnn_input_imu_queue.push(microstrain_data);
     }
@@ -92,7 +89,15 @@ void LcmHandler::receiveContactGroundTruthMsg(const lcm::ReceiveBuffer *rbuf,
     std::vector<int8_t> contact_ground_truth_label = msg->contact;
 
     int gt_label = contact_ground_truth_label[0] * 2 * 2 * 2 + contact_ground_truth_label[1] * 2 * 2 + contact_ground_truth_label[2] * 2 + contact_ground_truth_label[3];
-
+    for (int i = 0; i < contact_ground_truth_label.size(); i++) {
+        int j = 0;
+        int contact_tmp = contact_ground_truth_label[i];
+        while (j < 4 - i) {
+            contact_tmp *= 2;
+            ++j;
+        }
+        gt_label += contact_tmp;
+    }
     lcm_msg_in_->cnn_input_gtlabel_queue.push(gt_label);
 }
 

@@ -66,6 +66,7 @@ private:
     std::ofstream& myfile;
     std::ofstream& myfile_leg_p;
     LcmMsgQueues_t* lcm_msg_in_;
+    
 };
 
 #endif

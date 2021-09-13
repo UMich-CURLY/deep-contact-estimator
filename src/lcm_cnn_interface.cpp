@@ -40,7 +40,7 @@ int main(int argc, char **argv)
     int debug_flag = 0;
     std::ofstream myfile;
     std::ofstream myfile_leg_p;
-    string PROGRAM_PATH = "/media/jetson256g/code/LCM_CNN_INTERFACE/deep-contact-estimator/";
+    std::string PROGRAM_PATH = "/media/jetson256g/code/LCM_CNN_INTERFACE/deep-contact-estimator/";
 
     if (debug_flag == 1)
     {
