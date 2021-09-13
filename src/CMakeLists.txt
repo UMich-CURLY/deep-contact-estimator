@@ -11,6 +11,9 @@ INCLUDE_DIRECTORIES(${cuda_dir})
 SET(include_dir /media/jetson256g/code/LCM_CNN_INTERFACE/deep-contact-estimator/include)
 INCLUDE_DIRECTORIES(${include_dir})
 
+SET(PROGRMA_PATH /media/jetson256g/code/LCM_CNN_INTERFACE/deep-contact-estimator)
+INCLUDE_DIRECTORIES(${PROGRMA_PATH})
+
 SET(LOG_CPP /usr/src/tensorrt/samples/common/logger.cpp)
 
 ADD_LIBRARY(contact_estimation contact_estimation.cpp)
@@ -31,16 +34,20 @@ TARGET_LINK_LIBRARIES(lcm_cnn_interface ${LIBNVONNXPARSER})
 find_library(LIBCUDART cudart /usr/local/cuda-10.2/lib64/)
 TARGET_LINK_LIBRARIES(lcm_cnn_interface ${LIBCUDART})
 
+find_package(  yaml-cpp REQUIRED )
+
 find_library(LIBLCM lcm /usr/local/include/lcm/)
 TARGET_LINK_LIBRARIES(lcm_cnn_interface ${LIBLCM})
 
-
-TARGET_LINK_LIBRARIES(lcm_handler ${LIBLCM})
+TARGET_LINK_LIBRARIES(lcm_handler ${LIBLCM}
+					yaml-cpp)
 
 TARGET_LINK_LIBRARIES(tensorrt_acc ${LIBNVINFER}
 				   ${LIBNVONNXPARSER}
-				   ${LIBCUDART})
+				   ${LIBCUDART}
+				   yaml-cpp)
 
 TARGET_LINK_LIBRARIES(lcm_cnn_interface contact_estimation
 					lcm_handler
-					tensorrt_acc)
+					tensorrt_acc
+					yaml-cpp)

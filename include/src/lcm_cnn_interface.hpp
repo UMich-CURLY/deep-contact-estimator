@@ -20,7 +20,7 @@
 #include "communication/lcm_handler.hpp"
 #include "utils/tensorrt_acc.hpp"
 #include "communication/lcm_msg_queue.hpp"
-#include "include/yaml-cpp/yaml.h"
+#include "yaml-cpp/yaml.h"
 
 // #include <Eigen/Dense>
 #include <lcm/lcm-cpp.hpp>

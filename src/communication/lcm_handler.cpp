@@ -1,9 +1,12 @@
 #include "communication/lcm_handler.hpp"
+#include <stdlib.h>
 
 LcmHandler::LcmHandler(lcm::LCM* lcm, LcmMsgQueues_t* lcm_msg_in, std::mutex* cdata_mtx):
 lcm_(lcm), lcm_msg_in_(lcm_msg_in), cdata_mtx_(cdata_mtx)
 {
-    config_ = YAML::LoadFile("config/interface.yaml");
+    char resolved_path[PATH_MAX];
+    realpath("../", resolved_path);
+    config_ = YAML::LoadFile(std::string(resolved_path) + "/config/interface.yaml");
     lcm->subscribe(config_["lcm_leg_channel"].as<std::string>(), &LcmHandler::receiveLegControlMsg, this);
     lcm->subscribe(config_["lcm_imu_channel"].as<std::string>(), &LcmHandler::receiveMicrostrainMsg, this);
     // lcm.subscribe(config_["contact_ground_truth"].as<std::string>(), &&LcmHandler::receiveContactGroundTruthMsg, this);

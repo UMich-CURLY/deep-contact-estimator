@@ -14,7 +14,7 @@
 #include "../lcm_types/cpp/synced_proprioceptive_lcmt.hpp"
 
 #include "lcm_msg_queue.hpp"
-#include "include/yaml-cpp/yaml.h"
+#include "yaml-cpp/yaml.h"
 
 //!
 //! \brief The Handler class takes in LCM messages from subscribed channels and process them
