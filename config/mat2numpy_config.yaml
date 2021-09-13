@@ -1,10 +1,19 @@
 
-mat_folder: "/home/justin/data/contact_data/test_sequence/mat/"
-save_path: "/home/justin/data/contact_data/test_sequence/numpy/"
+mat_folder: "/home/justin/data/archive_contact_data/test_sequence/mat/"
+save_path: "/home/justin/data/archive_contact_data/test_sequence/numpy/"
 
 # mode: "train": split data into train/val/test
 #       "inference": create numpy for one seq without spliting
-mode: "inference"
+#       "mat2lcm": simply convert mat to lcm
+mode: "mat2lcm"
 
+# contact_type: "GRF":
+#               "gait_cycle"
+#               "contact"
+contact_type: "contact"
+mat_data_path: "/home/justin/data/automatic_contact_test/mat/lcmlog-2020-08-29-00_network_data.mat"
+lcm_save_path: "/home/justin/data/automatic_contact_test/lcm/lcmlog-2020-08-29-00_network_data_automatic_contact.lcm"
+
+window_size: 150
 train_ratio: 0.7
 val_ratio: 0.15

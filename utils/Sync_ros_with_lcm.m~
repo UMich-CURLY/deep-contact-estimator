@@ -1,0 +1,4 @@
+figure(1)
+plot(robot.joint_state.offset_time,robot.joint_state.position2);
+hold on
+plot(leg_control_data.lcm_timestamp,leg_control_data.

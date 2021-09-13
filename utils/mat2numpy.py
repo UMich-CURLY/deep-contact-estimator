@@ -1,12 +1,17 @@
 import os
 import argparse
 import glob
-
+import sys
+sys.path.append('.')
 import numpy as np
 import scipy.io as sio
 # import matplotlib.pyplot as plt
 import math
 import yaml
+
+import lcm
+from lcm_types.python import contact_t, leg_control_data_lcmt, microstrain_lcmt
+import time
 
 def mat2numpy_one_seq(data_pth, save_pth):
     """
@@ -194,6 +199,52 @@ def mat2numpy_split(data_pth, save_pth, train_ratio=0.7, val_ratio=0.15):
 def binary2decimal(a, axis=-1):
     return np.right_shift(np.packbits(a, axis=axis), 8 - a.shape[axis]).squeeze()
 
+def mat2lcm(config):
+    mat_data = sio.loadmat(config['mat_data_path'])
+    log = lcm.EventLog(config['lcm_save_path'], mode='w', overwrite=True)
+    
+    utime = int(time.time() * 10**6)
+
+    imu_time = mat_data['imu_time'].flatten().tolist()
+    
+    for idx,_ in enumerate(imu_time[config['window_size']-1:]):
+
+        data_idx = idx + config['window_size']-1
+        
+        leg_control_data_msg = leg_control_data_lcmt()
+        leg_control_data_msg.q = mat_data['q'][data_idx]
+        leg_control_data_msg.p = mat_data['p'][data_idx]
+        leg_control_data_msg.qd = mat_data['qd'][data_idx]
+        leg_control_data_msg.v = mat_data['v'][data_idx]
+        leg_control_data_msg.tau_est = mat_data['tau_est'][data_idx]
+        log.write_event(utime + int(10**6 * imu_time[data_idx]),\
+                    'leg_control_data', leg_control_data_msg.encode())
+        
+        contact_msg = contact_t()
+        contact_msg.num_legs = 4
+        contact_msg.timestamp = imu_time[data_idx]
+        if config['contact_type'] == 'GRF':
+            contact_msg.contact = mat_data['F_contacts'][data_idx]
+        elif config['contact_type'] == 'gait_cycle':
+            contact_msg.contact = mat_data['gait_cycle_contacts'][data_idx]
+        elif config['contact_type'] == 'contact':
+            contact_msg.contact = mat_data['contacts'][data_idx]
+
+        # if we want to use GT contact for varification
+        # contact_msg.contact = mat_data['contacts'][data_idx]
+        
+        log.write_event(utime + int(10**6 * imu_time[data_idx]),\
+                        'contact', contact_msg.encode())
+        
+        imu_msg = microstrain_lcmt()
+        imu_msg.acc = mat_data['imu_acc'][data_idx]
+        imu_msg.omega = mat_data['imu_omega'][data_idx]
+        imu_msg.rpy = mat_data['imu_rpy'][data_idx]
+        imu_msg.quat = mat_data['imu_quat'][data_idx]
+        log.write_event(utime + int(10**6 * imu_time[data_idx]),\
+                        'microstrain', imu_msg.encode())
+        
+    print("Saved data to lcm!")
 
 def main():
 
@@ -207,6 +258,9 @@ def main():
         mat2numpy_split(config['mat_folder'],config['save_path'],config['train_ratio'],config['val_ratio'])
     elif config['mode']=='inference':
         mat2numpy_one_seq(config['mat_folder'],config['save_path'])
+    elif config['mode']=='mat2lcm':
+        mat2lcm(config)
+    
 
 if __name__ == '__main__':
     main()
