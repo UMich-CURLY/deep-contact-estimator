@@ -78,7 +78,6 @@ def save2mat(pred, config):
     out['p'] = data[config['window_size']-1:,30:42]
     out['v'] = data[config['window_size']-1:,42:54]
 
-    # out['tau_est'] = data[config['window_size']-1:,54:66]
     # data not used in the network but needed for visualization.
     out['control_time'] = mat_raw_data['control_time'].flatten().tolist()[config['window_size']-1:]
     out['imu_time'] = mat_raw_data['imu_time'].flatten().tolist()[config['window_size']-1:]
@@ -117,7 +116,7 @@ def save2lcm(pred, config):
         contact_msg.timestamp = imu_time[data_idx]
         contact_msg.contact = pred[idx]
 
-        # if we want to use GT contact for varification
+        # if we want to use GT contact for verification
         # contact_msg.contact = mat_data['contacts'][data_idx]
         
         log.write_event(utime + int(10**6 * imu_time[data_idx]),\
