@@ -3,8 +3,8 @@ engin_save_path: "/home/tingjun/Desktop/Cheetah_Proj/deep-contact-estimator/engi
 engine_load_path: "/home/tingjun/Desktop/Cheetah_Proj/deep-contact-estimator/engines/"
 program_path: "/media/jetson256g/code/LCM_CNN_INTERFACE/deep-contact-estimator/"
 
-input_hight: 75
-input_width: 54
+input_h: 75
+input_w: 54
 
 lcm_leg_channel: "leg_control_data"
 lcm_imu_channel: "microstrain"

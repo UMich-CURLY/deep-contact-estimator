@@ -7,10 +7,22 @@ lcm_(lcm), lcm_msg_in_(lcm_msg_in), cdata_mtx_(cdata_mtx)
     char resolved_path[PATH_MAX];
     realpath("../", resolved_path);
     config_ = YAML::LoadFile(std::string(resolved_path) + "/config/interface.yaml");
+    //std::cout << "q_dim:" << config_["leg_q_dimension"].as<int>() << std::endl;
     lcm->subscribe(config_["lcm_leg_channel"].as<std::string>(), &LcmHandler::receiveLegControlMsg, this);
     lcm->subscribe(config_["lcm_imu_channel"].as<std::string>(), &LcmHandler::receiveMicrostrainMsg, this);
     // lcm.subscribe(config_["contact_ground_truth"].as<std::string>(), &&LcmHandler::receiveContactGroundTruthMsg, this);
     start_time_ = 0;
+    q_dim = config_["leg_q_dimension"].as<int>();
+    qd_dim = config_["leg_qd_dimension"].as<int>();
+    p_dim = config_["leg_p_dimension"].as<int>();
+    v_dim = config_["leg_v_dimension"].as<int>();
+    tau_est_dim = config_["leg_tau_dimension"].as<int>();
+
+    acc_dim = config_["imu_acc_dimension"].as<int>();
+    omega_dim = config_["imu_omega_dimension"].as<int>();
+    quat_dim = config_["imu_quat_dimension"].as<int>();
+    rpy_dim = config_["imu_rpy_dimension"].as<int>();
+
     std::cout << "Subscribed to channels" << std::endl;
     
 }
@@ -26,11 +38,11 @@ void LcmHandler::receiveLegControlMsg(const lcm::ReceiveBuffer *rbuf,
     }
 
     std::shared_ptr<LcmLegStruct> leg_control_data = std::make_shared<LcmLegStruct>();
-    arrayCopy(leg_control_data.get()->q, msg->q, config_["leg_q_dimension"].as<int>());
-    arrayCopy(leg_control_data.get()->qd, msg->qd, config_["leg_qd_dimension"].as<int>());
-    arrayCopy(leg_control_data.get()->p, msg->p, config_["leg_p_dimension"].as<int>());
-    arrayCopy(leg_control_data.get()->v, msg->v, config_["leg_v_dimension"].as<int>());
-    arrayCopy(leg_control_data.get()->tau_est, msg->tau_est, config_["leg_tau_est_dimension"].as<int>());
+    arrayCopy(leg_control_data.get()->q, msg->q, q_dim);
+    arrayCopy(leg_control_data.get()->qd, msg->qd, qd_dim);
+    arrayCopy(leg_control_data.get()->p, msg->p, p_dim);
+    arrayCopy(leg_control_data.get()->v, msg->v, v_dim);
+    arrayCopy(leg_control_data.get()->tau_est, msg->tau_est, tau_est_dim);
 
     /// LOW: 500Hz version:
     lcm_msg_in_->cnn_input_leg_queue.push(leg_control_data);
@@ -57,10 +69,10 @@ void LcmHandler::receiveMicrostrainMsg(const lcm::ReceiveBuffer *rbuf,
     if (lcm_msg_in_->cnn_input_leg_queue.size() > lcm_msg_in_->cnn_input_imu_queue.size())
     {
         std::shared_ptr<LcmIMUStruct> microstrain_data = std::make_shared<LcmIMUStruct>();
-        arrayCopy(microstrain_data.get()->acc, msg->acc, config_["imu_acc_dimension"].as<int>());
-        arrayCopy(microstrain_data.get()->omega, msg->omega, config_["imu_omega_dimension"].as<int>());
-        arrayCopy(microstrain_data.get()->quat, msg->quat, config_["imu_quat_dimension"].as<int>());
-        arrayCopy(microstrain_data.get()->rpy, msg->rpy, config_["imu_rpy_dimension"].as<int>());
+        arrayCopy(microstrain_data.get()->acc, msg->acc, acc_dim);
+        arrayCopy(microstrain_data.get()->omega, msg->omega, omega_dim);
+        arrayCopy(microstrain_data.get()->quat, msg->quat, quat_dim);
+        arrayCopy(microstrain_data.get()->rpy, msg->rpy, rpy_dim);
         microstrain_data.get()->good_packets = msg->good_packets;
         microstrain_data.get()->bad_packets = msg->bad_packets;
 

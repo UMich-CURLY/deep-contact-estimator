@@ -1,20 +1,23 @@
 #include "src/contact_estimation.hpp"
 #include "utils/tensorrt_acc.hpp"
 #include "src/lcm_cnn_interface.hpp"
-
+#include <stdlib.h>
 
 ContactEstimation::ContactEstimation(const samplesCommon::Args &args, lcm::LCM* lcm_, std::mutex* mtx_, 
                                     int debug_flag_, std::ofstream& myfile_, std::ofstream& myfile_leg_p_, 
-                                    LcmMsgQueues_t* lcm_msg_in)
-    : input_h(75),
-      input_w(54),
+                                    LcmMsgQueues_t* lcm_msg_in, YAML::Node* config, const int input_h, const int input_w,
+                                    const int num_legs)
+    : config_(config),
+      input_h_(input_h),
+      input_w_(input_w),
+      num_legs_(num_legs),
       sample(initializeSampleParams(args)),
       lcm(lcm_),
       mtx(mtx_),
       debug_flag(debug_flag_),
       myfile(myfile_),
       myfile_leg_p(myfile_leg_p_),
-      lcm_msg_in_(lcm_msg_in)
+      lcm_msg_in_(lcm_msg_in)      
 {
     // cnn_input_matrix_normalized = new float[input_h * input_w];
     if (!sample.buildFromSerializedEngine())
@@ -71,7 +74,7 @@ void ContactEstimation::makeInference(std::queue<float *> &cnn_input_queue, std:
 void ContactEstimation::publishOutput(int output_idx, std::shared_ptr<synced_proprioceptive_lcmt> synced_msgs)
 {
     std::string binary = std::bitset<4>(output_idx).to_string(); // to binary
-    synced_msgs.get()->num_legs = 4;
+    synced_msgs.get()->num_legs = num_legs_;
     synced_msgs.get()->contact = {0, 0, 0, 0};
     for (int i = 0; i < synced_msgs.get()->num_legs; i++)
     {

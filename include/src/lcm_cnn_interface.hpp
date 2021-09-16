@@ -40,7 +40,8 @@ public:
     //!
     //! \brief Initialize necessary variables, such as the TensorRT Engine.
     //!
-    LcmCnnInterface(const samplesCommon::Args &args, LcmMsgQueues_t* lcm_msg_in, std::mutex* mtx, int debug_flag, std::ofstream& myfile_leg_p);
+    LcmCnnInterface(const samplesCommon::Args &args, LcmMsgQueues_t* lcm_msg_in, std::mutex* mtx, int debug_flag, std::ofstream& myfile_leg_p, 
+                    YAML::Node* config, const int input_h, const int input_w);
     
     //!
     //! \brief Destroy the class
@@ -71,8 +72,8 @@ public:
     void runSlidingWindow(std::queue<float *>& cnnInputQueue);
 
 private:
-    int input_h; //!< The number of rows of the input matrix
-    int input_w; //!< The number of columns of the input matrix
+    const int input_h_; //!< The number of rows of the input matrix
+    const int input_w_; //!< The number of columns of the input matrix
     std::vector<float> new_line; //!< The latest data
     std::vector<std::vector<float>> cnn_input_matrix; //!< input_matrix as a 2D matrix before normalization
     // float* cnn_input_matrix_normalized; //!< input_matrix as an 1D array after normalization
@@ -88,7 +89,18 @@ private:
     std::mutex* mtx_;
     int debug_flag_;
     std::ofstream& myfile_leg_p_;
-    YAML::Node config_;
+    YAML::Node* config_;
+
+    int q_dim;
+    int qd_dim;
+    int p_dim;
+    int v_dim;
+    int tau_est_dim;
+
+    int acc_dim;
+    int omega_dim;
+    int quat_dim;
+    int rpy_dim;
 };
 
 #endif

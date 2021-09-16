@@ -6,6 +6,11 @@ TensorRTAccelerator::TensorRTAccelerator(const samplesCommon::OnnxSampleParams &
     : mParams(params),
       mEngine(nullptr)
 {
+    char resolved_path[PATH_MAX];
+    realpath("../", resolved_path);
+    std::cout << resolved_path << std::endl;
+    config_ = YAML::LoadFile(std::string(resolved_path) + "/config/interface.yaml");
+    PROGRAM_PATH = config_["program_path"].as<std::string>();
 }
 
 TensorRTAccelerator::~TensorRTAccelerator(){};

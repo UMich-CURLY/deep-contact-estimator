@@ -42,7 +42,10 @@ public:
     //!
     //! \brief Initialize necessary variables, such as the TensorRT Engine.
     //!
-    ContactEstimation(const samplesCommon::Args &args, lcm::LCM* lcm_, std::mutex* mtx_, int debug_flag_, std::ofstream& myfile_, std::ofstream& myfile_leg_p_, LcmMsgQueues_t* lcm_msg_in_);
+    ContactEstimation(const samplesCommon::Args &args, lcm::LCM* lcm_, std::mutex* mtx_, 
+                    int debug_flag_, std::ofstream& myfile_, std::ofstream& myfile_leg_p_, 
+                    LcmMsgQueues_t* lcm_msg_in, YAML::Node* config, const int input_h, const int input_w,
+                    const int num_legs);
 
     //!
     //! \brief Destroy the class
@@ -57,8 +60,8 @@ public:
     void publishOutput(int output_idx, std::shared_ptr<synced_proprioceptive_lcmt> synced_msgs);
 
 private:
-    int input_h; //!< The number of rows of the input matrix
-    int input_w; //!< The number of columns of the input matrix
+    const int input_h_; //!< The number of rows of the input matrix
+    const int input_w_; //!< The number of columns of the input matrix
     TensorRTAccelerator sample; //!< sample contains the engine and other related parameters
     lcm::LCM* lcm;
     std::mutex* mtx;
@@ -66,6 +69,8 @@ private:
     std::ofstream& myfile;
     std::ofstream& myfile_leg_p;
     LcmMsgQueues_t* lcm_msg_in_;
+    YAML::Node* config_;
+    const int num_legs_;
     
 };
 

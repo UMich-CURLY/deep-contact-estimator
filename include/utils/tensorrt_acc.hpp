@@ -24,6 +24,8 @@
 #include <iostream>
 #include <sstream>
 
+#include "yaml-cpp/yaml.h"
+
 class TensorRTAccelerator
 {
     template <typename T>
@@ -107,7 +109,9 @@ private:
     //!
     int getOutput(const samplesCommon::BufferManager& buffers);
 
-    string PROGRAM_PATH = "/media/jetson256g/code/LCM_CNN_INTERFACE/deep-contact-estimator/";
+    string PROGRAM_PATH;
+
+    YAML::Node config_;
 };
 
 samplesCommon::OnnxSampleParams initializeSampleParams(const samplesCommon::Args &args);

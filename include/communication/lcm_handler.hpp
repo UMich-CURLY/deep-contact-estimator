@@ -63,6 +63,16 @@ private:
     lcm::LCM* lcm_; //<! lcm object
     int64_t start_time_; //<! the starting time of the interface
     YAML::Node config_; //<! load interface config file
+    int q_dim;
+    int qd_dim;
+    int p_dim;
+    int v_dim;
+    int tau_est_dim;
+
+    int acc_dim;
+    int omega_dim;
+    int quat_dim;
+    int rpy_dim;
 };
 
 #endif
