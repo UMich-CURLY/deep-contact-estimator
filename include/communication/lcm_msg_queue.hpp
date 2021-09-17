@@ -8,6 +8,7 @@
 // #include <Eigen/Dense>
 #include <deque>
 #include <queue>
+#include <stack>
 #include <mutex>
 #include <thread>
 #include <bitset>
@@ -29,7 +30,9 @@ struct LcmMsgQueues_t {
     std::queue<std::shared_ptr<synced_proprioceptive_lcmt>> synced_msgs_queue;
     std::queue<int> cnn_input_gtlabel_queue;
     std::queue<double> timestamp_queue;
-    // std::queue<float *> cnnInputQueue;    
+    // std::queue<float *> cnnInputQueue;
+    // Stack for leg data:
+    std::stack<std::shared_ptr<LcmLegStruct>> cnn_input_leg_stack;    
 };
 
 

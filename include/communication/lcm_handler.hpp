@@ -59,7 +59,7 @@ private:
     void arrayCopy(float array1 [], const float array2 [], const int dim);
     
     LcmMsgQueues_t* lcm_msg_in_; //<! Stores necessary lcm messages
-    std::mutex* cdata_mtx_; //<! use in mutex lock
+    std::mutex* mtx_; //<! use in mutex lock
     lcm::LCM* lcm_; //<! lcm object
     int64_t start_time_; //<! the starting time of the interface
     YAML::Node config_; //<! load interface config file

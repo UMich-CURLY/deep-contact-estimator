@@ -11,6 +11,11 @@ TensorRTAccelerator::TensorRTAccelerator(const samplesCommon::OnnxSampleParams &
     std::cout << resolved_path << std::endl;
     config_ = YAML::LoadFile(std::string(resolved_path) + "/config/interface.yaml");
     PROGRAM_PATH = config_["program_path"].as<std::string>();
+    engine_save_path = config_["engine_save_path"].as<std::string>();
+    engine_load_path = config_["engine_load_path"].as<std::string>();
+
+    inputH = config_["input_h"].as<std::string>();
+    inputW = config_["input_w"].as<std::string>();
 }
 
 TensorRTAccelerator::~TensorRTAccelerator(){};
@@ -80,8 +85,7 @@ bool TensorRTAccelerator::buildFromSerializedEngine()
     /// REMARK: we can deserialize a serialized engine if we have one:
     // -----------------------------------------------------------------------------------------------------------------------
     nvinfer1::IRuntime *runtime = nvinfer1::createInferRuntime(sample::gLogger);
-    std::string cached_path = PROGRAM_PATH + "engines/0730_2blocks_best_val_loss.trt";
-    std::ifstream fin(cached_path);
+    std::ifstream fin(engine_load_path);
     std::string cached_engine = "";
     while (fin.peek() != EOF)
     {
@@ -239,7 +243,7 @@ bool TensorRTAccelerator::serialize()
     std::ofstream serialize_output_stream;
     serialize_str.resize(serializedModel->size());
     memcpy((void *)serialize_str.data(), serializedModel->data(), serializedModel->size());
-    serialize_output_stream.open(PROGRAM_PATH + "engines/0730_2blocks_best_val_loss.trt");
+    serialize_output_stream.open(engine_save_path);
 
     serialize_output_stream << serialize_str;
     serialize_output_stream.close();
@@ -255,13 +259,11 @@ bool TensorRTAccelerator::serialize()
 //!
 bool TensorRTAccelerator::processInput(const samplesCommon::BufferManager &buffers, const float *cnn_input_matrix_normalized)
 {
-    const int inputH = 75;
-    const int inputW = 54;
 
     float *hostDataBuffer = static_cast<float *>(buffers.getHostBuffer(mParams.inputTensorNames[0]));
-    int number_of_items = 75 * 54;
+    int number_of_items = inputH * inputW;
     // hostDataBuffer.resize(number_of_items);
-    for (int i = 0; i < inputH * inputW; i++)
+    for (int i = 0; i < number_of_items; i++)
     {
         // std::cout <<  cnn_input_matrix_normalized[i] << std::endl;
         hostDataBuffer[i] = cnn_input_matrix_normalized[i];
@@ -299,22 +301,19 @@ bool TensorRTAccelerator::processInput(const samplesCommon::BufferManager& buffe
 {   
     /// REMARK: if you don't know the input dimension, you can find it by parsing the ONNX model directly;
     /// You cannot find the dimension if you use a serialized engine.
-    const int inputH = mInputDims.d[1];
+    // const int inputH = mInputDims.d[1];
     std::cout << "inputH is: " << inputH << std::endl;
 
-    const int inputW = mInputDims.d[2];
+    // const int inputW = mInputDims.d[2];
     std::cout << "inputW is: " << inputW << std::endl;
-
-    /// REMARK: after you get the input dimension, you can define them here:
-    // const int inputH = 75;
-    // const int inputW = 54;
     
     /// REMARK: use a *.bin file to parse the model
     std::vector<uint8_t> fileData(inputH * inputW);
     std::ifstream data_file;
-    data_file.open((locateFile("input_matrix_500Hz.bin", mParams.dataDirs)), std::ios::in | std::ios::binary);
+    std::string input_file = config_["data_name"].as<std::string>();
+    data_file.open((locateFile(input_file, mParams.dataDirs)), std::ios::in | std::ios::binary);
     float* hostDataBuffer = static_cast<float*>(buffers.getHostBuffer(mParams.inputTensorNames[0]));
-    int number_of_items = 75 * 54;
+    int number_of_items = inputH * inputW;
     // hostDataBuffer.resize(number_of_items);
     data_file.read(reinterpret_cast<char*>(&hostDataBuffer[0]), number_of_items * sizeof(float));
     data_file.close(); 
@@ -372,7 +371,13 @@ samplesCommon::OnnxSampleParams initializeSampleParams(const samplesCommon::Args
         std::cout << "Using directory provided by the user" << endl;
         params.dataDirs = args.dataDirs;
     }
-    params.onnxFileName = "0730_2blocks_best_val_loss.onnx";
+
+    realpath("../", resolved_path);
+    std::cout << resolved_path << std::endl;
+    config_ = YAML::LoadFile(std::string(resolved_path) + "/config/interface.yaml");
+    PROGRAM_PATH = config_["program_path"].as<std::string>();
+
+    params.onnxFileName = config_["model_name"].as<std::string>();
     params.inputTensorNames.push_back("input");
     params.batchSize = 1; //!< Takes in 1 batch every time
     params.outputTensorNames.push_back("output");

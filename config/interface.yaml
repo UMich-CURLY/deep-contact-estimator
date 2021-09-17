@@ -1,10 +1,12 @@
-model_load_path: "/home/tingjun/Desktop/Cheetah_Proj/deep-contact-estimator/weights/"
-engin_save_path: "/home/tingjun/Desktop/Cheetah_Proj/deep-contact-estimator/engines/"
-engine_load_path: "/home/tingjun/Desktop/Cheetah_Proj/deep-contact-estimator/engines/"
+model_name: "0730_2blocks_best_val_loss.onnx"
+data_name: "input_matrix_500Hz.bin"
+engin_save_path: "/home/tingjun/Desktop/Cheetah_Proj/deep-contact-estimator/engines/0730_2blocks_best_val_loss.trt"
+engine_load_path: "/home/tingjun/Desktop/Cheetah_Proj/deep-contact-estimator/engines/0730_2blocks_best_val_loss.trt"
 program_path: "/media/jetson256g/code/LCM_CNN_INTERFACE/deep-contact-estimator/"
 
 input_h: 75
 input_w: 54
+mode: "slow" # slow is 500 Hz, fast is 1000 Hz
 
 lcm_leg_channel: "leg_control_data"
 lcm_imu_channel: "microstrain"

@@ -2,7 +2,7 @@
 #include <stdlib.h>
 
 LcmHandler::LcmHandler(lcm::LCM* lcm, LcmMsgQueues_t* lcm_msg_in, std::mutex* cdata_mtx):
-lcm_(lcm), lcm_msg_in_(lcm_msg_in), cdata_mtx_(cdata_mtx)
+lcm_(lcm), lcm_msg_in_(lcm_msg_in), mtx_(cdata_mtx)
 {
     char resolved_path[PATH_MAX];
     realpath("../", resolved_path);
@@ -48,14 +48,10 @@ void LcmHandler::receiveLegControlMsg(const lcm::ReceiveBuffer *rbuf,
     lcm_msg_in_->cnn_input_leg_queue.push(leg_control_data);
 
     /// HIGH: 1000Hz version:
-    // If the latest_idx reaches the limit of the buffer vector:
-    // if (latest_idx == cnn_input_leg_vector.size() - 1) {
-    //     latest_idx = -1;
-    // }
-    // if (cnn_input_leg_vector[latest_idx + 1] != nullptr) {
-    //     delete[] cnn_input_leg_vector[latest_idx + 1];
-    // }
-    // lcm_msg_in_->cnn_input_leg_vector[++latest_idx] = leg_control_data;
+    if (!lcm_msg_in_->cnn_input_leg_stack.empty()) 
+        lcm_msg_in_->cnn_input_leg_stack.pop();
+    
+    lcm_msg_in_->cnn_input_leg_stack.push(leg_control_data);
 }
 
 void LcmHandler::receiveMicrostrainMsg(const lcm::ReceiveBuffer *rbuf,
@@ -82,19 +78,19 @@ void LcmHandler::receiveMicrostrainMsg(const lcm::ReceiveBuffer *rbuf,
     }
 
     /// HIGH: 1000Hz version:
-    // if (latest_idx != -1 && cnn_input_leg_vector[latest_idx] != nullptr) {
-    //     std::shared_ptr<LcmIMUStruct> microstrain_data = std::make_shared<LcmIMUStruct>();
-    //     arrayCopy(microstrain_data.get()->acc, msg->acc, size);
-    //     arrayCopy(microstrain_data.get()->omega, msg->omega, size);
+    if (!lcm_msg_in_->cnn_input_leg_stack.empty()) {
+        std::shared_ptr<LcmIMUStruct> microstrain_data = std::make_shared<LcmIMUStruct>();
+        arrayCopy(microstrain_data.get()->acc, msg->acc, acc_dim);
+        arrayCopy(microstrain_data.get()->omega, msg->omega, omega_dim);
+        arrayCopy(microstrain_data.get()->quat, msg->quat, quat_dim);
+        arrayCopy(microstrain_data.get()->rpy, msg->rpy, rpy_dim);
+        microstrain_data.get()->good_packets = msg->good_packets;
+        microstrain_data.get()->bad_packets = msg->bad_packets;
 
-    //     cnn_input_imu_queue.push(microstrain_data);
-    //     std::shared_ptr<LcmLegStruct> leg_control_data = std::make_shared<LcmLegStruct>();
-    //     arrayCopy(leg_control_data.get()->q, msg->q);
-    //     arrayCopy(leg_control_data.get()->qd, msg->qd);
-    //     arrayCopy(leg_control_data.get()->p, msg->p);
-    //     arrayCopy(leg_control_data.get()->v, msg->v);
-    //     lcm_msg_in_->cnn_input_leg_queue.push(leg_control_data);
-    // }
+        mtx_->lock();
+        lcm_msg_in_->cnn_input_leg_queue.push(lcm_msg_in_->cnn_input_leg_stack.top());
+        mtx_->unlock();
+    }
 }
 
 void LcmHandler::receiveContactGroundTruthMsg(const lcm::ReceiveBuffer *rbuf,

@@ -112,6 +112,13 @@ private:
     string PROGRAM_PATH;
 
     YAML::Node config_;
+
+    std::string engine_save_path;
+
+    std::string engine_load_path;
+
+    int inputH;
+    int inputW;
 };
 
 samplesCommon::OnnxSampleParams initializeSampleParams(const samplesCommon::Args &args);
