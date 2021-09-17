@@ -30,8 +30,8 @@ struct LcmMsgQueues_t {
     std::queue<std::shared_ptr<synced_proprioceptive_lcmt>> synced_msgs_queue;
     std::queue<int> cnn_input_gtlabel_queue;
     std::queue<double> timestamp_queue;
-    // std::queue<float *> cnnInputQueue;
-    // Stack for leg data:
+
+    // Stack for leg data to do synchronization in fast mode:
     std::stack<std::shared_ptr<LcmLegStruct>> cnn_input_leg_stack;    
 };
 

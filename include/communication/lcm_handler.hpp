@@ -24,10 +24,10 @@ class LcmHandler
 public:
     ~LcmHandler();
 
-    LcmHandler(lcm::LCM* lcm, LcmMsgQueues_t* lcm_msg_in, std::mutex* cdata_mtx);
+    LcmHandler(lcm::LCM* lcm, LcmMsgQueues_t* lcm_msg_in, std::mutex* cdata_mtx, const std::string &mode);
 
     //!
-    //! \brief Receives messages from the "leg_control_data" channel and  
+    //! \brief [Normal version] Receives messages from the "leg_control_data" channel and  
     //! stores them in an array, then put the array pointer into a queue
     //!
     void receiveLegControlMsg(const lcm::ReceiveBuffer* rbuf,
@@ -35,10 +35,27 @@ public:
                                  const leg_control_data_lcmt* msg);
 
     //!
-    //! \brief Receives messages from the "microstrain" channel and  
+    //! \brief [Normal version] Receives messages from the "microstrain" channel and  
     //! stores them in an array, then put the array pointer into a queue
     //!
     void receiveMicrostrainMsg(const lcm::ReceiveBuffer* rbuf,
+                                 const std::string& chan, 
+                                 const microstrain_lcmt* msg);
+
+
+    //!
+    //! \brief [Fast version] Receives messages from the "leg_control_data" channel and  
+    //! stores them in an array, then put the array pointer into a queue
+    //!
+    void receiveLegControlMsg_Fast(const lcm::ReceiveBuffer* rbuf,
+                                 const std::string& chan, 
+                                 const leg_control_data_lcmt* msg);
+
+    //!
+    //! \brief [Fast version] Receives messages from the "microstrain" channel and  
+    //! stores them in an array, then put the array pointer into a queue
+    //!
+    void receiveMicrostrainMsg_Fast(const lcm::ReceiveBuffer* rbuf,
                                  const std::string& chan, 
                                  const microstrain_lcmt* msg);
 
@@ -63,12 +80,15 @@ private:
     lcm::LCM* lcm_; //<! lcm object
     int64_t start_time_; //<! the starting time of the interface
     YAML::Node config_; //<! load interface config file
+    
+    /// Dimensions for sensor input:
+    // leg_control_data:
     int q_dim;
     int qd_dim;
     int p_dim;
     int v_dim;
     int tau_est_dim;
-
+    // microstrain:
     int acc_dim;
     int omega_dim;
     int quat_dim;

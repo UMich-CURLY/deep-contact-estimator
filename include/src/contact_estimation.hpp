@@ -63,15 +63,17 @@ private:
     const int input_h_; //!< The number of rows of the input matrix
     const int input_w_; //!< The number of columns of the input matrix
     TensorRTAccelerator sample; //!< sample contains the engine and other related parameters
-    lcm::LCM* lcm;
-    std::mutex* mtx;
-    int debug_flag;
-    std::ofstream& myfile;
-    std::ofstream& myfile_leg_p;
-    LcmMsgQueues_t* lcm_msg_in_;
+    LcmMsgQueues_t* lcm_msg_in_; //!< The received lcm messages
+    lcm::LCM* lcm_;
+    std::mutex* mtx_;
+    int debug_flag_;
+    // file that is optional to be saved:
+    std::ofstream& myfile_;
+    std::ofstream& myfile_leg_p_;
+
+    // Configs:
     YAML::Node* config_;
     const int num_legs_;
-    
 };
 
 #endif

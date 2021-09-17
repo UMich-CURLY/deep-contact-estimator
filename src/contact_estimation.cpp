@@ -3,8 +3,8 @@
 #include "src/lcm_cnn_interface.hpp"
 #include <stdlib.h>
 
-ContactEstimation::ContactEstimation(const samplesCommon::Args &args, lcm::LCM* lcm_, std::mutex* mtx_, 
-                                    int debug_flag_, std::ofstream& myfile_, std::ofstream& myfile_leg_p_, 
+ContactEstimation::ContactEstimation(const samplesCommon::Args &args, lcm::LCM* lcm, std::mutex* mtx, 
+                                    int debug_flag, std::ofstream& myfile, std::ofstream& myfile_leg_p, 
                                     LcmMsgQueues_t* lcm_msg_in, YAML::Node* config, const int input_h, const int input_w,
                                     const int num_legs)
     : config_(config),
@@ -12,20 +12,19 @@ ContactEstimation::ContactEstimation(const samplesCommon::Args &args, lcm::LCM* 
       input_w_(input_w),
       num_legs_(num_legs),
       sample(initializeSampleParams(args)),
-      lcm(lcm_),
-      mtx(mtx_),
-      debug_flag(debug_flag_),
-      myfile(myfile_),
-      myfile_leg_p(myfile_leg_p_),
+      lcm_(lcm),
+      mtx_(mtx),
+      debug_flag_(debug_flag),
+      myfile_(myfile),
+      myfile_leg_p_(myfile_leg_p),
       lcm_msg_in_(lcm_msg_in)      
 {
-    // cnn_input_matrix_normalized = new float[input_h * input_w];
     if (!sample.buildFromSerializedEngine())
     {
         std::cerr << "FAILED: Cannot build the engine" << std::endl;
         return;
     }
-    if (!lcm->good())
+    if (!lcm_->good())
         return;
 }
 
@@ -44,13 +43,14 @@ void ContactEstimation::makeInference(std::queue<float *> &cnn_input_queue, std:
             cudaEventCreate(&stop);
             cudaEventRecord(start);
         	*/
-            mtx->lock();
+            mtx_->lock();
 
             float *cnn_input_matrix_normalized = cnn_input_queue.front();
             cnn_input_queue.pop();
             std::shared_ptr<synced_proprioceptive_lcmt> synced_msgs = lcm_msg_in_->synced_msgs_queue.front();
             lcm_msg_in_->synced_msgs_queue.pop();
-            mtx->unlock();
+            
+            mtx_->unlock();
 
             int output_idx = sample.infer(cnn_input_matrix_normalized);
             if (output_idx == -1)
@@ -79,18 +79,18 @@ void ContactEstimation::publishOutput(int output_idx, std::shared_ptr<synced_pro
     for (int i = 0; i < synced_msgs.get()->num_legs; i++)
     {
         synced_msgs.get()->contact[i] = binary[i] == '1';
-       	if (debug_flag == 1)
+       	if (debug_flag_ == 1)
         {
-            myfile << synced_msgs.get()->contact[i] << ',';
+            myfile_ << synced_msgs.get()->contact[i] << ',';
         }
     }
     
     
-    if (debug_flag == 1)
+    if (debug_flag_ == 1)
     {
-        myfile << '\n';
-        myfile << std::flush;
+        myfile_ << '\n';
+        myfile_ << std::flush;
     }
     
-    lcm->publish("synced_proprioceptive_data", synced_msgs.get());
+    lcm_->publish("synced_proprioceptive_data", synced_msgs.get());
 }

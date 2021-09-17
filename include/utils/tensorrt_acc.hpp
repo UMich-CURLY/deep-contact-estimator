@@ -62,6 +62,12 @@ public:
     int infer(float* cnnInputMatrix_normalized);
 
 
+    //!
+    //! \brief Default infer function offered by TensorRT
+    //!
+    //! \details This function is the main execution function of the sample. It allocates the buffer,
+    //!          sets inputs and executes the engine.
+    //!
     bool infer();
     
 
@@ -69,8 +75,13 @@ public:
     //! \brief Reads the input and stores the result in a managed buffer
     //!
     bool processInput(const samplesCommon::BufferManager& buffers);
-   
+    
+    //!
+    //! \brief Classifies digits and verify result
+    //!
+    //!
     bool verifyOutput(const samplesCommon::BufferManager& buffers);
+    
     //!
     //! \brief Serialize the TensorRT engine and save it to disk for later use. The engine can be
     //!  deserialized in buildFromSerialiezedEngine().
@@ -109,14 +120,14 @@ private:
     //!
     int getOutput(const samplesCommon::BufferManager& buffers);
 
-    string PROGRAM_PATH;
 
+    // Configs:
     YAML::Node config_;
-
+    std::string PROGRAM_PATH;
     std::string engine_save_path;
-
     std::string engine_load_path;
 
+    // Input size:
     int inputH;
     int inputW;
 };

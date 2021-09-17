@@ -1,6 +1,7 @@
 #include "utils/tensorrt_acc.hpp"
 // #include "src/config.hpp"
 
+void printHelpInfo();
 
 int main(int argc, char** argv) 
 // argc is 1 + the number of arguments
@@ -13,12 +14,12 @@ int main(int argc, char** argv)
     if (!argsOK)
     {
         sample::gLogError << "Invalid arguments" << std::endl;
-//        printHelpInfo();
+        printHelpInfo();
         return EXIT_FAILURE;
     }
     if (args.help)
     {
-//        printHelpInfo();
+        printHelpInfo();
         return EXIT_SUCCESS;
     }
 
@@ -48,4 +49,21 @@ int main(int argc, char** argv)
     }
 
     return sample::gLogger.reportPass(sampleTest);
+}
+
+void printHelpInfo()
+{
+    std::cout
+        << "Usage: ./sample_onnx_mnist [-h or --help] [-d or --datadir=<path to data directory>] [--useDLACore=<int>]"
+        << std::endl;
+    std::cout << "--help          Display help information" << std::endl;
+    std::cout << "--datadir       Specify path to a data directory, overriding the default. This option can be used "
+                 "multiple times to add multiple directories. If no data directories are given, the default is to use "
+                 "(data/samples/mnist/, data/mnist/)"
+              << std::endl;
+    std::cout << "--useDLACore=N  Specify a DLA engine for layers that support DLA. Value can range from 0 to n-1, "
+                 "where n is the number of DLA engines on the platform."
+              << std::endl;
+    std::cout << "--int8          Run in Int8 mode. Used in serializing an engine" << std::endl;
+    std::cout << "--fp16          Run in FP16 mode. Used in serializing an engine" << std::endl;
 }

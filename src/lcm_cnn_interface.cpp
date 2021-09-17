@@ -2,84 +2,6 @@
 #include "src/contact_estimation.hpp"
 #include <stdlib.h>
 #include <typeinfo>
-// #include "src/config.hpp"
-
-int main(int argc, char **argv)
-{
-    /// LCM: subscribe to channels:
-    lcm::LCM lcm;
-    if (!lcm.good())
-        return 1;
-    
-    char resolved_path[PATH_MAX];
-    realpath("../", resolved_path);
-    std::cout << resolved_path << std::endl;
-    YAML::Node config_ = YAML::LoadFile(std::string(resolved_path) + "/config/interface.yaml");
-
-    LcmMsgQueues_t lcm_msg_in;
-    std::mutex mtx;
-    LcmHandler handlerObject(&lcm, &lcm_msg_in, &mtx);
-    // lcm.subscribe("leg_control_data", &Handler::receiveLegControlMsg, &handlerObject);
-    // lcm.subscribe("microstrain", &Handler::receiveMicrostrainMsg, &handlerObject);
-    // lcm.subscribe("contact_ground_truth", &Handler::receiveContactGroundTruthMsg, &handlerObject);
-
-    std::cout << "Start Running LCM-CNN Interface" << std::endl;
-
-    // Takes input arguments
-    samplesCommon::Args args;
-    bool argsOK = samplesCommon::parseArgs(args, argc, argv);
-    if (!argsOK)
-    {
-        sample::gLogError << "Invalid arguments" << std::endl;
-        // samplesCommon::printHelpInfo();
-        return -1;
-    }
-    if (args.help)
-    {
-        // samplesCommon::printHelpInfo();
-        return -1;
-    }
-
-    /// INTERFACE: use multiple threads to avoid missing messages:
-    std::queue<float *> cnn_input_queue;
-    std::queue<float *> new_data_queue;
-
-    std::ofstream myfile;
-    std::ofstream myfile_leg_p;
-    // std::string PROGRAM_PATH = "/media/jetson256g/code/LCM_CNN_INTERFACE/deep-contact-estimator/";
-    int debug_flag = config_["debug_flag"].as<int>();
-    std::cout << "debug_flag: " << debug_flag << std::endl;
-    std::string PROGRAM_PATH = config_["program_path"].as<std::string>();
-    int input_w = config_["input_w"].as<int>();
-    int input_h = config_["input_h"].as<int>();
-    int num_legs = config_["num_legs"].as<int>();
-
-
-    if (debug_flag == 1)
-    {
-       myfile.open(PROGRAM_PATH + "contact_est_lcm.csv");
-       myfile_leg_p.open(PROGRAM_PATH + "p_lcm.csv");
-    }
-
-    LcmCnnInterface matrix_builder(args, &lcm_msg_in, &mtx, debug_flag, myfile_leg_p, &config_, input_h, input_w);
-    ContactEstimation engine_builder(args, &lcm, &mtx, debug_flag, myfile, myfile_leg_p, &lcm_msg_in, &config_, input_h, input_w, num_legs);
-    std::thread BuildMatrixThread(&LcmCnnInterface::buildMatrix, &matrix_builder, std::ref(cnn_input_queue), std::ref(new_data_queue));
-    std::thread CNNInferenceThread(&ContactEstimation::makeInference, &engine_builder, std::ref(cnn_input_queue), std::ref(new_data_queue));
-
-    std::cout << "started thread" << std::endl;
-
-    while (0 == lcm.handle());
-    
-    BuildMatrixThread.join();
-    CNNInferenceThread.join();
-
-    if (debug_flag == 1) {
-        myfile.close();
-        myfile_leg_p.close();
-    }
-
-    return 0;
-}
 
 LcmCnnInterface::LcmCnnInterface(const samplesCommon::Args &args, LcmMsgQueues_t* lcm_msg_in, std::mutex* mtx, int debug_flag, std::ofstream& myfile_leg_p, 
                                 YAML::Node* config, const int input_h, const int input_w)
@@ -114,19 +36,6 @@ LcmCnnInterface::LcmCnnInterface(const samplesCommon::Args &args, LcmMsgQueues_t
 
 LcmCnnInterface::~LcmCnnInterface()
 {
-    /* 
-    while (!cnn_input_leg_queue.empty())
-    {
-        delete[] cnn_input_leg_queue.front();
-        cnn_input_leg_queue.pop();
-    }
-
-    while (!cnn_input_imu_queue.empty())
-    {
-        delete[] cnn_input_imu_queue.front();
-        cnn_input_imu_queue.pop();
-    }
-    */
 }
 
 void LcmCnnInterface::buildMatrix(std::queue<float *> &cnn_input_queue, std::queue<float *> &new_data_queue)
@@ -145,7 +54,6 @@ void LcmCnnInterface::buildMatrix(std::queue<float *> &cnn_input_queue, std::que
             // Start to build a new line and generate a new input
             int idx = 0; //!< keep track of the current new_line idx;
             // new_data stores the pointer to the new line
-            float *new_data = new float[input_w_]();
 
             // get input data:
             std::shared_ptr<synced_proprioceptive_lcmt> synced_msgs = std::make_shared<synced_proprioceptive_lcmt>();
@@ -164,7 +72,6 @@ void LcmCnnInterface::buildMatrix(std::queue<float *> &cnn_input_queue, std::que
             for (int i = 0; i < q_dim; ++i)
             {
                 new_line[idx] = leg_control_data.get()->q[i];
-                // new_data[idx] = new_line[idx];
                 synced_msgs.get()->q[i] = leg_control_data.get()->q[i];
                 ++idx;
             }
@@ -172,7 +79,6 @@ void LcmCnnInterface::buildMatrix(std::queue<float *> &cnn_input_queue, std::que
             for (int i = 0; i < qd_dim; ++i)
             {
                 new_line[idx] = leg_control_data.get()->qd[i];
-                // new_data[idx] = new_line[idx];
                 synced_msgs.get()->qd[i] = leg_control_data.get()->qd[i];
                 ++idx;
             }
@@ -180,7 +86,6 @@ void LcmCnnInterface::buildMatrix(std::queue<float *> &cnn_input_queue, std::que
             for (int i = 0; i < acc_dim; ++i)
             {
                 new_line[idx] = microstrain_data.get()->acc[i];
-                // new_data[idx] = new_line[idx];
                 synced_msgs.get()->acc[i] = microstrain_data.get()->acc[i];
                 ++idx;
             }
@@ -188,7 +93,6 @@ void LcmCnnInterface::buildMatrix(std::queue<float *> &cnn_input_queue, std::que
             for (int i = 0; i < omega_dim; ++i)
             {
                 new_line[idx] = microstrain_data.get()->omega[i];
-                // new_data[idx] = new_line[idx]; 
                 synced_msgs.get()->omega[i] = microstrain_data.get()->omega[i];
                 ++idx;
             }
@@ -196,7 +100,6 @@ void LcmCnnInterface::buildMatrix(std::queue<float *> &cnn_input_queue, std::que
             for (int i = 0; i < p_dim; ++i)
             {
                 new_line[idx] = leg_control_data.get()->p[i];
-                // new_data[idx] = new_line[idx];
                 synced_msgs.get()->p[i] = leg_control_data.get()->p[i];
                 if (debug_flag_ == 1) {
                     myfile_leg_p_ << synced_msgs.get()->p[i] << ',';
@@ -214,7 +117,6 @@ void LcmCnnInterface::buildMatrix(std::queue<float *> &cnn_input_queue, std::que
             for (int i = 0; i < v_dim; ++i)
             {
                 new_line[idx] = leg_control_data.get()->v[i];
-                // new_data[idx] = new_line[idx];
                 synced_msgs.get()->v[i] = leg_control_data.get()->v[i];
                 ++idx;
             }
@@ -241,7 +143,6 @@ void LcmCnnInterface::buildMatrix(std::queue<float *> &cnn_input_queue, std::que
             synced_msgs.get()->bad_packets = microstrain_data.get()->bad_packets;
             
             lcm_msg_in_->synced_msgs_queue.push(synced_msgs);
-            // new_data_queue.push(new_data);
 
             // Put the new_line to the InputMatrix and destroy the first line:
             cnn_input_matrix.erase(cnn_input_matrix.begin());
@@ -250,14 +151,12 @@ void LcmCnnInterface::buildMatrix(std::queue<float *> &cnn_input_queue, std::que
 
             if (data_require != 0)
             {
-                // delete[] new_data_queue.front();
-                // new_data_queue.pop();
+
                 lcm_msg_in_->synced_msgs_queue.pop();
             }
             else if (data_require == 0)
             {
                 normalizeAndInfer(cnn_input_queue);
-                // new_data_queue.push(new_data);
                 // std::cout << "The ground truth label is: " << gtLabel << std::endl;
                 // break;
             }
@@ -323,6 +222,7 @@ void LcmCnnInterface::runFullCalculation(std::queue<float *> &cnn_input_queue)
     // data_file.close();
     cnn_input_queue.push(cnn_input_matrix_normalized);
 }
+
 
 void LcmCnnInterface::runSlidingWindow(std::queue<float *> &cnn_input_queue)
 {

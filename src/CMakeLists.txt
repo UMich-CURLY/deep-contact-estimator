@@ -22,7 +22,9 @@ ADD_LIBRARY(lcm_handler communication/lcm_handler.cpp)
 
 ADD_LIBRARY(tensorrt_acc ../utils/tensorrt_acc.cpp)
 
-ADD_EXECUTABLE(lcm_cnn_interface lcm_cnn_interface.cpp ${LOG_CPP})
+ADD_LIBRARY(lcm_cnn_interface lcm_cnn_interface.cpp)
+
+ADD_EXECUTABLE(run_contact_estimator run_contact_estimator.cpp ${LOG_CPP})
 SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pthread")
 
 find_library(LIBNVINFER nvinfer /usr/lib/aarch64-linux-gnu/)
@@ -48,6 +50,12 @@ TARGET_LINK_LIBRARIES(tensorrt_acc ${LIBNVINFER}
 				   yaml-cpp)
 
 TARGET_LINK_LIBRARIES(lcm_cnn_interface contact_estimation
+					lcm_handler
+					tensorrt_acc
+					yaml-cpp)
+
+TARGET_LINK_LIBRARIES(run_contact_estimator contact_estimation
+					lcm_cnn_interface
 					lcm_handler
 					tensorrt_acc
 					yaml-cpp)

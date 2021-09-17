@@ -1,4 +1,5 @@
 #include "utils/tensorrt_acc.hpp"
+#include <stdlib.h>
 
 const std::string gSampleName = "TensorRT.sample_onnx";
 
@@ -8,14 +9,13 @@ TensorRTAccelerator::TensorRTAccelerator(const samplesCommon::OnnxSampleParams &
 {
     char resolved_path[PATH_MAX];
     realpath("../", resolved_path);
-    std::cout << resolved_path << std::endl;
     config_ = YAML::LoadFile(std::string(resolved_path) + "/config/interface.yaml");
     PROGRAM_PATH = config_["program_path"].as<std::string>();
     engine_save_path = config_["engine_save_path"].as<std::string>();
     engine_load_path = config_["engine_load_path"].as<std::string>();
 
-    inputH = config_["input_h"].as<std::string>();
-    inputW = config_["input_w"].as<std::string>();
+    inputH = config_["input_h"].as<int>();
+    inputW = config_["input_w"].as<int>();
 }
 
 TensorRTAccelerator::~TensorRTAccelerator(){};
@@ -372,10 +372,9 @@ samplesCommon::OnnxSampleParams initializeSampleParams(const samplesCommon::Args
         params.dataDirs = args.dataDirs;
     }
 
+    char resolved_path[PATH_MAX];
     realpath("../", resolved_path);
-    std::cout << resolved_path << std::endl;
-    config_ = YAML::LoadFile(std::string(resolved_path) + "/config/interface.yaml");
-    PROGRAM_PATH = config_["program_path"].as<std::string>();
+    YAML::Node config_ = YAML::LoadFile(std::string(resolved_path) + "/config/interface.yaml");
 
     params.onnxFileName = config_["model_name"].as<std::string>();
     params.inputTensorNames.push_back("input");
@@ -384,27 +383,8 @@ samplesCommon::OnnxSampleParams initializeSampleParams(const samplesCommon::Args
     params.dlaCore = args.useDLACore;
     params.int8 = args.runInInt8;
     params.fp16 = args.runInFp16;
-
     return params;
 }
 
-//!
-//! \brief Prints the help information for running this sample
-//!
-void printHelpInfo()
-{
-    std::cout
-        << "Usage: ./sample_onnx_mnist [-h or --help] [-d or --datadir=<path to data directory>] [--useDLACore=<int>]"
-        << std::endl;
-    std::cout << "--help          Display help information" << std::endl;
-    std::cout << "--datadir       Specify path to a data directory, overriding the default. This option can be used "
-                 "multiple times to add multiple directories. If no data directories are given, the default is to use "
-                 "(data/samples/mnist/, data/mnist/)"
-              << std::endl;
-    std::cout << "--useDLACore=N  Specify a DLA engine for layers that support DLA. Value can range from 0 to n-1, "
-                 "where n is the number of DLA engines on the platform."
-              << std::endl;
-    std::cout << "--int8          Run in Int8 mode." << std::endl;
-    std::cout << "--fp16          Run in FP16 mode." << std::endl;
-}
+
 
