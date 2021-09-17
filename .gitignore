@@ -9,5 +9,4 @@ build/
 *.onnx
 *.trt
 *.csv
-*.npy
 *.mat
