@@ -64,6 +64,25 @@ The deep contact estimator takes in proprioceptive measurements from a quadruped
 6. Run `python3 src/inference_one_seq.py`.
 7. The saved LCM log can be used in [cheetah_inekf_ros](https://github.com/UMich-CURLY/cheetah_inekf_ros) for mini cheetah state estimation.
 
+## Running in real-time
+0. Switch to `500Hz_polish` branch
+1. Save your ONNX model in '/weights' folder and save an input matrix inside '/data' folder as '*.bin'
+2. Change the `interface.yaml` according
+3. Enter the program folder and build the program by the following commands:
+   ```
+      mkdir build
+      cd build
+      cmake ..
+      make -j8
+   ```
+4. Serialize an engine by using command `./utils/serialize_engine` in `${PROGRAM_PATH}/build/` directory. This command will read the model (*.onnx) and serialize the output engine (*.trt) on your disk
+   **Remark:** The saved engine is not portable between different machines
+5. Run the program by using command `./src/run_contact_estimator` in `${PROGRAM_PATH}/build/` directory
+6. Once you see the print out message `started thread`, the interface starts. You can feed input either through the robot, or using a pre-recorded `.lcm` log file. You can check the frequency by using lcm-spy
+7. The output of the program is a synchronized lcm message that contains `leg_control_data`, `microstrain`, `timestamp` and `contact_estimates`
+8. You can enable the debug_flag to save some files that is helpful for you to visualize the result. E.g. `leg_p.csv` and `contact_lcm_est.csv`
+
+
 ## Citation
 This work was submitted to a conference and is under review. For now, please cite the preprint version of the paper:
 
