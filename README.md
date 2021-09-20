@@ -65,7 +65,7 @@ The deep contact estimator takes in proprioceptive measurements from a quadruped
 7. The saved LCM log can be used in [cheetah_inekf_ros](https://github.com/UMich-CURLY/cheetah_inekf_ros) for mini cheetah state estimation.
 
 ## Running in real-time
-0. Switch to `500Hz_polish` branch, follow the [wiki_page](https://github.com/UMich-CURLY/deep-contact-estimator/wiki/Home/) to convert models and install tensorrt if needed
+0. Switch to `500Hz_polish` branch, follow the [wiki_page](https://github.com/UMich-CURLY/deep-contact-estimator/wiki/Home/) to convert models and install **TensorRT** if it haven't been installed already
 1. Save your ONNX model in '/weights' folder and save an input matrix inside '/data' folder as '*.bin'
 2. Change the `interface.yaml` according
 3. Enter the program folder and build the program by the following commands:
