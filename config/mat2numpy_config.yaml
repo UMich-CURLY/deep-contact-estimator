@@ -1,11 +1,11 @@
 
-mat_folder: "/home/justin/data/archive_contact_data/test_sequence/mat/"
-save_path: "/home/justin/data/archive_contact_data/test_sequence/numpy/"
+mat_folder: "/home/justin/data/contact_data/2021-09-07_terrain_estimation/automatic_contact_mat/"
+save_path: "/home/justin/data/contact_data/2021-09-07_terrain_estimation/numpy/"
 
 # mode: "train": split data into train/val/test
 #       "inference": create numpy for one seq without spliting
 #       "mat2lcm": simply convert mat to lcm
-mode: "mat2lcm"
+mode: "inference"
 
 # contact_type: "GRF":
 #               "gait_cycle"

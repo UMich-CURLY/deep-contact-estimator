@@ -11,9 +11,41 @@ import torch.optim as optim
 from sklearn.metrics import precision_score
 from sklearn.metrics import recall_score
 from sklearn.metrics import jaccard_score
+from sklearn.metrics import confusion_matrix
 
 from contact_cnn import *
 from utils.data_handler import *
+
+def compute_confusion_mat(bin_contact_pred_arr, bin_contact_gt_arr):
+    
+    confusion_mat = {}
+    
+    confusion_mat['leg_rf'] = confusion_matrix(bin_contact_gt_arr[:,0],bin_contact_pred_arr[:,0], labels=[0,1])
+    confusion_mat['leg_lf'] = confusion_matrix(bin_contact_gt_arr[:,1],bin_contact_pred_arr[:,1], labels=[0,1])
+    confusion_mat['leg_rh'] = confusion_matrix(bin_contact_gt_arr[:,2],bin_contact_pred_arr[:,2], labels=[0,1])
+    confusion_mat['leg_lh'] = confusion_matrix(bin_contact_gt_arr[:,3],bin_contact_pred_arr[:,3], labels=[0,1])
+    confusion_mat['total'] = confusion_mat['leg_rf'] + confusion_mat['leg_lf'] + confusion_mat['leg_rh'] + confusion_mat['leg_lh']
+    confusion_mat['total_ratio'] = confusion_mat['total'] / np.sum(confusion_mat['total'])
+    
+    # false negative and false postivie rate
+    # false negative = FN/P; false positive = FP/N
+    fn_rate = {}
+    fp_rate = {}
+
+    fn_rate['leg_rf'] = confusion_mat['leg_rf'][0,1] / (confusion_mat['leg_rf'][0,0]+confusion_mat['leg_rf'][0,1])
+    fn_rate['leg_lf'] = confusion_mat['leg_lf'][0,1] / (confusion_mat['leg_lf'][0,0]+confusion_mat['leg_lf'][0,1])
+    fn_rate['leg_rh'] = confusion_mat['leg_rh'][0,1] / (confusion_mat['leg_rh'][0,0]+confusion_mat['leg_rh'][0,1])
+    fn_rate['leg_lh'] = confusion_mat['leg_lh'][0,1] / (confusion_mat['leg_lh'][0,0]+confusion_mat['leg_lh'][0,1])
+    fn_rate['total'] = confusion_mat['total'][0,1] / (confusion_mat['total'][0,0]+confusion_mat['total'][0,1])
+
+    fp_rate['leg_rf'] = confusion_mat['leg_rf'][1,0] / (confusion_mat['leg_rf'][1,0] + confusion_mat['leg_rf'][1,1]) 
+    fp_rate['leg_lf'] = confusion_mat['leg_lf'][1,0] / (confusion_mat['leg_lf'][1,0] + confusion_mat['leg_lf'][1,1])
+    fp_rate['leg_rh'] = confusion_mat['leg_rh'][1,0] / (confusion_mat['leg_rh'][1,0] + confusion_mat['leg_rh'][1,1])
+    fp_rate['leg_lh'] = confusion_mat['leg_lh'][1,0] / (confusion_mat['leg_lh'][1,0] + confusion_mat['leg_lh'][1,1])
+    fp_rate['total'] = confusion_mat['total'][1,0] / (confusion_mat['total'][1,0] + confusion_mat['total'][1,1])
+
+    return confusion_mat, fn_rate, fp_rate
+
 
 def compute_precision(bin_pred_arr, bin_gt_arr, pred_arr, gt_arr):
 
@@ -104,6 +136,8 @@ def main():
     test_acc, acc_per_leg, bin_pred_arr, bin_gt_arr, pred_arr, gt_arr = compute_accuracy(test_dataloader, model)
     precision_of_class, precision_of_legs, precision_of_all_legs = compute_precision(bin_pred_arr,bin_gt_arr,pred_arr, gt_arr)
     jaccard_of_class, jaccard_of_legs, jaccard_of_all_legs = compute_jaccard(bin_pred_arr,bin_gt_arr,pred_arr, gt_arr)
+    confusion_mat, fn_rate, fp_rate = compute_confusion_mat(bin_pred_arr,bin_gt_arr)
+
 
     print("Test accuracy in terms of class is: %.4f" % test_acc)
     print("Accuracy of leg 0 is: %.4f" % acc_per_leg[0])
@@ -125,26 +159,65 @@ def main():
     print("jaccard of leg 2 is: %.4f" % jaccard_of_legs[2])
     print("jaccard of leg 3 is: %.4f" % jaccard_of_legs[3])
     print("jaccard of all legs is: %.4f" % jaccard_of_all_legs)
+    print("---------------")
+    print("confusion matrix of leg rf is: ")
+    print(confusion_mat['leg_rf'])
+    print("confusion matrix of leg lf is: ")
+    print(confusion_mat['leg_lf'])
+    print("confusion matrix of leg rh is: ")
+    print(confusion_mat['leg_rh'])
+    print("confusion matrix of leg lh is: ")
+    print(confusion_mat['leg_lh'])
+    print("confusion matrix sum is: ")
+    print(confusion_mat['total'])
+    print("confusion matrix ratio: ")
+    print(confusion_mat['total_ratio'])
+    print("---------------")
+    print("false negative rate of leg rf is: %.4f" % fn_rate['leg_rf'])
+    print("false negative rate of leg lf is: %.4f" % fn_rate['leg_lf'])
+    print("false negative rate of leg rh is: %.4f" % fn_rate['leg_rh'])
+    print("false negative rate of leg lh is: %.4f" % fn_rate['leg_lh'])
+    print("AVG false negative rate is: %.4f" % fn_rate['total'])
+    print("---------------")
+    print("false positive rate of leg rf is: %.4f" % fp_rate['leg_rf'])
+    print("false positive rate of leg lf is: %.4f" % fp_rate['leg_lf'])
+    print("false positive rate of leg rh is: %.4f" % fp_rate['leg_rh'])
+    print("false positive rate of leg lh is: %.4f" % fp_rate['leg_lh'])
+    print("AVG false positive rate is: %.4f" % fp_rate['total'])
+    print("---------------")
 
-    # print(test_acc)
-    # print(acc_per_leg[0])
-    # print(acc_per_leg[1])
-    # print(acc_per_leg[2])
-    # print(acc_per_leg[3])
-    # print((np.sum(acc_per_leg)/4.0))
-    # print("---------------")
-    # print(precision_of_class)
-    # print(precision_of_legs[0])
-    # print(precision_of_legs[1])
-    # print(precision_of_legs[2])
-    # print(precision_of_legs[3])
-    # print(precision_of_all_legs)
-    # print(jaccard_of_class)
-    # print(jaccard_of_legs[0])
-    # print(jaccard_of_legs[1])
-    # print(jaccard_of_legs[2])
-    # print(jaccard_of_legs[3])
-    # print(jaccard_of_all_legs)
+    print(test_acc)
+    print(acc_per_leg[0])
+    print(acc_per_leg[1])
+    print(acc_per_leg[2])
+    print(acc_per_leg[3])
+    print((np.sum(acc_per_leg)/4.0))
+    print("---------------")
+    print(precision_of_class)
+    print(precision_of_legs[0])
+    print(precision_of_legs[1])
+    print(precision_of_legs[2])
+    print(precision_of_legs[3])
+    print(precision_of_all_legs)
+    print("---------------")
+    print(jaccard_of_class)
+    print(jaccard_of_legs[0])
+    print(jaccard_of_legs[1])
+    print(jaccard_of_legs[2])
+    print(jaccard_of_legs[3])
+    print(jaccard_of_all_legs)
+    print("---------------")
+    print(fn_rate['leg_rf'])
+    print(fn_rate['leg_lf'])
+    print(fn_rate['leg_rh'])
+    print(fn_rate['leg_lh'])
+    print(fn_rate['total'])
+    print("---------------")
+    print(fp_rate['leg_rf'])
+    print(fp_rate['leg_lf'])
+    print(fp_rate['leg_rh'])
+    print(fp_rate['leg_lh'])
+    print(fp_rate['total'])
 
 if __name__ == '__main__':
     main()
