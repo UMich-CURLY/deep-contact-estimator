@@ -1,5 +1,6 @@
 #include "communication/lcm_handler.hpp"
 #include <stdlib.h>
+#include <limits.h>
 
 LcmHandler::LcmHandler(lcm::LCM* lcm, LcmMsgQueues_t* lcm_msg_in, std::mutex* cdata_mtx, const std::string &mode):
 lcm_(lcm), lcm_msg_in_(lcm_msg_in), mtx_(cdata_mtx)

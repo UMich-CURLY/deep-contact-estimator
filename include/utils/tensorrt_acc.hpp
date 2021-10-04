@@ -127,9 +127,10 @@ private:
     std::string engine_save_path;
     std::string engine_load_path;
 
-    // Input size:
+    // Input / Output size:
     int inputH;
     int inputW;
+    int outputSize;
 };
 
 samplesCommon::OnnxSampleParams initializeSampleParams(const samplesCommon::Args &args);

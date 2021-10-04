@@ -1,7 +1,7 @@
 #include "utils/tensorrt_acc.hpp"
 #include <stdlib.h>
 
-const std::string gSampleName = "TensorRT.sample_onnx";
+const std::string gSampleName = "TensorRT.contact_estimator_onnx";
 
 TensorRTAccelerator::TensorRTAccelerator(const samplesCommon::OnnxSampleParams &params)
     : mParams(params),
@@ -16,6 +16,7 @@ TensorRTAccelerator::TensorRTAccelerator(const samplesCommon::OnnxSampleParams &
 
     inputH = config_["input_h"].as<int>();
     inputW = config_["input_w"].as<int>();
+    outputSize = config_["output_size"].as<int>();
 }
 
 TensorRTAccelerator::~TensorRTAccelerator(){};
@@ -134,7 +135,7 @@ bool TensorRTAccelerator::constructNetwork(SampleUniquePtr<nvinfer1::IBuilder>& 
     }
 
     builder->setMaxBatchSize(mParams.batchSize);
-    config->setMaxWorkspaceSize(16_MiB);
+    config->setMaxWorkspaceSize(32_MiB);
     if (mParams.fp16)
     {
         config->setFlag(BuilderFlag::kFP16);
@@ -274,7 +275,7 @@ bool TensorRTAccelerator::processInput(const samplesCommon::BufferManager &buffe
 
 int TensorRTAccelerator::getOutput(const samplesCommon::BufferManager &buffers)
 {
-    const int outputSize = 16; // 4 legs, 16 status
+    // const int outputSize = 16; // 4 legs, 16 status
 
     float *output = static_cast<float *>(buffers.getHostBuffer(mParams.outputTensorNames[0]));
     float val{0.0f};
@@ -301,10 +302,10 @@ bool TensorRTAccelerator::processInput(const samplesCommon::BufferManager& buffe
 {   
     /// REMARK: if you don't know the input dimension, you can find it by parsing the ONNX model directly;
     /// You cannot find the dimension if you use a serialized engine.
-    // const int inputH = mInputDims.d[1];
+    // const int inputSize_H = mInputDims.d[1];
     std::cout << "inputH is: " << inputH << std::endl;
 
-    // const int inputW = mInputDims.d[2];
+    // const int inputSize_W = mInputDims.d[2];
     std::cout << "inputW is: " << inputW << std::endl;
     
     /// REMARK: use a *.bin file to parse the model
@@ -330,7 +331,7 @@ bool TensorRTAccelerator::verifyOutput(const samplesCommon::BufferManager& buffe
 {
     /// REMARK: if you don't know the output dimension, you can find it by parsing the ONNX model directly;
     /// You cannot find the dimension if you use a serialized engine.
-    const int outputSize = mOutputDims.d[1];
+    // const int outputSize = mOutputDims.d[1];
     std::cout << "outputSize is " << outputSize << std::endl;
 
     // const int outputSize = 16;

@@ -81,7 +81,7 @@ void ContactEstimation::publishOutput(int output_idx, std::shared_ptr<synced_pro
         synced_msgs.get()->contact[i] = binary[i] == '1';
        	if (debug_flag_ == 1)
         {
-            myfile_ << synced_msgs.get()->contact[i] << ',';
+            myfile_ << binary[i] << ',';
         }
     }
     
