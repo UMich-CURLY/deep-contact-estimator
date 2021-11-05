@@ -84,17 +84,17 @@ The deep contact estimator takes in proprioceptive measurements from a quadruped
 
 
 ## Citation
-This work was submitted to a conference and is under review. For now, please cite the preprint version of the paper:
+This work is published in 2021 Conference on Robot Learning:
 
-* Tzu-Yuan Lin, Ray Zhang, Justin Yu, and Maani Ghaffari. "Deep Multi-Modal Contact Estimation for Invariant Observer Design on Quadruped Robots." arXiv preprint arXiv:2106.15713 (2021). [https://arxiv.org/abs/2106.15713](https://arxiv.org/abs/2106.15713)
+* Tzu-Yuan Lin, Ray Zhang, Justin Yu, and Maani Ghaffari. "Legged Robot State Estimation using Invariant Kalman Filtering and Learned Contact Events." In Conference on robot learning. PMLR, 2021
 ```
-@misc{lin2021deep,
-      title={Deep Multi-Modal Contact Estimation for Invariant Observer Design on Quadruped Robots}, 
-      author={Tzu-Yuan Lin and Ray Zhang and Justin Yu and Maani Ghaffari},
-      year={2021},
-      eprint={2106.15713},
-      archivePrefix={arXiv},
-      primaryClass={cs.RO}
+@inproceedings{
+   lin2021legged,
+   title={Legged Robot State Estimation using Invariant Kalman Filtering and Learned Contact Events},
+   author={Tzu-Yuan Lin and Ray Zhang and Justin Yu and Maani Ghaffari},
+   booktitle={5th Annual Conference on Robot Learning },
+   year={2021},
+   url={https://openreview.net/forum?id=yt3tDB67lc5}
 }
 ```
 
